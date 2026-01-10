@@ -34,7 +34,7 @@ This guide covers setting up your development environment, understanding the cod
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/madfam-io/digifab-quoting.git
+git clone https://github.com/madfam-org/digifab-quoting.git
 cd digifab-quoting
 ```
 

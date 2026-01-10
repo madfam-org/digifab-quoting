@@ -1,6 +1,6 @@
 # Cotiza Studio - Digital Manufacturing Quoting Platform
 
-[![Build Status](https://github.com/madfam-io/digifab-quoting/workflows/CI/badge.svg)](https://github.com/madfam-io/digifab-quoting/actions)
+[![Build Status](https://github.com/madfam-org/digifab-quoting/workflows/CI/badge.svg)](https://github.com/madfam-org/digifab-quoting/actions)
 [![Security Score](https://img.shields.io/badge/Security-A-green)](docs/SECURITY.md)
 [![License](https://img.shields.io/badge/License-Proprietary-blue.svg)](LICENSE)
 [![Website](https://img.shields.io/badge/Website-cotiza.studio-purple)](https://www.cotiza.studio)
@@ -105,7 +105,7 @@ npm run dev
 1. **Clone and install**:
 
 ```bash
-git clone https://github.com/madfam-io/digifab-quoting.git
+git clone https://github.com/madfam-org/digifab-quoting.git
 cd digifab-quoting
 npm install
 ```
@@ -603,4 +603,4 @@ This project is proprietary software. All rights reserved.
 
 - Documentation: [https://docs.cotiza.studio](https://docs.cotiza.studio)
 - Email: support@cotiza.studio
-- Issues: [GitHub Issues](https://github.com/madfam-io/digifab-quoting/issues)
+- Issues: [GitHub Issues](https://github.com/madfam-org/digifab-quoting/issues)

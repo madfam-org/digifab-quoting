@@ -10,7 +10,7 @@ name: cotiza-production
 services:
   # NestJS API
   api:
-    image: ${DOCKER_REGISTRY:-ghcr.io/madfam-io}/cotiza-api:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-ghcr.io/madfam-org}/cotiza-api:${IMAGE_TAG:-latest}
     container_name: cotiza-api
     ports:
       - '${COTIZA_API_PORT:-8200}:4000'
@@ -50,7 +50,7 @@ services:
 
   # Next.js Web Frontend
   web:
-    image: ${DOCKER_REGISTRY:-ghcr.io/madfam-io}/cotiza-web:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-ghcr.io/madfam-org}/cotiza-web:${IMAGE_TAG:-latest}
     container_name: cotiza-web
     ports:
       - '${COTIZA_WEB_PORT:-3030}:3000'
@@ -82,7 +82,7 @@ services:
 
   # Python STL Analysis Worker
   worker:
-    image: ${DOCKER_REGISTRY:-ghcr.io/madfam-io}/cotiza-worker:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-ghcr.io/madfam-org}/cotiza-worker:${IMAGE_TAG:-latest}
     container_name: cotiza-worker
     ports:
       - '${COTIZA_WORKER_PORT:-8201}:8000'

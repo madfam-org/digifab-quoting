@@ -15,7 +15,7 @@ spec:
     context: .
     source:
       git:
-        repository: https://github.com/madfam-io/digifab-quoting
+        repository: https://github.com/madfam-org/digifab-quoting
         branch: main
         autoDeploy: true
 
