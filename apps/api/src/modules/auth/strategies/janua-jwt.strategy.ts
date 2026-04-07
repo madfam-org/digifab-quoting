@@ -2,6 +2,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { passportJwtSecret } from 'jwks-rsa';
 
 /**
  * Janua JWT Payload structure
@@ -13,7 +14,7 @@ export interface JanuaJWTPayload {
   org_id?: string; // Organization/Tenant ID
   roles?: string[];
   permissions?: string[];
-  iss: string; // Should be 'janua'
+  iss: string; // Should be 'janua' or 'https://auth.madfam.io'
   iat: number;
   exp: number;
 }
@@ -31,21 +32,44 @@ export interface JanuaUser {
 }
 
 // Valid issuers from Janua auth service
-const JANUA_VALID_ISSUERS = ['janua', 'https://janua.dev', 'http://localhost:8001'];
+const JANUA_VALID_ISSUERS = [
+  'janua',
+  'https://janua.dev',
+  'http://localhost:8001',
+  'https://auth.madfam.io',
+];
+
+/** Default JWKS endpoint for Janua auth service */
+const DEFAULT_JWKS_URI = 'https://auth.madfam.io/.well-known/jwks.json';
+
+/** JWKS key cache TTL in milliseconds (1 hour) */
+const JWKS_CACHE_TTL_MS = 3_600_000;
 
 @Injectable()
 export class JanuaJwtStrategy extends PassportStrategy(Strategy, 'janua-jwt') {
   private readonly logger = new Logger(JanuaJwtStrategy.name);
 
   constructor(private configService: ConfigService) {
+    const jwksUri =
+      configService.get<string>('JANUA_JWKS_URI') || DEFAULT_JWKS_URI;
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get('JANUA_JWT_SECRET') || configService.get('jwt.secret'),
+      algorithms: ['RS256'],
+      secretOrKeyProvider: passportJwtSecret({
+        jwksUri,
+        cache: true,
+        cacheMaxAge: JWKS_CACHE_TTL_MS,
+        rateLimit: true,
+        jwksRequestsPerMinute: 10,
+      }),
       // Don't validate issuer in passport - we'll do it manually to support multiple issuers
     });
 
-    this.logger.log('Janua JWT Strategy initialized');
+    this.logger.log(
+      `Janua JWT Strategy initialized with RS256 JWKS validation (jwksUri=${jwksUri})`,
+    );
   }
 
   /**
