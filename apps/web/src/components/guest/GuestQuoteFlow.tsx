@@ -14,13 +14,6 @@ import { GuestQuote } from '@cotiza/shared';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
-type RegisterForm = {
-  email: string;
-  password: string;
-  name: string;
-  company?: string;
-};
-
 export function GuestQuoteFlow() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -102,25 +95,6 @@ export function GuestQuoteFlow() {
         console.error('Failed to convert quote:', error);
         toast.error(t('auth.errors.conversion_failed'));
       }
-    }
-  };
-
-  const handleRegisterWithQuote = async (data: RegisterForm) => {
-    if (!session || !quote) return;
-
-    try {
-      const result = await guestApi.registerWithQuote({
-        ...data,
-        sessionId: session.id,
-        sessionQuoteId: quote.id,
-      }) as { user: unknown; tokens: unknown; quote: { id: string } };
-
-      // Auto-login and redirect
-      router.push(`/quote/${result.quote.id}`);
-      toast.success(t('auth.success.registered'));
-    } catch (error) {
-      console.error('Registration failed:', error);
-      toast.error(t('auth.errors.registration_failed'));
     }
   };
 
@@ -244,7 +218,6 @@ export function GuestQuoteFlow() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
-        onRegisterWithQuote={handleRegisterWithQuote}
         mode="guest-conversion"
         guestQuoteId={quote.id}
         actionIntent={authAction}
