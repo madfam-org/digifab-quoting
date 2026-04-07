@@ -7,6 +7,7 @@ import { MeteringService } from './services/metering.service';
 import { InvoiceService } from './services/invoice.service';
 import { PricingTierService } from './services/pricing-tier.service';
 import { UsageTrackingInterceptor } from './interceptors/usage-tracking.interceptor';
+import { DhanamRelayService } from './services/dhanam-relay.service';
 import { JanuaBillingService } from './services/janua-billing.service';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { RedisModule } from '@/modules/redis/redis.module';
@@ -29,6 +30,7 @@ import { RedisModule } from '@/modules/redis/redis.module';
   providers: [
     BillingService,
     JanuaBillingService,
+    DhanamRelayService,
     UsageTrackingService,
     MeteringService,
     InvoiceService,
@@ -38,6 +40,7 @@ import { RedisModule } from '@/modules/redis/redis.module';
   exports: [
     BillingService,
     JanuaBillingService,
+    DhanamRelayService,
     UsageTrackingService,
     MeteringService,
     UsageTrackingInterceptor,
