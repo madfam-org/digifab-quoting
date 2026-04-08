@@ -35,7 +35,7 @@ jobs:
         uses: docker/build-push-action@v5
         id: build-api
         with:
-          context: apps/api
+          context: .
           file: apps/api/Dockerfile
           push: true
           tags: |
@@ -48,7 +48,7 @@ jobs:
         uses: docker/build-push-action@v5
         id: build-web
         with:
-          context: apps/web
+          context: .
           file: apps/web/Dockerfile
           push: true
           tags: |
@@ -61,7 +61,7 @@ jobs:
         uses: docker/build-push-action@v5
         id: build-admin
         with:
-          context: apps/admin
+          context: .
           file: apps/web/Dockerfile
           push: true
           tags: |
@@ -74,7 +74,7 @@ jobs:
         uses: docker/build-push-action@v5
         id: build-worker
         with:
-          context: apps/worker
+          context: .
           file: apps/worker/Dockerfile
           push: true
           tags: |
@@ -85,7 +85,6 @@ jobs:
 
       - name: Install kustomize
         uses: imranismail/setup-kustomize@v2
-
 
       - name: Update api image digest
         working-directory: infra/k8s/production
