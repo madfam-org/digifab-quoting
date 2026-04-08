@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: digifab-quoting
+resources:
+- namespace.yaml
+- api-deployment.yaml
+- api-service.yaml
+- web-deployment.yaml
+- web-service.yaml
+- admin-deployment.yaml
+- admin-service.yaml
+- worker-deployment.yaml
+- network-policies.yaml
+images:
+- name: ghcr.io/madfam-org/digifab-quoting/api
+  newName: ghcr.io/madfam-org/digifab-quoting/api
+- name: ghcr.io/madfam-org/digifab-quoting/web
+  newName: ghcr.io/madfam-org/digifab-quoting/web
+- name: ghcr.io/madfam-org/digifab-quoting/admin
+  newName: ghcr.io/madfam-org/digifab-quoting/admin
+- name: ghcr.io/madfam-org/digifab-quoting/worker
+  newName: ghcr.io/madfam-org/digifab-quoting/worker

@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: digifab-quoting-api
+  namespace: digifab-quoting
+  labels:
+    app: digifab-quoting-api
+    app.kubernetes.io/name: digifab-quoting-api
+    app.kubernetes.io/part-of: digifab-quoting
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: digifab-quoting-api
+  template:
+    metadata:
+      labels:
+        app: digifab-quoting-api
+        app.kubernetes.io/name: digifab-quoting-api
+        app.kubernetes.io/part-of: digifab-quoting
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+      - name: ghcr-credentials
+      containers:
+      - name: digifab-quoting-api
+        image: ghcr.io/madfam-org/digifab-quoting/api:latest
+        ports:
+        - containerPort: 4500
+          name: http
+        envFrom:
+        - secretRef:
+            name: digifab-quoting-secrets
+            optional: true
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 4500
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4500
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4500
+          periodSeconds: 30

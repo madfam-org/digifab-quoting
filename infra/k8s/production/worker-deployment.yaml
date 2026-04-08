@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: digifab-quoting-worker
+  namespace: digifab-quoting
+  labels:
+    app: digifab-quoting-worker
+    app.kubernetes.io/name: digifab-quoting-worker
+    app.kubernetes.io/part-of: digifab-quoting
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: digifab-quoting-worker
+  template:
+    metadata:
+      labels:
+        app: digifab-quoting-worker
+        app.kubernetes.io/name: digifab-quoting-worker
+        app.kubernetes.io/part-of: digifab-quoting
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+      - name: ghcr-credentials
+      containers:
+      - name: digifab-quoting-worker
+        image: ghcr.io/madfam-org/digifab-quoting/worker:latest
+        envFrom:
+        - secretRef:
+            name: digifab-quoting-secrets
+            optional: true
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
