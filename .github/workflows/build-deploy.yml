@@ -57,24 +57,11 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
-      - name: Build and push admin
-        uses: docker/build-push-action@v5
-        id: build-admin
-        with:
-          context: .
-          file: apps/web/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/madfam-org/digifab-quoting/admin:${{ github.sha }}
-            ghcr.io/madfam-org/digifab-quoting/admin:latest
-          cache-from: type=gha,scope=admin
-          cache-to: type=gha,mode=max,scope=admin
-
       - name: Build and push worker
         uses: docker/build-push-action@v5
         id: build-worker
         with:
-          context: .
+          context: apps/worker
           file: apps/worker/Dockerfile
           push: true
           tags: |
@@ -95,11 +82,6 @@ jobs:
         working-directory: infra/k8s/production
         run: |
           kustomize edit set image ghcr.io/madfam-org/digifab-quoting/web=ghcr.io/madfam-org/digifab-quoting/web@${{ steps.build-web.outputs.digest }}
-
-      - name: Update admin image digest
-        working-directory: infra/k8s/production
-        run: |
-          kustomize edit set image ghcr.io/madfam-org/digifab-quoting/admin=ghcr.io/madfam-org/digifab-quoting/admin@${{ steps.build-admin.outputs.digest }}
 
       - name: Update worker image digest
         working-directory: infra/k8s/production
