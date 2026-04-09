@@ -80,4 +80,6 @@ temp/
 # Generated files
 generated/
 *.generated.ts
-*.generated.js
+*.generated.js*.key
+*.p12
+*.pfx
