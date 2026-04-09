@@ -13,7 +13,7 @@ interface JwtAuthRequest extends Request {
 }
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
+export class JwtAuthGuard extends AuthGuard('janua-jwt') {
   constructor(
     private reflector: Reflector,
     private tokenBlacklist: TokenBlacklistService,

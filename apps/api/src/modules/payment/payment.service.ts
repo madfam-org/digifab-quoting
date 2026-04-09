@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { PrismaService } from '../../prisma/prisma.service';
 import { StripeService } from './stripe.service';
 import { ConfigService } from '@nestjs/config';
+import { createHmac } from 'crypto';
 import { PaymentStatus, OrderStatus, QuoteStatus } from '@cotiza/shared';
 // import { OrdersService } from '../orders/orders.service'; // Removed to avoid circular dependency
 import Stripe from 'stripe';
@@ -12,12 +13,17 @@ export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
   private readonly frontendUrl: string;
 
+  private readonly dhanamWebhookUrl: string | undefined;
+  private readonly dhanamWebhookSecret: string | undefined;
+
   constructor(
     private prisma: PrismaService,
     private stripe: StripeService,
     private configService: ConfigService,
   ) {
     this.frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3002');
+    this.dhanamWebhookUrl = this.configService.get<string>('DHANAM_BILLING_WEBHOOK_URL');
+    this.dhanamWebhookSecret = this.configService.get<string>('DHANAM_BILLING_WEBHOOK_SECRET');
   }
 
   async createPaymentSession(quoteId: string, tenantId: string) {
@@ -176,6 +182,15 @@ export class PaymentService {
           status: QuoteStatus.ORDERED,
         },
       });
+
+      // Relay payment event to Dhanam for unified revenue reporting
+      this.relayPaymentToDhanam({
+        quoteId: order.quoteId,
+        orderId: order.id,
+        amount: Number(order.totalAmount),
+        currency: order.currency,
+        tenantId,
+      }).catch(() => {}); // fire-and-forget
     }
   }
 
@@ -320,5 +335,55 @@ export class PaymentService {
     });
 
     return order;
+  }
+
+  /**
+   * Fire-and-forget billing event relay to Dhanam for unified revenue reporting.
+   * Non-blocking — failures are logged but never thrown.
+   */
+  private async relayPaymentToDhanam(event: {
+    quoteId: string;
+    orderId?: string;
+    amount: number;
+    currency: string;
+    tenantId: string;
+    customerEmail?: string;
+  }): Promise<void> {
+    if (!this.dhanamWebhookUrl) return;
+
+    try {
+      const payload = JSON.stringify({
+        source: 'cotiza-studio',
+        event_type: 'payment.succeeded',
+        data: event,
+        timestamp: new Date().toISOString(),
+      });
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (this.dhanamWebhookSecret) {
+        const signature = createHmac('sha256', this.dhanamWebhookSecret)
+          .update(payload)
+          .digest('hex');
+        headers['X-Cotiza-Signature'] = signature;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      await fetch(this.dhanamWebhookUrl, {
+        method: 'POST',
+        headers,
+        body: payload,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      this.logger.log(`Billing event relayed to Dhanam for quote ${event.quoteId}`);
+    } catch (error) {
+      this.logger.warn(`Failed to relay billing event to Dhanam: ${error.message}`);
+    }
   }
 }
