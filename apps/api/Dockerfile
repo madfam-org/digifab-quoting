@@ -1,4 +1,4 @@
-FROM ghcr.io/madfam-org/mirrors/node:20-alpine AS builder
+FROM node:20-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
@@ -17,7 +17,7 @@ WORKDIR /app
 RUN pnpm run build --filter=@cotiza/api...
 
 # Production image
-FROM ghcr.io/madfam-org/mirrors/node:20-alpine AS runner
+FROM node:20-alpine AS runner
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN addgroup --system --gid 1001 nodejs && \
