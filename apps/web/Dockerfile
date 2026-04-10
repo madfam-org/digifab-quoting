@@ -4,7 +4,7 @@
 # ============================================
 # STAGE 1: Builder
 # ============================================
-FROM node:20-alpine AS builder
+FROM ghcr.io/madfam-org/mirrors/node:20-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
@@ -20,7 +20,7 @@ RUN pnpm run build --filter=@cotiza/web...
 # ============================================
 # STAGE 2: Runner
 # ============================================
-FROM node:20-alpine AS runner
+FROM ghcr.io/madfam-org/mirrors/node:20-alpine AS runner
 
 WORKDIR /app
 
