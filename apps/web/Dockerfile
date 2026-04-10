@@ -6,16 +6,16 @@
 # ============================================
 FROM node:20-alpine AS builder
 
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
 WORKDIR /app
 
-COPY package*.json ./
-COPY turbo.json ./
-COPY tsconfig.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
 COPY packages/ ./packages/
 COPY apps/web/ ./apps/web/
 
-RUN npm ci
-RUN npm run build -- --filter=@cotiza/web...
+RUN pnpm install --frozen-lockfile
+RUN pnpm run build --filter=@cotiza/web...
 
 # ============================================
 # STAGE 2: Runner
