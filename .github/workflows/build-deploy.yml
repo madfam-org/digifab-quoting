@@ -48,25 +48,11 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
-      - name: Build and push worker
-        uses: docker/build-push-action@v5
-        id: build-worker
-        with:
-          context: apps/worker
-          file: apps/worker/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/madfam-org/digifab-quoting/worker:${{ github.sha }}
-            ghcr.io/madfam-org/digifab-quoting/worker:latest
-          cache-from: type=gha,scope=worker
-          cache-to: type=gha,mode=max,scope=worker
-
-      - name: Sign images with cosign
+      - name: Sign web image with cosign
         env:
           COSIGN_EXPERIMENTAL: "true"
         run: |
           cosign sign --yes ghcr.io/madfam-org/digifab-quoting/web@${{ steps.build-web.outputs.digest }}
-          cosign sign --yes ghcr.io/madfam-org/digifab-quoting/worker@${{ steps.build-worker.outputs.digest }}
 
       - name: Install kustomize
         run: |
@@ -77,11 +63,6 @@ jobs:
         working-directory: infra/k8s/production
         run: |
           kustomize edit set image ghcr.io/madfam-org/digifab-quoting/web=ghcr.io/madfam-org/digifab-quoting/web@${{ steps.build-web.outputs.digest }}
-
-      - name: Update worker image digest
-        working-directory: infra/k8s/production
-        run: |
-          kustomize edit set image ghcr.io/madfam-org/digifab-quoting/worker=ghcr.io/madfam-org/digifab-quoting/worker@${{ steps.build-worker.outputs.digest }}
 
       - name: Commit updated manifests
         run: |
