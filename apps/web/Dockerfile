@@ -16,6 +16,8 @@ COPY apps/web/ ./apps/web/
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm run build --filter=@cotiza/web...
+# Ensure public/ exists for runner COPY (may be empty in some projects)
+RUN mkdir -p /app/apps/web/public
 
 # ============================================
 # STAGE 2: Runner
