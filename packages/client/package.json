@@ -32,7 +32,7 @@
     }
   },
   "dependencies": {
-    "@cotiza/shared": "*"
+    "@cotiza/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",

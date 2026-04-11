@@ -20,7 +20,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@cotiza/shared": "*",
+    "@cotiza/shared": "workspace:*",
     "decimal.js": "^10.4.3",
     "mathjs": "^12.4.0"
   },
