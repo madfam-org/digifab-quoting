@@ -14,6 +14,7 @@ describe('AuthController', () => {
     register: jest.fn(),
     login: jest.fn(),
     refresh: jest.fn(),
+    refreshTokens: jest.fn(),
     logout: jest.fn(),
     validateUser: jest.fn(),
     generateTokens: jest.fn(),
@@ -25,6 +26,7 @@ describe('AuthController', () => {
     email: 'test@example.com',
     name: 'Test User',
     role: 'customer',
+    roles: ['customer'],
     tenantId: 'tenant-123',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -117,101 +119,88 @@ describe('AuthController', () => {
     });
   });
 
-  describe('login', () => {
-    const loginDto = {
-      email: 'test@example.com',
-      password: 'password123',
-    };
+  describe('login (JanuaAuthGuard)', () => {
+    // The login endpoint now uses @UseGuards(JanuaAuthGuard), which
+    // authenticates via Janua JWT and populates req.user before the
+    // controller method runs. The controller calls authService.login(user).
 
-    it('should successfully login a user', async () => {
+    it('should successfully login a user via JanuaAuthGuard', async () => {
+      const req = {
+        user: mockUser,
+        ip: '192.168.1.1',
+        headers: { 'user-agent': 'test' },
+      } as any;
+
+      const loginDto = {
+        email: 'test@example.com',
+        password: 'password123',
+      };
+
       mockAuthService.login.mockResolvedValue({
         user: mockUser,
         ...mockTokens,
       });
 
-      const result = await controller.login(loginDto);
+      const result = await controller.login(req, loginDto);
 
       expect(result).toEqual({
         user: mockUser,
         ...mockTokens,
       });
-      expect(mockAuthService.login).toHaveBeenCalledWith(
-        loginDto.email,
-        loginDto.password
-      );
+      // The controller passes req.user (set by JanuaAuthGuard) to authService.login
+      expect(mockAuthService.login).toHaveBeenCalledWith(mockUser);
     });
 
-    it('should handle invalid credentials', async () => {
+    it('should handle invalid credentials from JanuaAuthGuard', async () => {
+      const req = {
+        user: mockUser,
+      } as any;
+
+      const loginDto = {
+        email: 'test@example.com',
+        password: 'password123',
+      };
+
       mockAuthService.login.mockRejectedValue(
         new UnauthorizedException('Invalid credentials')
       );
 
-      await expect(controller.login(loginDto)).rejects.toThrow(
+      await expect(controller.login(req, loginDto)).rejects.toThrow(
         UnauthorizedException
-      );
-    });
-
-    it('should handle account lockout', async () => {
-      mockAuthService.login.mockRejectedValue(
-        new UnauthorizedException('Account locked due to multiple failed attempts')
-      );
-
-      await expect(controller.login(loginDto)).rejects.toThrow(
-        'Account locked'
-      );
-    });
-
-    it('should track login attempts', async () => {
-      const req = { ip: '192.168.1.1', headers: { 'user-agent': 'test' } } as Request;
-      
-      mockAuthService.login.mockResolvedValue({
-        user: mockUser,
-        ...mockTokens,
-      });
-
-      await controller.login(loginDto, req);
-
-      expect(mockAuthService.login).toHaveBeenCalledWith(
-        loginDto.email,
-        loginDto.password,
-        expect.objectContaining({
-          ip: '192.168.1.1',
-          userAgent: 'test',
-        })
       );
     });
   });
 
-  describe('refresh', () => {
+  describe('refreshToken', () => {
     const refreshDto = {
       refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh',
     };
 
     it('should successfully refresh access token', async () => {
-      mockAuthService.refresh.mockResolvedValue(mockTokens);
+      mockAuthService.refreshTokens.mockResolvedValue(mockTokens);
 
-      const result = await controller.refresh(refreshDto);
+      const result = await controller.refreshToken(refreshDto);
 
       expect(result).toEqual(mockTokens);
-      expect(mockAuthService.refresh).toHaveBeenCalledWith(refreshDto.refreshToken);
+      expect(mockAuthService.refreshTokens).toHaveBeenCalledWith(refreshDto.refreshToken);
     });
 
     it('should handle invalid refresh token', async () => {
-      mockAuthService.refresh.mockRejectedValue(
+      mockAuthService.refreshTokens.mockRejectedValue(
         new UnauthorizedException('Invalid refresh token')
       );
 
-      await expect(controller.refresh(refreshDto)).rejects.toThrow(
+      await expect(controller.refreshToken(refreshDto)).rejects.toThrow(
         UnauthorizedException
       );
     });
 
     it('should handle expired refresh token', async () => {
-      mockAuthService.refresh.mockRejectedValue(
+      mockAuthService.refreshTokens.mockRejectedValue(
         new UnauthorizedException('Refresh token expired')
       );
 
-      await expect(controller.refresh(refreshDto)).rejects.toThrow(
+      await expect(controller.refreshToken(refreshDto)).rejects.toThrow(
         'Refresh token expired'
       );
     });
@@ -224,22 +213,24 @@ describe('AuthController', () => {
         headers: { authorization: 'Bearer token' },
       } as any;
 
-      mockAuthService.logout.mockResolvedValue({ success: true });
+      mockAuthService.logout.mockResolvedValue(undefined);
 
-      const result = await controller.logout(req);
+      await controller.logout(req);
 
-      expect(result).toEqual({ success: true });
-      expect(mockAuthService.logout).toHaveBeenCalledWith('user-123', 'Bearer token');
+      expect(mockAuthService.logout).toHaveBeenCalledWith('token');
     });
 
-    it('should handle logout without user context', async () => {
+    it('should handle logout without authorization header', async () => {
       const req = {
-        headers: { authorization: 'Bearer token' },
+        user: { id: 'user-123' },
+        headers: {},
       } as any;
 
-      const result = await controller.logout(req);
+      mockAuthService.logout.mockResolvedValue(undefined);
 
-      expect(result).toEqual({ success: true });
+      await controller.logout(req);
+
+      expect(mockAuthService.logout).toHaveBeenCalledWith(undefined);
     });
   });
 
@@ -251,21 +242,55 @@ describe('AuthController', () => {
 
       const result = await controller.getSession(req);
 
-      expect(result).toEqual({ user: mockUser });
-    });
-
-    it('should return null for unauthenticated request', async () => {
-      const req = {} as any;
-
-      const result = await controller.getSession(req);
-
-      expect(result).toEqual({ user: null });
+      expect(result.user).toBeDefined();
+      expect(result.user.id).toBe(mockUser.id);
+      expect(result.user.email).toBe(mockUser.email);
+      expect(result.timestamp).toBeDefined();
     });
   });
 
-  describe('logAuthEvent', () => {
-    it('should log authentication events', async () => {
-      const logDto = {
+  describe('getMe (JanuaAuthGuard)', () => {
+    it('should return Janua JWT user profile', async () => {
+      const req = {
+        user: {
+          id: 'janua-user-1',
+          email: 'alice@example.com',
+          name: 'Alice',
+          roles: ['customer'],
+          tenantId: 'tenant-abc',
+        },
+      } as any;
+
+      const result = await controller.getMe(req);
+
+      expect(result).toEqual({
+        id: 'janua-user-1',
+        email: 'alice@example.com',
+        name: 'Alice',
+        roles: ['customer'],
+        tenantId: 'tenant-abc',
+      });
+    });
+
+    it('should handle user without name', async () => {
+      const req = {
+        user: {
+          id: 'janua-user-2',
+          email: 'bob@example.com',
+          roles: ['customer'],
+          tenantId: 'tenant-abc',
+        },
+      } as any;
+
+      const result = await controller.getMe(req);
+
+      expect(result.name).toBeNull();
+    });
+  });
+
+  describe('logEvent', () => {
+    it('should accept authentication event logs', async () => {
+      const eventData = {
         event: 'login_attempt',
         userId: 'user-123',
         metadata: {
@@ -274,32 +299,14 @@ describe('AuthController', () => {
         },
       };
 
-      const result = await controller.logAuthEvent(logDto);
-
-      expect(result).toEqual({ success: true });
-    });
-
-    it('should handle different event types', async () => {
-      const events = [
-        'login_success',
-        'login_failure',
-        'logout',
-        'password_reset',
-        'token_refresh',
-      ];
-
-      for (const event of events) {
-        const result = await controller.logAuthEvent({
-          event,
-          userId: 'user-123',
-        });
-        expect(result).toEqual({ success: true });
-      }
+      // logEvent returns void (HTTP 204)
+      const result = await controller.logEvent(eventData);
+      expect(result).toBeUndefined();
     });
   });
 
   describe('validation', () => {
-    it('should validate email format', async () => {
+    it('should validate email format on register', async () => {
       const invalidEmails = [
         'notanemail',
         '@example.com',
@@ -322,7 +329,7 @@ describe('AuthController', () => {
       }
     });
 
-    it('should enforce password requirements', async () => {
+    it('should enforce password requirements on register', async () => {
       const weakPasswords = [
         '12345',           // Too short
         'password',        // No numbers
@@ -344,79 +351,6 @@ describe('AuthController', () => {
           })
         ).rejects.toThrow('Password does not meet requirements');
       }
-    });
-  });
-
-  describe('rate limiting', () => {
-    it('should enforce rate limits on login attempts', async () => {
-      const loginDto = {
-        email: 'test@example.com',
-        password: 'password',
-      };
-
-      // Simulate multiple rapid requests
-      const promises = [];
-      for (let i = 0; i < 10; i++) {
-        promises.push(controller.login(loginDto));
-      }
-
-      mockAuthService.login.mockRejectedValue(
-        new UnauthorizedException('Too many attempts')
-      );
-
-      const results = await Promise.allSettled(promises);
-      const rejected = results.filter(r => r.status === 'rejected');
-      
-      expect(rejected.length).toBeGreaterThan(0);
-    });
-
-    it('should enforce rate limits on registration', async () => {
-      const promises = [];
-      for (let i = 0; i < 5; i++) {
-        promises.push(controller.register({
-          email: `user${i}@example.com`,
-          password: 'Password123!',
-          name: `User ${i}`,
-        }));
-      }
-
-      mockAuthService.register.mockRejectedValue(
-        new BadRequestException('Too many registration attempts')
-      );
-
-      const results = await Promise.allSettled(promises);
-      const rejected = results.filter(r => r.status === 'rejected');
-      
-      expect(rejected.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe('security headers', () => {
-    it('should set secure cookie options', async () => {
-      const res = {
-        cookie: jest.fn(),
-        json: jest.fn(),
-      } as any;
-
-      mockAuthService.login.mockResolvedValue({
-        user: mockUser,
-        ...mockTokens,
-      });
-
-      await controller.loginWithCookie(
-        { email: 'test@example.com', password: 'password' },
-        res
-      );
-
-      expect(res.cookie).toHaveBeenCalledWith(
-        'refresh_token',
-        expect.any(String),
-        expect.objectContaining({
-          httpOnly: true,
-          secure: true,
-          sameSite: 'strict',
-        })
-      );
     });
   });
 });

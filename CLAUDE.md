@@ -92,12 +92,12 @@ terraform destroy
 
 - **Frontend**: Next.js (App Router) with TypeScript, TailwindCSS, shadcn/ui, i18next (ES/EN), React Query
 - **Backend**: NestJS with TypeScript, REST API, OpenAPI docs, Zod validation
-- **Worker**: Python microservice (FastAPI) for geometry/DFM analysis
+- **Worker**: Python microservice (FastAPI) for geometry/DFM analysis (also built and deployed via CI/CD)
 - **Database**: PostgreSQL with Prisma ORM
 - **Queue/Cache**: AWS SQS for job queuing, Redis for caching
 - **Storage**: AWS S3 for file uploads and PDFs
-- **Auth**: NextAuth with JWT and refresh tokens
-- **Payments**: Stripe for card payments
+- **Auth**: Janua JWT (consolidated -- `LocalAuthGuard` removed, all auth flows use `JanuaAuthGuard`)
+- **Payments**: Stripe for card payments, DhanamRelayService for billing webhook relay
 
 ### Project Structure
 
@@ -137,6 +137,40 @@ For complete route documentation, see:
 - [docs/NAVIGATION_AUDIT.md](docs/NAVIGATION_AUDIT.md) - Navigation audit and user flows
 - [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) - Guide for adding and managing routes
 
+### Authentication
+
+Auth has been consolidated to **Janua only**. The legacy `LocalAuthGuard` (`local-auth.guard.ts`) was removed. All auth endpoints use `JanuaAuthGuard` for JWT verification via Janua JWKS:
+
+- `POST /auth/login` -- Uses `@UseGuards(JanuaAuthGuard)` (was LocalAuthGuard)
+- `GET /auth/me` -- Uses `@UseGuards(JanuaAuthGuard)` for Janua JWT user profiles
+- `GET /auth/session` -- Uses `JwtAuthGuard` (internal JWT)
+- `POST /auth/logout` -- Uses `JwtAuthGuard`
+
+Key files: `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules/auth/guards/janua-auth.guard.ts`, `apps/api/src/modules/auth/guards/jwt-auth.guard.ts`.
+
+### Ecosystem Webhook Integrations
+
+**Forgesight Webhook** (`POST /api/v1/webhooks/forgesight`):
+- Receives `price.updated` events from Forgesight pricing feed
+- HMAC-SHA256 signature verification via `x-forgesight-signature` header
+- Invalidates all cached Forgesight pricing data (4 cache patterns)
+- Key files: `apps/api/src/integrations/forgesight/webhook.controller.ts`
+- Env: `FORGESIGHT_WEBHOOK_SECRET`
+
+**Yantra4D Webhook Service** (`Yantra4dWebhookService`):
+- Fires outbound webhooks to Yantra4D when quotes originated from Yantra4D reach terminal status
+- Identifies Yantra4D quotes via `metadata.source === 'yantra4d'` and `metadata.yantra4dProject`
+- HMAC-SHA256 signed via `x-cotiza-signature` header
+- Fire-and-forget (errors logged, never thrown)
+- Key files: `apps/api/src/modules/quotes/services/yantra4d-webhook.service.ts`
+- Env: `YANTRA4D_API_URL`, `YANTRA4D_WEBHOOK_SECRET`, `YANTRA4D_WEBHOOK_TIMEOUT`
+
+**Dhanam Billing Relay** (`DhanamRelayService`):
+- Relays payment events to Dhanam billing platform
+- HMAC-SHA256 signed via `x-cotiza-signature` header
+- Key files: `apps/api/src/modules/billing/services/dhanam-relay.service.ts`
+- Env: `DHANAM_WEBHOOK_URL`, `DHANAM_WEBHOOK_SECRET`
+
 ### Environment Variables
 
 Key environment variables required:
@@ -156,12 +190,17 @@ DEFAULT_CURRENCY=MXN
 SUPPORTED_CURRENCIES=MXN,USD
 DEFAULT_LOCALES=es,en
 FX_SOURCE=openexchangerates
+FORGESIGHT_WEBHOOK_SECRET
+YANTRA4D_API_URL
+YANTRA4D_WEBHOOK_SECRET
+DHANAM_WEBHOOK_URL
+DHANAM_WEBHOOK_SECRET
 ```
 
 ### Deployment
 
 - **Branches**: `main` (production), `develop` (staging)
-- **CI/CD**: GitHub Actions → Docker → ECR → ECS Fargate
+- **CI/CD**: GitHub Actions -> Docker -> ECR -> ECS Fargate. Worker build job included in `build-deploy.yml` (builds and deploys the Python worker alongside the API and web apps)
 - **Environments**: `dev`, `staging`, `prod`
 - PR checks include: lint, unit tests, E2E smoke tests
 
@@ -178,11 +217,12 @@ FX_SOURCE=openexchangerates
 - Audit logging for all configuration changes and sensitive operations
 - Encryption in transit (TLS 1.2+) and at rest (S3/KMS)
 - Support for NDA acceptance tracking
+- All webhook endpoints use HMAC-SHA256 with timing-safe comparison
 
 ### Testing Strategy
 
 - Unit tests for pricing calculations, margin enforcement, FX conversion
-- Integration tests for file upload → DFM → pricing pipeline
+- Integration tests for file upload -> DFM -> pricing pipeline
 - E2E tests (Playwright) for critical user journeys
 - Performance tests for concurrent quote processing
 - Route testing coverage >80% for all endpoints
@@ -196,9 +236,22 @@ FX_SOURCE=openexchangerates
 - Sustainability scoring integrated into all quotes
 - Quote validity default: 14 days
 
+### Frontend Updates
+
+- Enhanced quote detail page with expanded information display
+- New quote history page for tracking past quotes
+- Dashboard KPIs for business metrics overview
+- Updated navbar with improved navigation
+- 3-locale translation support (ES, EN, and additional locale)
+
 ### Recent Features
 
 - **Multicurrency System**: 30+ currencies with geo-detection and automatic conversion
 - **Performance Monitoring**: MetricsService with Redis-backed distributed metrics
 - **Admin Dashboard**: Currency management interface at `/admin/currency`
 - **Comprehensive Testing**: 90+ tests for currency components and services
+- **Auth Consolidation**: Migrated from dual auth (Local + Janua) to Janua-only
+- **Worker CI/CD**: Python worker now built and deployed alongside API/web in `build-deploy.yml`
+- **Forgesight Webhook**: Inbound price update webhook with cache invalidation
+- **Yantra4D Webhook**: Outbound quote lifecycle notifications to Yantra4D platform
+- **Dhanam Billing Relay**: Payment event relay to centralized billing platform
