@@ -20,7 +20,6 @@ import {
   ApiHeader,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JanuaAuthGuard } from './guards/janua-auth.guard';
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
@@ -75,7 +74,7 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(JanuaAuthGuard)
   @Post('login')
   @Public()
   @HttpCode(HttpStatus.OK)

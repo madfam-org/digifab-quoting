@@ -2,28 +2,26 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { PrismaService } from '../../prisma/prisma.service';
 import { StripeService } from './stripe.service';
 import { ConfigService } from '@nestjs/config';
-import { createHmac } from 'crypto';
 import { PaymentStatus, OrderStatus, QuoteStatus } from '@cotiza/shared';
 // import { OrdersService } from '../orders/orders.service'; // Removed to avoid circular dependency
 import Stripe from 'stripe';
 import { QuoteItem } from '@prisma/client';
+import { DhanamRelayService } from '../billing/services/dhanam-relay.service';
+import { Yantra4dWebhookService } from '../quotes/services/yantra4d-webhook.service';
 
 @Injectable()
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
   private readonly frontendUrl: string;
 
-  private readonly dhanamWebhookUrl: string | undefined;
-  private readonly dhanamWebhookSecret: string | undefined;
-
   constructor(
     private prisma: PrismaService,
     private stripe: StripeService,
     private configService: ConfigService,
+    private readonly dhanamRelay: DhanamRelayService,
+    private readonly yantra4dWebhook: Yantra4dWebhookService,
   ) {
     this.frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3002');
-    this.dhanamWebhookUrl = this.configService.get<string>('DHANAM_BILLING_WEBHOOK_URL');
-    this.dhanamWebhookSecret = this.configService.get<string>('DHANAM_BILLING_WEBHOOK_SECRET');
   }
 
   async createPaymentSession(quoteId: string, tenantId: string) {
@@ -184,13 +182,16 @@ export class PaymentService {
       });
 
       // Relay payment event to Dhanam for unified revenue reporting
-      this.relayPaymentToDhanam({
+      this.dhanamRelay.relay('payment.succeeded', {
+        tenantId,
         quoteId: order.quoteId,
-        orderId: order.id,
         amount: Number(order.totalAmount),
         currency: order.currency,
-        tenantId,
-      }).catch(() => {}); // fire-and-forget
+        metadata: { orderId: order.id },
+      });
+
+      // Notify Yantra4D if the quote originated from there (fire-and-forget)
+      await this.notifyYantra4dIfApplicable(order.quoteId, tenantId, 'quote.completed');
     }
   }
 
@@ -338,52 +339,43 @@ export class PaymentService {
   }
 
   /**
-   * Fire-and-forget billing event relay to Dhanam for unified revenue reporting.
-   * Non-blocking — failures are logged but never thrown.
+   * If the quote originated from Yantra4D, fire a webhook notification.
+   * This is fire-and-forget — errors are logged but never propagated.
    */
-  private async relayPaymentToDhanam(event: {
-    quoteId: string;
-    orderId?: string;
-    amount: number;
-    currency: string;
-    tenantId: string;
-    customerEmail?: string;
-  }): Promise<void> {
-    if (!this.dhanamWebhookUrl) return;
-
+  private async notifyYantra4dIfApplicable(
+    quoteId: string,
+    tenantId: string,
+    eventType: 'quote.completed' | 'quote.approved' | 'quote.cancelled',
+  ): Promise<void> {
     try {
-      const payload = JSON.stringify({
-        source: 'cotiza-studio',
-        event_type: 'payment.succeeded',
-        data: event,
+      const quote = await this.prisma.quote.findFirst({
+        where: { id: quoteId, tenantId },
+      });
+
+      if (!quote) return;
+
+      const metadata = quote.metadata as Record<string, unknown> | null;
+      if (!this.yantra4dWebhook.isYantra4dQuote(metadata)) return;
+
+      const totals = (quote.totals as Record<string, unknown>) || {};
+
+      await this.yantra4dWebhook.notify({
+        event_type: eventType,
+        quote_id: quote.id,
+        quote_number: quote.number,
+        project_slug: this.yantra4dWebhook.getProjectSlug(metadata!),
+        status: quote.status,
+        total_amount: Number(totals.grandTotal || quote.totalPrice || 0),
+        currency: quote.currency,
         timestamp: new Date().toISOString(),
       });
-
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      if (this.dhanamWebhookSecret) {
-        const signature = createHmac('sha256', this.dhanamWebhookSecret)
-          .update(payload)
-          .digest('hex');
-        headers['X-Cotiza-Signature'] = signature;
-      }
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-      await fetch(this.dhanamWebhookUrl, {
-        method: 'POST',
-        headers,
-        body: payload,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-      this.logger.log(`Billing event relayed to Dhanam for quote ${event.quoteId}`);
     } catch (error) {
-      this.logger.warn(`Failed to relay billing event to Dhanam: ${error.message}`);
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'Failed to notify Yantra4D for quote %s: %s',
+        quoteId,
+        msg,
+      );
     }
   }
 }

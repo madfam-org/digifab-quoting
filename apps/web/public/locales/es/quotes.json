@@ -1,0 +1,110 @@
+{
+  "title": "Mis Cotizaciones",
+  "detail": {
+    "title": "Cotizacion {{number}}",
+    "createdOn": "Creada el {{date}}",
+    "validUntil": "Valida hasta {{date}}",
+    "expired": "Esta cotizacion ha expirado",
+    "items": "Articulos de Cotizacion",
+    "summary": "Resumen",
+    "quantity": "Cant",
+    "unitPrice": "Precio Unitario",
+    "each": "c/u",
+    "leadTime": "{{days}} dias de entrega",
+    "acceptQuote": "Aceptar Cotizacion",
+    "processing": "Procesando...",
+    "downloadPdf": "Descargar PDF",
+    "backToDashboard": "Volver al Panel",
+    "backToQuotes": "Volver a Cotizaciones"
+  },
+  "dfm": {
+    "title": "Analisis de Diseno para Manufactura",
+    "riskScore": "Puntuacion de Riesgo",
+    "noIssues": "No se detectaron problemas de manufactura",
+    "issues": "{{count}} problema(s) encontrado(s)",
+    "severity": {
+      "low": "Bajo",
+      "medium": "Medio",
+      "high": "Alto"
+    }
+  },
+  "pricing": {
+    "subtotal": "Subtotal",
+    "tax": "Impuestos (IVA)",
+    "shipping": "Envio",
+    "discount": "Descuento",
+    "total": "Total"
+  },
+  "history": {
+    "title": "Historial de Cotizaciones",
+    "description": "Ver y gestionar todas tus cotizaciones",
+    "searchPlaceholder": "Buscar por numero de cotizacion...",
+    "filterAll": "Todos los Estados",
+    "filterPending": "Pendientes",
+    "filterAccepted": "Aceptadas",
+    "filterExpired": "Expiradas",
+    "columns": {
+      "quoteNumber": "Cotizacion #",
+      "date": "Fecha",
+      "status": "Estado",
+      "items": "Articulos",
+      "total": "Total",
+      "actions": "Acciones"
+    },
+    "viewDetails": "Ver Detalles",
+    "noQuotes": "No se encontraron cotizaciones",
+    "noQuotesDescription": "Aun no tienes cotizaciones. Crea tu primera para comenzar.",
+    "noMatchingQuotes": "Ninguna cotizacion coincide con tu busqueda o filtro.",
+    "createFirst": "Crea Tu Primera Cotizacion",
+    "loadMore": "Cargar Mas",
+    "loading": "Cargando cotizaciones...",
+    "showing": "Mostrando {{count}} de {{total}} cotizaciones"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Bienvenido de vuelta, {{name}}",
+    "kpi": {
+      "totalQuotes": "Total de Cotizaciones",
+      "pendingQuotes": "Cotizaciones Pendientes",
+      "acceptedQuotes": "Cotizaciones Aceptadas",
+      "totalRevenue": "Ingresos Totales"
+    },
+    "recentQuotes": "Cotizaciones Recientes",
+    "newQuote": "Nueva Cotizacion",
+    "viewAll": "Ver Todas las Cotizaciones",
+    "noQuotes": "Sin cotizaciones aun",
+    "noQuotesDescription": "Crea tu primera cotizacion para comenzar",
+    "createQuote": "Crear Cotizacion"
+  },
+  "status": {
+    "draft": "Borrador",
+    "submitted": "Enviada",
+    "auto_quoted": "Auto Cotizada",
+    "needs_review": "Necesita Revision",
+    "quoted": "Cotizada",
+    "approved": "Aprobada",
+    "ordered": "Ordenada",
+    "in_production": "En Produccion",
+    "qc": "Control de Calidad",
+    "shipped": "Enviada",
+    "closed": "Cerrada",
+    "cancelled": "Cancelada",
+    "rejected": "Rechazada",
+    "expired": "Expirada"
+  },
+  "accept": {
+    "confirmTitle": "Aceptar Cotizacion",
+    "confirmDescription": "Al aceptar esta cotizacion, seras redirigido para completar el pago. Esta accion no se puede deshacer.",
+    "confirm": "Aceptar y Proceder al Pago",
+    "cancel": "Cancelar",
+    "success": "Cotizacion aceptada exitosamente",
+    "error": "No se pudo aceptar la cotizacion. Intenta de nuevo.",
+    "redirecting": "Redirigiendo al checkout..."
+  },
+  "errors": {
+    "loadFailed": "No se pudieron cargar los detalles de la cotizacion",
+    "loadListFailed": "No se pudieron cargar las cotizaciones",
+    "pdfFailed": "No se pudo generar el PDF",
+    "acceptFailed": "No se pudo aceptar la cotizacion"
+  }
+}

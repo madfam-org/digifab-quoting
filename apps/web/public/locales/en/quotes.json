@@ -1,0 +1,110 @@
+{
+  "title": "My Quotes",
+  "detail": {
+    "title": "Quote {{number}}",
+    "createdOn": "Created on {{date}}",
+    "validUntil": "Valid until {{date}}",
+    "expired": "This quote has expired",
+    "items": "Quote Items",
+    "summary": "Summary",
+    "quantity": "Qty",
+    "unitPrice": "Unit Price",
+    "each": "each",
+    "leadTime": "{{days}} days lead time",
+    "acceptQuote": "Accept Quote",
+    "processing": "Processing...",
+    "downloadPdf": "Download PDF",
+    "backToDashboard": "Back to Dashboard",
+    "backToQuotes": "Back to Quotes"
+  },
+  "dfm": {
+    "title": "Design for Manufacturing Analysis",
+    "riskScore": "Risk Score",
+    "noIssues": "No manufacturing issues detected",
+    "issues": "{{count}} issue(s) found",
+    "severity": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    }
+  },
+  "pricing": {
+    "subtotal": "Subtotal",
+    "tax": "Tax (IVA)",
+    "shipping": "Shipping",
+    "discount": "Discount",
+    "total": "Total"
+  },
+  "history": {
+    "title": "Quote History",
+    "description": "View and manage all your quotes",
+    "searchPlaceholder": "Search by quote number...",
+    "filterAll": "All Statuses",
+    "filterPending": "Pending",
+    "filterAccepted": "Accepted",
+    "filterExpired": "Expired",
+    "columns": {
+      "quoteNumber": "Quote #",
+      "date": "Date",
+      "status": "Status",
+      "items": "Items",
+      "total": "Total",
+      "actions": "Actions"
+    },
+    "viewDetails": "View Details",
+    "noQuotes": "No quotes found",
+    "noQuotesDescription": "You don't have any quotes yet. Create your first one to get started.",
+    "noMatchingQuotes": "No quotes match your search or filter criteria.",
+    "createFirst": "Create Your First Quote",
+    "loadMore": "Load More",
+    "loading": "Loading quotes...",
+    "showing": "Showing {{count}} of {{total}} quotes"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back, {{name}}",
+    "kpi": {
+      "totalQuotes": "Total Quotes",
+      "pendingQuotes": "Pending Quotes",
+      "acceptedQuotes": "Accepted Quotes",
+      "totalRevenue": "Total Revenue"
+    },
+    "recentQuotes": "Recent Quotes",
+    "newQuote": "New Quote",
+    "viewAll": "View All Quotes",
+    "noQuotes": "No quotes yet",
+    "noQuotesDescription": "Create your first quote to get started",
+    "createQuote": "Create Quote"
+  },
+  "status": {
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "auto_quoted": "Auto Quoted",
+    "needs_review": "Needs Review",
+    "quoted": "Quoted",
+    "approved": "Approved",
+    "ordered": "Ordered",
+    "in_production": "In Production",
+    "qc": "Quality Check",
+    "shipped": "Shipped",
+    "closed": "Closed",
+    "cancelled": "Cancelled",
+    "rejected": "Rejected",
+    "expired": "Expired"
+  },
+  "accept": {
+    "confirmTitle": "Accept Quote",
+    "confirmDescription": "By accepting this quote, you will be redirected to complete payment. This action cannot be undone.",
+    "confirm": "Accept & Proceed to Payment",
+    "cancel": "Cancel",
+    "success": "Quote accepted successfully",
+    "error": "Failed to accept quote. Please try again.",
+    "redirecting": "Redirecting to checkout..."
+  },
+  "errors": {
+    "loadFailed": "Failed to load quote details",
+    "loadListFailed": "Failed to load quotes",
+    "pdfFailed": "Failed to generate PDF",
+    "acceptFailed": "Failed to accept quote"
+  }
+}

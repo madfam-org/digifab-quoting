@@ -45,6 +45,12 @@ export function Navbar() {
                     {t('nav.dashboard')}
                   </Link>
                   <Link
+                    href="/quotes"
+                    className="text-sm font-medium text-gray-600 hover:text-gray-900"
+                  >
+                    {t('nav.quotes')}
+                  </Link>
+                  <Link
                     href="/quote/new"
                     className="text-sm font-medium text-gray-600 hover:text-gray-900"
                   >

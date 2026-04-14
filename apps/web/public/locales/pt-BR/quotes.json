@@ -1,0 +1,110 @@
+{
+  "title": "Minhas Cotacoes",
+  "detail": {
+    "title": "Cotacao {{number}}",
+    "createdOn": "Criada em {{date}}",
+    "validUntil": "Valida ate {{date}}",
+    "expired": "Esta cotacao expirou",
+    "items": "Itens da Cotacao",
+    "summary": "Resumo",
+    "quantity": "Qtd",
+    "unitPrice": "Preco Unitario",
+    "each": "cada",
+    "leadTime": "{{days}} dias de entrega",
+    "acceptQuote": "Aceitar Cotacao",
+    "processing": "Processando...",
+    "downloadPdf": "Baixar PDF",
+    "backToDashboard": "Voltar ao Painel",
+    "backToQuotes": "Voltar as Cotacoes"
+  },
+  "dfm": {
+    "title": "Analise de Design para Manufatura",
+    "riskScore": "Pontuacao de Risco",
+    "noIssues": "Nenhum problema de manufatura detectado",
+    "issues": "{{count}} problema(s) encontrado(s)",
+    "severity": {
+      "low": "Baixo",
+      "medium": "Medio",
+      "high": "Alto"
+    }
+  },
+  "pricing": {
+    "subtotal": "Subtotal",
+    "tax": "Impostos (IVA)",
+    "shipping": "Frete",
+    "discount": "Desconto",
+    "total": "Total"
+  },
+  "history": {
+    "title": "Historico de Cotacoes",
+    "description": "Visualize e gerencie todas as suas cotacoes",
+    "searchPlaceholder": "Buscar por numero de cotacao...",
+    "filterAll": "Todos os Status",
+    "filterPending": "Pendentes",
+    "filterAccepted": "Aceitas",
+    "filterExpired": "Expiradas",
+    "columns": {
+      "quoteNumber": "Cotacao #",
+      "date": "Data",
+      "status": "Status",
+      "items": "Itens",
+      "total": "Total",
+      "actions": "Acoes"
+    },
+    "viewDetails": "Ver Detalhes",
+    "noQuotes": "Nenhuma cotacao encontrada",
+    "noQuotesDescription": "Voce ainda nao tem cotacoes. Crie a primeira para comecar.",
+    "noMatchingQuotes": "Nenhuma cotacao corresponde a sua busca ou filtro.",
+    "createFirst": "Crie Sua Primeira Cotacao",
+    "loadMore": "Carregar Mais",
+    "loading": "Carregando cotacoes...",
+    "showing": "Mostrando {{count}} de {{total}} cotacoes"
+  },
+  "dashboard": {
+    "title": "Painel",
+    "welcome": "Bem-vindo de volta, {{name}}",
+    "kpi": {
+      "totalQuotes": "Total de Cotacoes",
+      "pendingQuotes": "Cotacoes Pendentes",
+      "acceptedQuotes": "Cotacoes Aceitas",
+      "totalRevenue": "Receita Total"
+    },
+    "recentQuotes": "Cotacoes Recentes",
+    "newQuote": "Nova Cotacao",
+    "viewAll": "Ver Todas as Cotacoes",
+    "noQuotes": "Sem cotacoes ainda",
+    "noQuotesDescription": "Crie sua primeira cotacao para comecar",
+    "createQuote": "Criar Cotacao"
+  },
+  "status": {
+    "draft": "Rascunho",
+    "submitted": "Enviada",
+    "auto_quoted": "Auto Cotada",
+    "needs_review": "Necessita Revisao",
+    "quoted": "Cotada",
+    "approved": "Aprovada",
+    "ordered": "Pedida",
+    "in_production": "Em Producao",
+    "qc": "Controle de Qualidade",
+    "shipped": "Enviada",
+    "closed": "Fechada",
+    "cancelled": "Cancelada",
+    "rejected": "Rejeitada",
+    "expired": "Expirada"
+  },
+  "accept": {
+    "confirmTitle": "Aceitar Cotacao",
+    "confirmDescription": "Ao aceitar esta cotacao, voce sera redirecionado para completar o pagamento. Esta acao nao pode ser desfeita.",
+    "confirm": "Aceitar e Prosseguir para Pagamento",
+    "cancel": "Cancelar",
+    "success": "Cotacao aceita com sucesso",
+    "error": "Falha ao aceitar a cotacao. Tente novamente.",
+    "redirecting": "Redirecionando para o checkout..."
+  },
+  "errors": {
+    "loadFailed": "Falha ao carregar detalhes da cotacao",
+    "loadListFailed": "Falha ao carregar cotacoes",
+    "pdfFailed": "Falha ao gerar PDF",
+    "acceptFailed": "Falha ao aceitar a cotacao"
+  }
+}
