@@ -37,6 +37,13 @@ spec:
         - secretRef:
             name: digifab-quoting-secrets
             optional: true
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: NEXT_PUBLIC_API_URL
+          value: "https://api.cotiza.studio"
+        - name: NEXTAUTH_URL
+          value: "https://cotiza.studio"
         resources:
           requests:
             cpu: "100m"
