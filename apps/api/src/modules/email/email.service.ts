@@ -4,6 +4,22 @@ import * as nodemailer from 'nodemailer';
 import { I18nService, Locale } from '../i18n/i18n.service';
 import { PrismaService } from '@/prisma/prisma.service';
 
+/**
+ * Centralized email color palette for Cotiza Studio templates.
+ * Email clients do not support CSS variables, so inline hex is required.
+ * Keep every hex value here so brand changes are a single-file edit.
+ */
+const EMAIL_COLORS = {
+  text: '#333',
+  textFooter: '#586069',
+  border: '#e1e4e8',
+  backgroundFooter: '#f6f8fa',
+  gradientStart: '#667eea',
+  gradientEnd: '#764ba2',
+  button: '#667eea',
+  buttonHover: '#5a67d8',
+} as const;
+
 interface EmailParams {
   [key: string]: string | number;
 }
@@ -248,13 +264,13 @@ export class EmailService {
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.6;
-      color: #333;
+      color: ${EMAIL_COLORS.text};
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
     }
     .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, ${EMAIL_COLORS.gradientStart} 0%, ${EMAIL_COLORS.gradientEnd} 100%);
       color: white;
       padding: 30px;
       border-radius: 10px 10px 0 0;
@@ -263,28 +279,28 @@ export class EmailService {
     .content {
       background: white;
       padding: 30px;
-      border: 1px solid #e1e4e8;
+      border: 1px solid ${EMAIL_COLORS.border};
       border-top: none;
     }
     .footer {
-      background: #f6f8fa;
+      background: ${EMAIL_COLORS.backgroundFooter};
       padding: 20px;
       border-radius: 0 0 10px 10px;
       text-align: center;
       font-size: 12px;
-      color: #586069;
+      color: ${EMAIL_COLORS.textFooter};
     }
     .button {
       display: inline-block;
       padding: 12px 24px;
-      background: #667eea;
+      background: ${EMAIL_COLORS.button};
       color: white;
       text-decoration: none;
       border-radius: 5px;
       margin: 10px 0;
     }
     .button:hover {
-      background: #5a67d8;
+      background: ${EMAIL_COLORS.buttonHover};
     }
   </style>
 </head>

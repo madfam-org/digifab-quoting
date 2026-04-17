@@ -8,6 +8,25 @@ import * as nodemailer from 'nodemailer';
 import { compile } from 'handlebars';
 import { getErrorMessage, toError } from '@/common/utils/error-handling';
 
+/**
+ * Centralized email color palette for notification templates.
+ * Email clients do not support CSS variables, so inline hex is required.
+ * Keep every hex value here so brand changes are a single-file edit.
+ */
+const EMAIL_COLORS = {
+  text: '#333',
+  textFooter: '#6c757d',
+  backgroundLight: '#f8f9fa',
+  border: '#e9ecef',
+  // Per-template header backgrounds
+  quoteReadyHeader: '#f8f9fa',
+  quoteAcceptedHeader: '#28a745',
+  quoteExpiredHeader: '#ffc107',
+  orderShippedHeader: '#17a2b8',
+  // Shared button / accent
+  button: '#007bff',
+} as const;
+
 interface EmailResult {
   messageId: string;
   accepted: string[];
@@ -155,25 +174,25 @@ export class EmailNotificationProcessor {
         <html>
         <head>
           <style>
-            body { font-family: Arial, sans-serif; color: #333; }
+            body { font-family: Arial, sans-serif; color: ${EMAIL_COLORS.text}; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
+            .header { background-color: ${EMAIL_COLORS.quoteReadyHeader}; padding: 20px; text-align: center; }
             .content { padding: 20px; }
-            .button { 
-              display: inline-block; 
-              padding: 12px 24px; 
-              background-color: #007bff; 
-              color: white; 
-              text-decoration: none; 
-              border-radius: 4px; 
+            .button {
+              display: inline-block;
+              padding: 12px 24px;
+              background-color: ${EMAIL_COLORS.button};
+              color: white;
+              text-decoration: none;
+              border-radius: 4px;
             }
-            .footer { 
-              margin-top: 40px; 
-              padding-top: 20px; 
-              border-top: 1px solid #e9ecef; 
-              text-align: center; 
-              color: #6c757d; 
-              font-size: 14px; 
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid ${EMAIL_COLORS.border};
+              text-align: center;
+              color: ${EMAIL_COLORS.textFooter};
+              font-size: 14px;
             }
           </style>
         </head>
@@ -211,23 +230,23 @@ export class EmailNotificationProcessor {
         <html>
         <head>
           <style>
-            body { font-family: Arial, sans-serif; color: #333; }
+            body { font-family: Arial, sans-serif; color: ${EMAIL_COLORS.text}; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #28a745; color: white; padding: 20px; text-align: center; }
+            .header { background-color: ${EMAIL_COLORS.quoteAcceptedHeader}; color: white; padding: 20px; text-align: center; }
             .content { padding: 20px; }
-            .order-details { 
-              background-color: #f8f9fa; 
-              padding: 15px; 
-              border-radius: 4px; 
-              margin: 20px 0; 
+            .order-details {
+              background-color: ${EMAIL_COLORS.backgroundLight};
+              padding: 15px;
+              border-radius: 4px;
+              margin: 20px 0;
             }
-            .footer { 
-              margin-top: 40px; 
-              padding-top: 20px; 
-              border-top: 1px solid #e9ecef; 
-              text-align: center; 
-              color: #6c757d; 
-              font-size: 14px; 
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid ${EMAIL_COLORS.border};
+              text-align: center;
+              color: ${EMAIL_COLORS.textFooter};
+              font-size: 14px;
             }
           </style>
         </head>
@@ -263,25 +282,25 @@ export class EmailNotificationProcessor {
         <html>
         <head>
           <style>
-            body { font-family: Arial, sans-serif; color: #333; }
+            body { font-family: Arial, sans-serif; color: ${EMAIL_COLORS.text}; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #ffc107; color: #333; padding: 20px; text-align: center; }
+            .header { background-color: ${EMAIL_COLORS.quoteExpiredHeader}; color: ${EMAIL_COLORS.text}; padding: 20px; text-align: center; }
             .content { padding: 20px; }
-            .button { 
-              display: inline-block; 
-              padding: 12px 24px; 
-              background-color: #007bff; 
-              color: white; 
-              text-decoration: none; 
-              border-radius: 4px; 
+            .button {
+              display: inline-block;
+              padding: 12px 24px;
+              background-color: ${EMAIL_COLORS.button};
+              color: white;
+              text-decoration: none;
+              border-radius: 4px;
             }
-            .footer { 
-              margin-top: 40px; 
-              padding-top: 20px; 
-              border-top: 1px solid #e9ecef; 
-              text-align: center; 
-              color: #6c757d; 
-              font-size: 14px; 
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid ${EMAIL_COLORS.border};
+              text-align: center;
+              color: ${EMAIL_COLORS.textFooter};
+              font-size: 14px;
             }
           </style>
         </head>
@@ -312,31 +331,31 @@ export class EmailNotificationProcessor {
         <html>
         <head>
           <style>
-            body { font-family: Arial, sans-serif; color: #333; }
+            body { font-family: Arial, sans-serif; color: ${EMAIL_COLORS.text}; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #17a2b8; color: white; padding: 20px; text-align: center; }
+            .header { background-color: ${EMAIL_COLORS.orderShippedHeader}; color: white; padding: 20px; text-align: center; }
             .content { padding: 20px; }
-            .tracking-info { 
-              background-color: #f8f9fa; 
-              padding: 15px; 
-              border-radius: 4px; 
-              margin: 20px 0; 
+            .tracking-info {
+              background-color: ${EMAIL_COLORS.backgroundLight};
+              padding: 15px;
+              border-radius: 4px;
+              margin: 20px 0;
             }
-            .button { 
-              display: inline-block; 
-              padding: 12px 24px; 
-              background-color: #007bff; 
-              color: white; 
-              text-decoration: none; 
-              border-radius: 4px; 
+            .button {
+              display: inline-block;
+              padding: 12px 24px;
+              background-color: ${EMAIL_COLORS.button};
+              color: white;
+              text-decoration: none;
+              border-radius: 4px;
             }
-            .footer { 
-              margin-top: 40px; 
-              padding-top: 20px; 
-              border-top: 1px solid #e9ecef; 
-              text-align: center; 
-              color: #6c757d; 
-              font-size: 14px; 
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid ${EMAIL_COLORS.border};
+              text-align: center;
+              color: ${EMAIL_COLORS.textFooter};
+              font-size: 14px;
             }
           </style>
         </head>
