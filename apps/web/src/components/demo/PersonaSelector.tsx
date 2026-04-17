@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Wrench, Building2, Lightbulb, GraduationCap, Briefcase } from 'lucide-react';
 
@@ -19,6 +20,18 @@ interface Persona {
     step3: string;
     step4: string;
   };
+}
+
+const PERSONA_DESTINATIONS: Record<string, string> = {
+  'diy-maker': '/try?persona=diy-maker',
+  'shop-owner': '/auth/register?persona=shop-owner',
+  'product-designer': '/quote/new?persona=product-designer',
+  'procurement': '/quote/new?persona=procurement&mode=rfq',
+  'educator': '/auth/register?persona=educator',
+};
+
+function getPersonaDestination(personaId: string): string {
+  return PERSONA_DESTINATIONS[personaId] ?? `/quote/new?persona=${personaId}`;
 }
 
 const PERSONAS: Persona[] = [
@@ -161,6 +174,11 @@ const PERSONAS: Persona[] = [
 
 export function PersonaSelector() {
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handlePersonaCta = (personaId: string) => {
+    router.push(getPersonaDestination(personaId));
+  };
 
   return (
     <div className="space-y-8">
@@ -201,11 +219,18 @@ export function PersonaSelector() {
             </div>
 
             {/* CTA */}
-            <button className={`w-full py-2 px-4 rounded-lg font-semibold transition-all ${
-              selectedPersona === persona.id
-                ? `bg-gradient-to-r ${persona.color} text-white`
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePersonaCta(persona.id);
+              }}
+              className={`w-full py-2 px-4 rounded-lg font-semibold transition-all ${
+                selectedPersona === persona.id
+                  ? `bg-gradient-to-r ${persona.color} text-white`
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
               {persona.cta}
             </button>
 
@@ -292,7 +317,11 @@ export function PersonaSelector() {
 
                   {/* Action Button */}
                   <div className="mt-8">
-                    <button className={`w-full py-4 px-6 rounded-xl font-bold text-lg text-white bg-gradient-to-r ${persona.color} hover:scale-105 transition-transform shadow-lg`}>
+                    <button
+                      type="button"
+                      onClick={() => handlePersonaCta(persona.id)}
+                      className={`w-full py-4 px-6 rounded-xl font-bold text-lg text-white bg-gradient-to-r ${persona.color} hover:scale-105 transition-transform shadow-lg`}
+                    >
                       {persona.cta} - Free Trial
                     </button>
                     <p className="text-center text-sm text-gray-500 mt-2">
