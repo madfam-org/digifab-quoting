@@ -16,9 +16,9 @@ images:
   newName: ghcr.io/madfam-org/digifab-quoting/admin
 - name: ghcr.io/madfam-org/digifab-quoting/api
   newName: ghcr.io/madfam-org/digifab-quoting/api
-- digest: sha256:c6e94ffe9a34926a47bf2741906b4ac00c4a80af93d93e63a3a8957ddb0b67b0
+- digest: sha256:d0e947d2edc943eb08945eff03152d6c82dd16681a011d1c163ef26c40669074
   name: ghcr.io/madfam-org/digifab-quoting/web
   newName: ghcr.io/madfam-org/digifab-quoting/web
-- digest: sha256:03a0d06faf0c3be4706ee95506b091a671b226904aa18b3ace8af4f5b8c312d0
+- digest: sha256:de19f250f7be2a1df5b48259cceb1af089a131d0c9ae0d0c73c6b5cd81ef0c71
   name: ghcr.io/madfam-org/digifab-quoting/worker
   newName: ghcr.io/madfam-org/digifab-quoting/worker
