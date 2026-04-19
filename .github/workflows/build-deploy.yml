@@ -29,12 +29,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.MADFAM_BOT_PAT }}
 
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+      # Log in to Docker Hub BEFORE buildx so buildx inherits auth config
+      # (avoids anonymous rate-limit 429 pulling base images on ARC runners)
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         continue-on-error: true
@@ -43,6 +39,32 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
+      # Pin cosign-installer action + cosign release for reproducible, ARC-compatible builds
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.7.0
+        with:
+          cosign-release: v2.4.3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push api
+        uses: docker/build-push-action@v5
+        id: build-api
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: ghcr.io/madfam-org/digifab-quoting/api:${{ github.sha }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+      - name: Sign api image with cosign
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          cosign sign --yes ghcr.io/madfam-org/digifab-quoting/api@${{ steps.build-api.outputs.digest }}
+
       - name: Build and push web
         uses: docker/build-push-action@v5
         id: build-web
@@ -50,9 +72,7 @@ jobs:
           context: .
           file: apps/web/Dockerfile
           push: true
-          tags: |
-            ghcr.io/madfam-org/digifab-quoting/web:${{ github.sha }}
-            ghcr.io/madfam-org/digifab-quoting/web:latest
+          tags: ghcr.io/madfam-org/digifab-quoting/web:${{ github.sha }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
@@ -69,9 +89,7 @@ jobs:
           context: .
           file: apps/worker/Dockerfile
           push: true
-          tags: |
-            ghcr.io/madfam-org/digifab-quoting/worker:${{ github.sha }}
-            ghcr.io/madfam-org/digifab-quoting/worker:latest
+          tags: ghcr.io/madfam-org/digifab-quoting/worker:${{ github.sha }}
           cache-from: type=gha,scope=worker
           cache-to: type=gha,mode=max,scope=worker
 
@@ -89,6 +107,7 @@ jobs:
       - name: Update image digests
         working-directory: infra/k8s/production
         run: |
+          kustomize edit set image ghcr.io/madfam-org/digifab-quoting/api=ghcr.io/madfam-org/digifab-quoting/api@${{ steps.build-api.outputs.digest }}
           kustomize edit set image ghcr.io/madfam-org/digifab-quoting/web=ghcr.io/madfam-org/digifab-quoting/web@${{ steps.build-web.outputs.digest }}
           kustomize edit set image ghcr.io/madfam-org/digifab-quoting/worker=ghcr.io/madfam-org/digifab-quoting/worker@${{ steps.build-worker.outputs.digest }}
 
