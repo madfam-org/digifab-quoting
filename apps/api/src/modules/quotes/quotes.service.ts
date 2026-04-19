@@ -538,7 +538,7 @@ export class QuotesService {
   //  - Dhanam   — milestone invoices (services-mode MILESTONE items)
   //  - Pravara  — MES dispatch (FAB items only)
   // ---------------------------------------------------------------
-  async handleOrdered(tenantId: string, quoteId: string): Promise<void> {
+  async handleOrdered(tenantId: string, quoteId: string, orderId?: string): Promise<void> {
     let quote: PrismaQuote & { items: PrismaQuoteItem[] };
     try {
       const loaded = await this.prisma.quote.findFirst({
@@ -616,6 +616,7 @@ export class QuotesService {
       customerId: quote.customerId ?? '',
       currency: quote.currency,
       engagementId: engagementId ?? undefined,
+      orderId,
       items: milestoneItems,
     });
 

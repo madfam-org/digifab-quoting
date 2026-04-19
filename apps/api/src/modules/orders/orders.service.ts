@@ -138,7 +138,9 @@ export class OrdersService {
     // invoicing, MES dispatch) — fire-and-forget, never blocks the
     // order-creation response. handleOrdered internally uses
     // Promise.allSettled so one failing integration can't affect others.
-    void this.quotesService.handleOrdered(tenantId, quoteId);
+    // orderId is stamped onto Stripe PI metadata so Dhanam's ecosystem
+    // extractor can pass it through to PhyneCRM's engagement timeline.
+    void this.quotesService.handleOrdered(tenantId, quoteId, order.id);
 
     this.logger.log(`Created order ${order.orderNumber} from quote ${quoteId}`);
     return order;

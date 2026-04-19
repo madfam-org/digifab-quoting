@@ -39,6 +39,7 @@ function sampleContext(
     customerId: 'user-xyz',
     currency: 'MXN',
     engagementId: 'eng-tablaco-001',
+    orderId: 'order-xyz-001',
     items: [
       {
         quoteItemId: 'item-1',
@@ -139,6 +140,7 @@ describe('DhanamMilestoneService', () => {
           cotiza_quote_item_id: 'item-1',
           milestone_id: 'ms-1',
           engagement_id: 'eng-tablaco-001',
+          order_id: 'order-xyz-001',
           source: 'cotiza',
         },
       });
@@ -216,6 +218,28 @@ describe('DhanamMilestoneService', () => {
       await service.createInvoicesForMilestones(ctx);
       const init = fetchSpy.mock.calls[0][1] as RequestInit;
       expect(JSON.parse(init.body as string).currency).toBe('MXN');
+    });
+
+    it('omits order_id when ctx.orderId is absent (backward compat for pre-order flows)', async () => {
+      const ctx = sampleContext({ orderId: undefined });
+      await service.createInvoicesForMilestones(ctx);
+      const body = JSON.parse(
+        (fetchSpy.mock.calls[0][1] as RequestInit).body as string,
+      );
+      // undefined fields survive JSON.stringify as missing keys; assert shape.
+      expect(body.metadata.order_id).toBeUndefined();
+      // But the other ecosystem keys are still there.
+      expect(body.metadata.engagement_id).toBe('eng-tablaco-001');
+      expect(body.metadata.cotiza_quote_id).toBe('quote-abc');
+    });
+
+    it('stamps order_id onto every milestone invoice when provided', async () => {
+      const ctx = sampleContext({ orderId: 'order-tablaco-phy-001' });
+      await service.createInvoicesForMilestones(ctx);
+      for (const call of fetchSpy.mock.calls) {
+        const body = JSON.parse((call[1] as RequestInit).body as string);
+        expect(body.metadata.order_id).toBe('order-tablaco-phy-001');
+      }
     });
   });
 });
