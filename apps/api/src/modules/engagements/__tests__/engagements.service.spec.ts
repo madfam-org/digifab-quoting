@@ -167,5 +167,57 @@ describe('EngagementsService', () => {
         service.listQuotesForEngagement('t1', 'pcrm_missing'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
+
+    it('orders quotes by createdAt asc + scopes to caller tenant', async () => {
+      // Portal renders oldest-first so the services + fab card pairs keep
+      // a stable timeline.
+      prisma.engagement.findFirst.mockResolvedValue({ id: 'eng_1' });
+      prisma.quote.findMany.mockResolvedValue([]);
+      await service.listQuotesForEngagement('t1', 'pcrm_1');
+      const call = prisma.quote.findMany.mock.calls[0][0];
+      expect(call.orderBy).toEqual({ createdAt: 'asc' });
+      expect(call.where).toEqual({ engagementId: 'eng_1', tenantId: 't1' });
+    });
+
+    it('preserves empty buckets (no quoteType ⇒ empty grouped object)', async () => {
+      prisma.engagement.findFirst.mockResolvedValue({ id: 'eng_1' });
+      prisma.quote.findMany.mockResolvedValue([]);
+      const grouped = await service.listQuotesForEngagement('t1', 'pcrm_1');
+      expect(grouped).toEqual({});
+    });
+  });
+
+  describe('ensureProjection — concurrent-create race tolerance', () => {
+    it('two parallel callers for the same id both return an id; second falls through to upsert (idempotent on the unique constraint)', async () => {
+      // First caller: sees no existing row → upserts → returns new id.
+      // Second caller: arrives after the first findUnique, before the row
+      // is visible to it (simulated by the second findUnique returning
+      // null) → also upserts. Because phynecrmEngagementId is UNIQUE and
+      // we use upsert (not create), the DB-level race resolves to the
+      // same canonical row on both sides.
+      prisma.engagement.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
+      prisma.engagement.upsert
+        .mockResolvedValueOnce({ id: 'eng_race_winner' })
+        .mockResolvedValueOnce({ id: 'eng_race_winner' });
+
+      const [a, b] = await Promise.all([
+        service.ensureProjection('t1', 'pcrm_race'),
+        service.ensureProjection('t1', 'pcrm_race'),
+      ]);
+
+      expect(a).toBe('eng_race_winner');
+      expect(b).toBe('eng_race_winner');
+      // Both callers reach the upsert path — this is expected; upsert is
+      // the race guard at the DB layer. The unique index on
+      // phynecrmEngagementId makes the second upsert a no-op update.
+      expect(prisma.engagement.upsert).toHaveBeenCalledTimes(2);
+      // And neither call clobbers lastSyncedAt (synced=false ⇒ undefined
+      // in update to preserve prior webhook stamps).
+      for (const [args] of prisma.engagement.upsert.mock.calls) {
+        expect((args as any).update.lastSyncedAt).toBeUndefined();
+      }
+    });
   });
 });
