@@ -426,8 +426,9 @@ export class QuotesService {
     });
 
     // Fire-and-forget: announce the approval into the client's PhyneCRM
-    // portal timeline. Failures never block the approve flow; the
-    // service logs its own errors.
+    // portal timeline + push the signed-proposal PDF as an artifact so
+    // the client can open it from the portal. Failures never block the
+    // approve flow; the integration service logs its own errors.
     const engagementId = this.phynecrmEngagement.getEngagementId(
       updatedQuote.metadata as Record<string, unknown> | null,
     );
@@ -436,6 +437,7 @@ export class QuotesService {
         (updatedQuote as unknown as { quoteType?: string }).quoteType === QuoteType.SERVICES
           ? 'services'
           : 'fabrication';
+
       void this.phynecrmEngagement.recordEvent({
         engagement_id: engagementId,
         source: 'cotiza',
@@ -452,10 +454,42 @@ export class QuotesService {
           currency: updatedQuote.currency,
         },
       });
+
+      // Push the signed-proposal artifact. generatePdf() either returns
+      // a fresh 7-day presigned S3 URL (when an existing PDF is on hand)
+      // or a placeholder status URL (when generation is queued). Either
+      // way, surfacing it in the portal is non-blocking.
+      void this.pushProposalArtifact(tenantId, engagementId, updatedQuote);
     }
 
     // Return just the quote for now - payment integration will be handled separately
     return { quote: updatedQuote };
+  }
+
+  private async pushProposalArtifact(
+    tenantId: string,
+    engagementId: string,
+    quote: PrismaQuote,
+  ): Promise<void> {
+    try {
+      const { url } = await this.generatePdf(tenantId, quote.id);
+      await this.phynecrmEngagement.recordArtifact({
+        engagement_id: engagementId,
+        type: 'signed_proposal',
+        entity_type: 'quote',
+        entity_id: quote.id,
+        url,
+        title: `Proposal ${quote.number}`,
+        metadata: {
+          quote_id: quote.id,
+          quote_number: quote.number,
+          currency: quote.currency,
+        },
+      });
+    } catch {
+      // Non-blocking. Staff can add the PDF to the engagement manually
+      // via engagements.addArtifact if the auto-push fails.
+    }
   }
 
   @CacheInvalidate('quote:detail:*')

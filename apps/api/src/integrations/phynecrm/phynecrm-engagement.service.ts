@@ -30,6 +30,16 @@ export interface EngagementEventPayload {
   metadata?: Record<string, unknown>;
 }
 
+export interface EngagementArtifactPayload {
+  engagement_id: string;
+  type: 'quote' | 'signed_proposal' | 'invoice' | 'deliverable' | 'nft_receipt';
+  entity_type?: 'quote' | 'order' | 'external_reference';
+  entity_id?: string;
+  url?: string;
+  title?: string;
+  metadata?: Record<string, unknown>;
+}
+
 @Injectable()
 export class PhyneCrmEngagementService {
   private readonly logger = new Logger(PhyneCrmEngagementService.name);
@@ -55,14 +65,35 @@ export class PhyneCrmEngagementService {
   }
 
   async recordEvent(payload: EngagementEventPayload): Promise<void> {
+    return this.post('/api/v1/engagements/events', payload, {
+      engagement_id: payload.engagement_id,
+      event_type: payload.event_type,
+    });
+  }
+
+  // Push an artifact (signed proposal PDF, invoice, deliverable link,
+  // NFT receipt, …) to the engagement so it shows up in the client
+  // portal. Called from approve() after the PDF is generated.
+  async recordArtifact(payload: EngagementArtifactPayload): Promise<void> {
+    return this.post('/api/v1/engagements/artifacts', payload, {
+      engagement_id: payload.engagement_id,
+      event_type: `artifact:${payload.type}`,
+    });
+  }
+
+  private async post(
+    path: string,
+    payload: EngagementEventPayload | EngagementArtifactPayload,
+    logCtx: { engagement_id: string; event_type: string },
+  ): Promise<void> {
     if (!this.apiUrl || !this.secret) {
       this.logger.debug(
-        'PhyneCRM engagement event skipped: PHYNECRM_API_URL or PHYNECRM_ENGAGEMENT_SECRET not configured',
+        'PhyneCRM webhook skipped: PHYNECRM_API_URL or PHYNECRM_ENGAGEMENT_SECRET not configured',
       );
       return;
     }
 
-    const url = `${this.apiUrl.replace(/\/$/, '')}/api/v1/engagements/events`;
+    const url = `${this.apiUrl.replace(/\/$/, '')}${path}`;
     const body = JSON.stringify(payload);
     const timestamp = new Date().toISOString();
     const signature = this.sign(body);
@@ -86,24 +117,27 @@ export class PhyneCrmEngagementService {
 
       if (!response.ok) {
         this.logger.warn(
-          'PhyneCRM engagement webhook returned %d for engagement=%s event=%s',
+          'PhyneCRM webhook %s returned %d for engagement=%s event=%s',
+          path,
           response.status,
-          payload.engagement_id,
-          payload.event_type,
+          logCtx.engagement_id,
+          logCtx.event_type,
         );
       } else {
         this.logger.log(
-          'PhyneCRM engagement webhook delivered: engagement=%s event=%s',
-          payload.engagement_id,
-          payload.event_type,
+          'PhyneCRM webhook %s delivered: engagement=%s event=%s',
+          path,
+          logCtx.engagement_id,
+          logCtx.event_type,
         );
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        'PhyneCRM engagement webhook failed (engagement=%s event=%s): %s',
-        payload.engagement_id,
-        payload.event_type,
+        'PhyneCRM webhook %s failed (engagement=%s event=%s): %s',
+        path,
+        logCtx.engagement_id,
+        logCtx.event_type,
         msg,
       );
     }
