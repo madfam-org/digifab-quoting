@@ -22,6 +22,10 @@ export interface TenantFeatures {
   euRegion: boolean;
   whatsappNotifications: boolean;
   bankTransferReconciliation: boolean;
+  // Gates services-mode quoting (hourly / fixed-fee / milestone).
+  // Internal-only today (MADFAM tenant). Will be exposed to Cotiza
+  // tenants once the services flow is proven.
+  servicesQuotes: boolean;
   [key: string]: boolean;
 }
 

@@ -2,6 +2,7 @@
 export * from './types/common';
 export * from './types/pricing';
 export * from './types/quote';
+export * from './types/services-quote';
 export * from './types/tenant';
 export * from './types/enums';
 export * from './types/geo';
