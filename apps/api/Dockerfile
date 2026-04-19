@@ -43,7 +43,11 @@ COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 
-RUN pnpm install --frozen-lockfile --prod
+# `--ignore-scripts` because root package.json's postinstall calls
+# `turbo run db:generate`; turbo is a devDep (skipped under --prod) and
+# Prisma generate already ran in the builder stage — the runtime + client
+# are layered below from /app/deploy/api-prisma.
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Layer the Prisma runtime + generated client into the production
 # node_modules tree at the location NestJS runtime will require() from.
