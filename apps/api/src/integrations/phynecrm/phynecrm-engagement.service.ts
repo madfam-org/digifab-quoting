@@ -83,7 +83,7 @@ export class PhyneCrmEngagementService {
 
   private async post(
     path: string,
-    payload: Record<string, unknown>,
+    payload: EngagementEventPayload | EngagementArtifactPayload,
     logCtx: { engagement_id: string; event_type: string },
   ): Promise<void> {
     if (!this.apiUrl || !this.secret) {
