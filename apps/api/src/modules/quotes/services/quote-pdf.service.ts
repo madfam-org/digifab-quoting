@@ -111,7 +111,9 @@ export class QuotePdfService {
         const chunks: Buffer[] = [];
 
         doc.on('data', (chunk) => chunks.push(chunk));
-        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        // Node 22 narrowed Buffer.concat's overload to Uint8Array[]; Buffer
+        // extends Uint8Array so the map is a zero-copy cast.
+        doc.on('end', () => resolve(Buffer.concat(chunks.map((c) => new Uint8Array(c)))));
         doc.on('error', reject);
 
         // Header

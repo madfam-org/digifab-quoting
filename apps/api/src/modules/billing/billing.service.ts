@@ -116,10 +116,11 @@ export class BillingService {
       customerId,
       customerEmail: tenant.email,
       quoteId,
-      amount: Math.round(quote.totalPrice * 100), // Convert to cents/centavos
+      // Decimal (Prisma) -> number before arithmetic; schema is `totalPrice: Decimal?`.
+      amount: Math.round(Number(quote.totalPrice ?? 0) * 100), // Convert to cents/centavos
       currency: countryCode === 'MX' ? 'MXN' : 'USD',
       countryCode,
-      description: `Quote #${quote.quoteNumber}`,
+      description: `Quote #${quote.number}`,
       lineItems: [], // Could populate from quote line items
       successUrl: `${webUrl}/quotes/${quoteId}/success`,
       cancelUrl: `${webUrl}/quotes/${quoteId}`,
@@ -509,10 +510,15 @@ export class BillingService {
           },
         });
 
+        // The Invoice model doesn't have a dedicated `januaInvoiceId` column;
+        // stash the provider reference in metadata alongside any existing keys.
         await this.prisma.invoice.update({
           where: { id: invoice.id },
           data: {
-            januaInvoiceId: januaInvoice.invoiceId,
+            metadata: {
+              ...((invoice.metadata as Record<string, unknown> | null) ?? {}),
+              januaInvoiceId: januaInvoice.invoiceId,
+            },
           },
         });
       } catch (err) {
@@ -644,20 +650,24 @@ export class BillingService {
       return;
     }
 
-    // Create invoice record
+    // Invoice schema uses `totalAmount` (maps to `total`), requires `period` +
+    // `dueDate`, and has no `lineItems` column — fold line-item detail into
+    // metadata JSON.
+    const now = new Date();
     await this.prisma.invoice.create({
       data: {
         tenantId: tenant.id,
-        amount: amount || 0,
+        totalAmount: amount || 0,
         currency: currency || 'USD',
         status: 'paid',
-        paidAt: new Date(),
-        lineItems: [
-          {
-            description: `Subscription payment via ${provider}`,
-            amount: amount || 0,
-          },
-        ],
+        paidAt: now,
+        period: `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`,
+        dueDate: now,
+        metadata: {
+          lineItems: [
+            { description: `Subscription payment via ${provider}`, amount: amount || 0 },
+          ],
+        },
       },
     });
 
@@ -679,19 +689,25 @@ export class BillingService {
       return;
     }
 
-    // Create failed invoice record
+    // Same schema alignment as `handleJanuaPaymentSucceeded`: totalAmount +
+    // required period/dueDate; lineItems into metadata.
+    const failedAt = new Date();
     await this.prisma.invoice.create({
       data: {
         tenantId: tenant.id,
-        amount: amount || 0,
+        totalAmount: amount || 0,
         currency: currency || 'USD',
         status: 'failed',
-        lineItems: [
-          {
-            description: `Failed payment via ${provider}`,
-            amount: amount || 0,
-          },
-        ],
+        period: `${failedAt.getUTCFullYear()}-${String(failedAt.getUTCMonth() + 1).padStart(2, '0')}`,
+        dueDate: failedAt,
+        metadata: {
+          lineItems: [
+            {
+              description: `Failed payment via ${provider}`,
+              amount: amount || 0,
+            },
+          ],
+        },
       },
     });
 

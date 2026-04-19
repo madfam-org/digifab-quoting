@@ -51,4 +51,11 @@ export type {
   // Search
   MaterialSearchOptions,
   PaginatedResponse,
+  // Intelligence (history, vendor compare, regional compare)
+  MaterialPriceHistory,
+  MaterialPriceHistoryPoint,
+  VendorPriceComparison,
+  VendorPriceQuote,
+  RegionalComparison,
+  RegionalPricingEntry,
 } from './types';

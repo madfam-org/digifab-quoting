@@ -9,13 +9,16 @@ import {
   Material,
   MaterialCategory,
   MaterialSearchOptions,
+  MaterialPriceHistory,
   PaginatedResponse,
   QuotePricingParams,
   QuotePricingResult,
   BatchQuotePricingParams,
   BatchQuotePricingResult,
+  RegionalComparison,
   ServicePricing,
   ServiceType,
+  VendorPriceComparison,
 } from './types';
 
 // ============================================================================
@@ -184,6 +187,56 @@ export class ForgesightClient {
     if (options?.material) params.set('material', options.material);
     if (options?.region) params.set('region', options.region);
     return this.request<ServicePricing>(`/api/v1/services/pricing?${params.toString()}`);
+  }
+
+  // -------------------------------------------------------------------------
+  // Intelligence API (history, vendor compare, regional compare)
+  //
+  // These endpoints back the `getMaterialTrends` / `compareVendors` /
+  // `getRegionalPricing` helpers in `modules/pricing/forgesight.service.ts`.
+  // The upstream routes exist only when Forgesight ships its intelligence
+  // tier; callers already handle 404/network errors by falling back to
+  // neutral defaults (empty arrays / nulls), so the signatures are typed
+  // narrowly and the client just forwards the request.
+  // -------------------------------------------------------------------------
+
+  async getMaterialPriceHistory(
+    materialId: string,
+    options?: { days?: number; granularity?: 'hourly' | 'daily' | 'weekly' | 'monthly' },
+  ): Promise<MaterialPriceHistory> {
+    const params = new URLSearchParams();
+    if (options?.days !== undefined) params.set('days', String(options.days));
+    if (options?.granularity) params.set('granularity', options.granularity);
+    const query = params.toString();
+    return this.request<MaterialPriceHistory>(
+      `/api/v1/materials/${encodeURIComponent(materialId)}/price-history${query ? `?${query}` : ''}`,
+    );
+  }
+
+  async compareVendorPrices(
+    materialId: string,
+    options?: { quantity?: number; includeShipping?: boolean; region?: string },
+  ): Promise<VendorPriceComparison> {
+    const params = new URLSearchParams();
+    if (options?.quantity !== undefined) params.set('quantity', String(options.quantity));
+    if (options?.includeShipping !== undefined)
+      params.set('includeShipping', String(options.includeShipping));
+    if (options?.region) params.set('region', options.region);
+    const query = params.toString();
+    return this.request<VendorPriceComparison>(
+      `/api/v1/materials/${encodeURIComponent(materialId)}/vendor-comparison${query ? `?${query}` : ''}`,
+    );
+  }
+
+  async getRegionalComparison(params: {
+    materialId: string;
+    service: ServiceType;
+    regions: string[];
+  }): Promise<RegionalComparison> {
+    return this.request<RegionalComparison>('/api/v1/pricing/regional-comparison', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
   }
 
   // -------------------------------------------------------------------------

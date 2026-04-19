@@ -46,7 +46,10 @@ interface PriceBenchmark {
   recommendation: 'price_increase' | 'maintain' | 'price_decrease';
 }
 
-interface MaterialPriceTrend {
+// Exported so consumers that embed `getMaterialTrends()` results in their own
+// public return signatures (e.g. PricingService.getIntelligencePack) don't
+// trigger TS4053 ("return type uses name ... but cannot be named").
+export interface MaterialPriceTrend {
   materialId: string;
   materialName: string;
   currentPrice: number;
@@ -92,15 +95,18 @@ export class ForgeSightService implements OnModuleInit {
    * Map internal process types to ForgeSight service types
    */
   private mapProcessToService(process: ProcessType): ServiceType {
+    // ForgeSight's ServiceType union is coarser than our internal ProcessType:
+    // MJF/DMLS roll up to 'metal_printing', and 5-axis falls back to 'cnc_milling'
+    // until the upstream catalog adds finer granularity.
     const mapping: Record<string, ServiceType> = {
       FDM: 'fdm_printing',
       SLA: 'sla_printing',
       SLS: 'sls_printing',
-      MJF: 'mjf_printing',
-      DMLS: 'dmls_printing',
+      MJF: 'metal_printing',
+      DMLS: 'metal_printing',
       CNC_MILLING: 'cnc_milling',
       CNC_TURNING: 'cnc_turning',
-      CNC_5AXIS: 'cnc_5axis',
+      CNC_5AXIS: 'cnc_milling',
       LASER_CUTTING: 'laser_cutting',
       SHEET_METAL: 'sheet_metal',
       INJECTION_MOLDING: 'injection_molding',
