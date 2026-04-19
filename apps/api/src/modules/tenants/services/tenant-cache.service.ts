@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CacheService } from '@/modules/redis/cache.service';
 import { Material, Machine } from '@prisma/client';
-import { ProcessType } from '@cotiza/shared';
+import { ProcessType, TenantFeatures } from '@cotiza/shared';
 
 interface TenantConfig {
   id: string;
@@ -71,6 +71,49 @@ export class TenantCacheService {
     await this.cacheService.set(cacheKey, config, this.CACHE_TTL);
 
     return config;
+  }
+
+  // Typed readthrough for Tenant.features. Use this for feature flag
+  // checks (e.g. servicesQuotes) instead of pulling the raw JSON.
+  // Returns an object with all flags defaulted to false — callers can
+  // do plain boolean reads without undefined checks.
+  async getTenantFeatures(tenantId: string): Promise<TenantFeatures> {
+    const cacheKey = `tenant:features:${tenantId}`;
+
+    const cached = await this.cacheService.get<TenantFeatures>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { features: true },
+    });
+
+    if (!tenant) {
+      throw new Error(`Tenant ${tenantId} not found`);
+    }
+
+    const raw = (tenant.features as Record<string, unknown>) || {};
+    const features: TenantFeatures = {
+      supplierPortal: Boolean(raw.supplierPortal),
+      dynamicScheduling: Boolean(raw.dynamicScheduling),
+      euRegion: Boolean(raw.euRegion),
+      whatsappNotifications: Boolean(raw.whatsappNotifications),
+      bankTransferReconciliation: Boolean(raw.bankTransferReconciliation),
+      servicesQuotes: Boolean(raw.servicesQuotes),
+    };
+
+    // Forward any extra flags untouched so tenants can opt into beta
+    // features without requiring a shape change.
+    for (const [k, v] of Object.entries(raw)) {
+      if (!(k in features)) {
+        features[k] = Boolean(v);
+      }
+    }
+
+    await this.cacheService.set(cacheKey, features, this.CACHE_TTL);
+    return features;
   }
 
   async getMaterialsByProcess(tenantId: string, process: ProcessType): Promise<Material[]> {

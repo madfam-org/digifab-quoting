@@ -202,6 +202,10 @@ model Quote {
   tenantId       String
   customerId     String?
   number         String    @unique
+  // "fab" (default) or "services". Services mode is feature-flagged
+  // per-tenant via Tenant.features.servicesQuotes. Existing fab quotes
+  // default to "fab" so the migration is strictly additive.
+  quoteType      String    @default("fab")
   status         String    @default("draft")
   currency       Currency  @default(MXN)
   exchangeRate   Decimal?  @db.Decimal(12, 6) // Rate used at quote creation
@@ -257,6 +261,10 @@ model QuoteItem {
   selections     Json
   costBreakdown  Json?
   sustainability Json?
+  // Services-mode line details (hourly / fixed-fee / milestone).
+  // Null for fab-mode items. Shape validated by
+  // servicesQuoteItemDetailsSchema in @cotiza/shared.
+  servicesDetails Json?
   flags          String[] @default([])
   metadata       Json     @default("{}")
   createdAt      DateTime @default(now())

@@ -1,3 +1,28 @@
+// Distinguishes fabrication quotes (material + machine time pricing)
+// from internal-only services quotes (hourly/fixed-fee/milestone).
+// Externally, only FAB is exposed; SERVICES is gated per-tenant via
+// Tenant.features.services_quotes.
+export enum QuoteType {
+  FAB = 'fab',
+  SERVICES = 'services',
+}
+
+// Billable shape for a services quote line.
+export enum ServicesBillableType {
+  HOURLY = 'hourly',
+  FIXED_FEE = 'fixed_fee',
+  MILESTONE = 'milestone',
+}
+
+// Milestone lifecycle (services quotes only).
+export enum MilestoneStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  DELIVERED = 'delivered',
+  APPROVED = 'approved',
+  INVOICED = 'invoiced',
+}
+
 // Quote related enums
 export enum QuoteStatus {
   DRAFT = 'draft',
