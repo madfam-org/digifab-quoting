@@ -7,13 +7,9 @@ resources:
 - api-service.yaml
 - web-deployment.yaml
 - web-service.yaml
-- admin-deployment.yaml
-- admin-service.yaml
 - worker-deployment.yaml
 - network-policies.yaml
 images:
-- name: ghcr.io/madfam-org/digifab-quoting/admin
-  newName: ghcr.io/madfam-org/digifab-quoting/admin
 - name: ghcr.io/madfam-org/digifab-quoting/api
   newName: ghcr.io/madfam-org/digifab-quoting/api
 - digest: sha256:d0e947d2edc943eb08945eff03152d6c82dd16681a011d1c163ef26c40669074
