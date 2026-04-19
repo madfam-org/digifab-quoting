@@ -171,6 +171,32 @@ Key files: `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules
 - Key files: `apps/api/src/modules/billing/services/dhanam-relay.service.ts`
 - Env: `DHANAM_WEBHOOK_URL`, `DHANAM_WEBHOOK_SECRET`
 
+### Engagement projection (Phase B Consumer)
+
+Cotiza stores a lightweight projection of PhyneCRM's engagement
+aggregate in the `Engagement` table (migration
+`20260419100000_add_engagements_and_quote_fk`). Purpose:
+
+- group quotes under one engagement (two-quotes-per-engagement is the
+  tablaco flow — physical fab + digital services under the same client
+  engagement)
+- serve portal queries without a round-trip to PhyneCRM on every render
+
+Lifecycle:
+
+- `Quote.engagementId` is a first-class nullable FK. When a quote is
+  created with the `engagementId` DTO field, `EngagementsService.ensureProjection`
+  auto-materializes the row with `lastSyncedAt = NULL`.
+- `POST /api/v1/webhooks/phynecrm/engagements` — inbound HMAC-SHA256
+  signed webhook. Handles `engagement.created` / `engagement.updated`
+  (upsert + stamp `lastSyncedAt`) and `engagement.archived` (soft-delete).
+- `GET /api/v1/engagements/:phynecrmEngagementId` — projection + quote
+  type counts.
+- `GET /api/v1/engagements/:phynecrmEngagementId/quotes` — quotes
+  grouped by `quoteType` for the portal's side-by-side card layout.
+
+Env: `PHYNECRM_INBOUND_SECRET` (separate from outbound `PHYNECRM_ENGAGEMENT_SECRET`).
+
 ### Services-mode quoting
 
 Services-mode (`Quote.quoteType === 'services'`) is feature-flag gated per tenant via `Tenant.features.servicesQuotes`. The `QuoteItem.servicesDetails` Json column carries the per-line billable shape (`hourly` / `fixed_fee` / `milestone`). Schema in `packages/shared/src/schemas/services-quote.ts`; types in `packages/shared/src/types/services-quote.ts`. The services-mode branch in `QuotesService.calculate()` sidesteps the fab pricing engine entirely. See `PhyneCrmEngagementService` for how the quote-approval flow pushes lifecycle events + the signed proposal PDF into the client's PhyneCRM engagement timeline.
