@@ -4,7 +4,7 @@ import { PricingService } from '../pricing/pricing.service';
 import { QuoteCacheService } from '../redis/quote-cache.service';
 import { Cacheable, CacheInvalidate } from '../redis/decorators/cache.decorator';
 import { Quote as PrismaQuote, QuoteItem as PrismaQuoteItem, Prisma } from '@prisma/client';
-import { QuoteStatus, Currency, ProcessType } from '@cotiza/shared';
+import { QuoteStatus, Currency, ProcessType, QuoteType } from '@cotiza/shared';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { AddQuoteItemDto } from './dto/add-quote-item.dto';
 import { CalculateQuoteDto } from './dto/calculate-quote.dto';
@@ -16,6 +16,7 @@ import { TenantCacheService } from '../tenants/services/tenant-cache.service';
 import { JobsService } from '../jobs/jobs.service';
 import { JobType } from '../jobs/interfaces/job.interface';
 import { FilesService } from '../files/files.service';
+import { PhyneCrmEngagementService } from '../../integrations/phynecrm/phynecrm-engagement.service';
 
 @Injectable()
 export class QuotesService {
@@ -26,9 +27,23 @@ export class QuotesService {
     private tenantCacheService: TenantCacheService,
     private jobsService: JobsService,
     private filesService: FilesService,
+    private phynecrmEngagement: PhyneCrmEngagementService,
   ) {}
 
   async create(tenantId: string, customerId: string, dto: CreateQuoteDto): Promise<PrismaQuote> {
+    const quoteType = dto.quoteType ?? QuoteType.FAB;
+
+    // Services mode is feature-flagged per-tenant. Fail fast at create
+    // time rather than carrying an unusable quote around.
+    if (quoteType === QuoteType.SERVICES) {
+      const features = await this.tenantCacheService.getTenantFeatures(tenantId);
+      if (!features.servicesQuotes) {
+        throw new BadRequestException(
+          'Services-mode quoting is not enabled for this tenant',
+        );
+      }
+    }
+
     // Get quote validity days from tenant configuration
     const tenantConfig = await this.tenantCacheService.getTenantConfig(tenantId);
     const validityDays = (tenantConfig.settings.quoteValidityDays as number) || 14;
@@ -43,6 +58,7 @@ export class QuotesService {
         tenantId,
         customerId,
         number: quoteNumber,
+        quoteType,
         currency: dto.currency,
         objective: dto.objective,
         validityUntil,
@@ -191,6 +207,13 @@ export class QuotesService {
   async calculate(tenantId: string, quoteId: string, dto: CalculateQuoteDto): Promise<{ quote: PrismaQuote & { items: Array<PrismaQuoteItem & { files: unknown[]; dfmReport: unknown }> }; errors?: Array<{ itemId?: string; error: string }> }> {
     const quote = await this.findOne(tenantId, quoteId);
 
+    // Services mode: no pricing engine, no DFM, no cache lookup. Items
+    // already carry unitPrice + quantity from their dto at add-time;
+    // we only recompute totals here.
+    if ((quote as unknown as { quoteType?: string }).quoteType === QuoteType.SERVICES) {
+      return this.calculateServices(tenantId, quoteId);
+    }
+
     // Update objective if provided
     if (dto.objective) {
       await this.prisma.quote.update({
@@ -314,6 +337,70 @@ export class QuotesService {
     };
   }
 
+  // Services-mode pricing: no engine, no DFM, no cache. Items already
+  // carry unitPrice + quantity from addItem (dto). We sum them for the
+  // subtotal and run the same tax/shipping rules as fab so the
+  // PDF/totals view works unchanged.
+  private async calculateServices(
+    tenantId: string,
+    quoteId: string,
+  ): Promise<{
+    quote: PrismaQuote & {
+      items: Array<PrismaQuoteItem & { files: unknown[]; dfmReport: unknown }>;
+    };
+  }> {
+    const quote = await this.findOne(tenantId, quoteId);
+
+    const items = quote.items;
+    for (const item of items) {
+      if (item.unitPrice == null) {
+        throw new BadRequestException(
+          `Services quote item ${item.id} is missing unitPrice; set it at addItem time.`,
+        );
+      }
+      const total = new Decimal(item.unitPrice).mul(item.quantity);
+      if (
+        item.totalPrice == null ||
+        !new Decimal(item.totalPrice).equals(total)
+      ) {
+        await this.prisma.quoteItem.update({
+          where: { id: item.id },
+          data: { totalPrice: total },
+        });
+      }
+    }
+
+    const refreshed = await this.prisma.quote.findUniqueOrThrow({
+      where: { id: quoteId },
+      include: {
+        items: {
+          include: { files: true, dfmReport: true },
+        },
+      },
+    });
+
+    const totals = await this.calculateTotals(
+      tenantId,
+      refreshed.items,
+      refreshed.currency as Currency,
+    );
+
+    const updated = await this.prisma.quote.update({
+      where: { id: quoteId },
+      data: {
+        status: QuoteStatus.QUOTED,
+        totals,
+      },
+      include: {
+        items: {
+          include: { files: true, dfmReport: true },
+        },
+      },
+    });
+
+    return { quote: updated };
+  }
+
   async approve(
     tenantId: string,
     quoteId: string,
@@ -337,6 +424,35 @@ export class QuotesService {
       where: { id: quoteId },
       data: { status: QuoteStatus.APPROVED },
     });
+
+    // Fire-and-forget: announce the approval into the client's PhyneCRM
+    // portal timeline. Failures never block the approve flow; the
+    // service logs its own errors.
+    const engagementId = this.phynecrmEngagement.getEngagementId(
+      updatedQuote.metadata as Record<string, unknown> | null,
+    );
+    if (engagementId) {
+      const quoteTypeLabel =
+        (updatedQuote as unknown as { quoteType?: string }).quoteType === QuoteType.SERVICES
+          ? 'services'
+          : 'fabrication';
+      void this.phynecrmEngagement.recordEvent({
+        engagement_id: engagementId,
+        source: 'cotiza',
+        event_type: 'quote.approved',
+        status: 'in_progress',
+        message: `${quoteTypeLabel === 'services' ? 'Services' : 'Fabrication'} proposal approved`,
+        timestamp: new Date().toISOString(),
+        dedup_key: `cotiza:quote.approved:${updatedQuote.id}`,
+        metadata: {
+          quote_id: updatedQuote.id,
+          quote_number: updatedQuote.number,
+          quote_type: quoteTypeLabel,
+          total: (updatedQuote.total ?? updatedQuote.totalPrice ?? 0).toString(),
+          currency: updatedQuote.currency,
+        },
+      });
+    }
 
     // Return just the quote for now - payment integration will be handled separately
     return { quote: updatedQuote };

@@ -1,7 +1,7 @@
 import { IsEnum, IsObject, IsOptional, ValidateNested, IsNumber, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Currency } from '@cotiza/shared';
+import { Currency, QuoteType } from '@cotiza/shared';
 
 export class QuoteObjectiveDto implements Record<string, number> {
   @ApiProperty({
@@ -77,6 +77,19 @@ export class CreateQuoteDto {
   @IsOptional()
   @IsObject()
   metadata?: Record<string, unknown>;
+
+  @ApiPropertyOptional({
+    enum: QuoteType,
+    default: QuoteType.FAB,
+    description:
+      'Quote mode. "fab" (default) runs the fabrication pricing engine. "services" skips it ' +
+      'and uses line-item unitPrice directly. Services mode is gated by the tenant feature ' +
+      'flag `servicesQuotes` — tenants without the flag receive a 400.',
+    example: 'fab',
+  })
+  @IsOptional()
+  @IsEnum(QuoteType)
+  quoteType?: QuoteType;
 }
 
 export class QuoteResponseDto {
