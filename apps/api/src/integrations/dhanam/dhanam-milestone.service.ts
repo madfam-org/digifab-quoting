@@ -38,6 +38,13 @@ export interface DhanamMilestoneContext {
   customerId: string;
   currency: string;
   engagementId?: string;
+  /**
+   * Cotiza Order ID (post-acceptance bundle). Stamped onto each Stripe
+   * PaymentIntent so Dhanam's ecosystem extractor can pass it through
+   * to PhyneCRM's engagement timeline. Absent when invoicing runs from
+   * a flow that doesn't materialize an Order row.
+   */
+  orderId?: string;
   items: DhanamMilestoneItem[];
 }
 
@@ -59,6 +66,7 @@ export interface DhanamInvoiceRequest {
     milestone_id: string;
     quote_number?: string;
     engagement_id?: string;
+    order_id?: string;
     source: 'cotiza';
   };
 }
@@ -123,6 +131,7 @@ export class DhanamMilestoneService {
         milestone_id: item.milestoneId,
         quote_number: ctx.quoteNumber,
         engagement_id: ctx.engagementId,
+        order_id: ctx.orderId,
         source: 'cotiza',
       },
     };
