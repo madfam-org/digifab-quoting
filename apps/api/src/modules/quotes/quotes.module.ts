@@ -12,9 +12,17 @@ import { PricingModule } from '../pricing/pricing.module';
 import { PaymentModule } from '../payment/payment.module';
 import { TenantsModule } from '../tenants/tenants.module';
 import { JobsModule } from '../jobs/jobs.module';
+import { EngagementsModule } from '../engagements/engagements.module';
 
 @Module({
-  imports: [FilesModule, PricingModule, PaymentModule, TenantsModule, forwardRef(() => JobsModule)],
+  imports: [
+    FilesModule,
+    PricingModule,
+    PaymentModule,
+    TenantsModule,
+    forwardRef(() => JobsModule),
+    EngagementsModule,
+  ],
   controllers: [QuotesController, Yantra4dImportController],
   providers: [
     QuotesService,

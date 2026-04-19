@@ -1,4 +1,4 @@
-import { IsEnum, IsObject, IsOptional, ValidateNested, IsNumber, Min, Max } from 'class-validator';
+import { IsEnum, IsObject, IsOptional, IsString, ValidateNested, IsNumber, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Currency, QuoteType } from '@cotiza/shared';
@@ -90,6 +90,19 @@ export class CreateQuoteDto {
   @IsOptional()
   @IsEnum(QuoteType)
   quoteType?: QuoteType;
+
+  @ApiPropertyOptional({
+    description:
+      'PhyneCRM engagement ID this quote belongs to. If the projection ' +
+      'does not yet exist in Cotiza, one is auto-materialized and will ' +
+      'be reconciled when PhyneCRM next emits an engagement webhook. ' +
+      'Two quotes can share the same engagementId — e.g. a physical-build ' +
+      'fab quote + a digital-app services quote under one client engagement.',
+    example: 'eng_01HXK3D...',
+  })
+  @IsOptional()
+  @IsString()
+  engagementId?: string;
 }
 
 export class QuoteResponseDto {

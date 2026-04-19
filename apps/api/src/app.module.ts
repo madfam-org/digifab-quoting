@@ -16,6 +16,7 @@ import { RedisModule } from './modules/redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { QuotesModule } from './modules/quotes/quotes.module';
+import { EngagementsModule } from './modules/engagements/engagements.module';
 import { FilesModule } from './modules/files/files.module';
 import { PricingModule } from './modules/pricing/pricing.module';
 import { AdminModule } from './modules/admin/admin.module';
@@ -55,6 +56,7 @@ import { GeoModule } from './modules/geo/geo.module';
     AuthModule,
     UsersModule,
     QuotesModule,
+    EngagementsModule,
     FilesModule,
     PricingModule,
     AdminModule,

@@ -26,6 +26,7 @@ import {
   PravaraDispatchService,
   PravaraJobItem,
 } from '../../integrations/pravara/pravara-dispatch.service';
+import { EngagementsService } from '../engagements/engagements.service';
 
 @Injectable()
 export class QuotesService {
@@ -42,6 +43,7 @@ export class QuotesService {
     private karafielCompliance: KarafielComplianceService,
     private dhanamMilestone: DhanamMilestoneService,
     private pravaraDispatch: PravaraDispatchService,
+    private engagements: EngagementsService,
   ) {}
 
   async create(tenantId: string, customerId: string, dto: CreateQuoteDto): Promise<PrismaQuote> {
@@ -56,6 +58,18 @@ export class QuotesService {
           'Services-mode quoting is not enabled for this tenant',
         );
       }
+    }
+
+    // If the DTO cites a PhyneCRM engagement ID, auto-materialize the
+    // Cotiza projection so subsequent queries (portal grouping,
+    // engagement detail) can join on it. The projection is marked
+    // `lastSyncedAt: NULL` until PhyneCRM pushes back a webhook.
+    let engagementProjectionId: string | null = null;
+    if (dto.engagementId) {
+      engagementProjectionId = await this.engagements.ensureProjection(
+        tenantId,
+        dto.engagementId,
+      );
     }
 
     // Get quote validity days from tenant configuration
@@ -77,6 +91,10 @@ export class QuotesService {
         objective: dto.objective,
         validityUntil,
         status: QuoteStatus.DRAFT,
+        ...(engagementProjectionId && { engagementId: engagementProjectionId }),
+        ...(dto.engagementId && {
+          metadata: { phynecrmEngagementId: dto.engagementId },
+        }),
       },
     });
   }
