@@ -255,3 +255,48 @@ DHANAM_WEBHOOK_SECRET
 - **Forgesight Webhook**: Inbound price update webhook with cache invalidation
 - **Yantra4D Webhook**: Outbound quote lifecycle notifications to Yantra4D platform
 - **Dhanam Billing Relay**: Payment event relay to centralized billing platform
+- **Services-mode quoting (Phase B, 2026-04-19)**: Second quoting mode alongside fab for hourly/fixed-fee/milestone digital-services proposals. Feature-flag gated per-tenant via `Tenant.features.servicesQuotes`; externally the public surface remains fab-only. See "Services-mode quoting" section below.
+- **PhyneCRM engagement integration (2026-04-19)**: On quote APPROVED, fires `engagement_event` + pushes the generated PDF as a `signed_proposal` artifact into the client's PhyneCRM engagement so external clients see it in their portal.
+
+### Services-mode quoting
+
+A second quoting mode lives alongside fab mode. Same DB model, same PDF pipeline, different pricing path.
+
+**Domain primitives (`@cotiza/shared`):**
+- `QuoteType` enum (`FAB` | `SERVICES`) — gates the pricing branch
+- `ServicesBillableType` enum (`HOURLY` | `FIXED_FEE` | `MILESTONE`)
+- `MilestoneStatus` enum (`PENDING` → `IN_PROGRESS` → `DELIVERED` → `APPROVED` → `INVOICED`)
+- `ServicesQuoteItemDetails` discriminated union + Zod schemas
+- `TenantFeatures.servicesQuotes` flag typed in the shared interface
+
+**Prisma schema:**
+- `Quote.quoteType` (default `"fab"`, indexed)
+- `QuoteItem.servicesDetails` (nullable JSON, Zod-validated at the API boundary)
+- Migration: `20260419000001_add_quote_type_services_details` — strictly additive
+
+**QuotesService code paths:**
+- `create()`: enforces the feature flag — tenants without `servicesQuotes=true` get 400 on `quoteType=SERVICES`
+- `calculate()`: early-branches to `calculateServices()` when `quote.quoteType === 'services'`. Bypasses the pricing engine, DFM, cache, materials, machines. Items carry `unitPrice` from `addItem`; we recompute `totalPrice = unitPrice × quantity` and apply the same tax/shipping rules as fab so the PDF renderer is unchanged.
+- `approve()`: fires fire-and-forget `engagement_event` + `pushProposalArtifact()` to PhyneCRM when the quote has `metadata.phynecrmEngagementId` set.
+
+**Feature flag wiring:**
+- `TenantCacheService.getTenantFeatures(tenantId)` returns typed `TenantFeatures` (all flags default to false, extra flags forwarded untouched for beta experimentation)
+- Seed MADFAM's internal org: `UPDATE "Tenant" SET "features" = jsonb_set("features", '{servicesQuotes}', 'true') WHERE "code" = 'madfam';`
+
+**PhyneCRM integration (`apps/api/src/integrations/phynecrm/`):**
+- `PhyneCrmEngagementService.recordEvent(payload)` — `POST /api/v1/engagements/events`
+- `PhyneCrmEngagementService.recordArtifact(payload)` — `POST /api/v1/engagements/artifacts`
+- Both HMAC-SHA256 hex body signature in `x-webhook-signature`, matches PhyneCRM's `validateWebhookSignature`
+- Fire-and-forget: PhyneCRM offline or PDF gen failure never breaks `approve()`
+- Skipped (soft-fail) when `PHYNECRM_API_URL` or `PHYNECRM_ENGAGEMENT_SECRET` unset
+
+**New env vars:**
+| Var | Purpose |
+|---|---|
+| `PHYNECRM_API_URL` | PhyneCRM base URL (e.g. `https://phyne-crm.madfam.io`) |
+| `PHYNECRM_ENGAGEMENT_SECRET` | HMAC-SHA256 shared secret (matches PhyneCRM's `PHYNE_ENGAGEMENT_EVENTS_SECRET`) |
+| `PHYNECRM_WEBHOOK_TIMEOUT` | HTTP timeout ms (default: 10000) |
+
+**Tests:**
+- `apps/api/src/modules/quotes/__tests__/quotes.service.services-mode.spec.ts` — feature-flag gate + `calculateServices` pricing-bypass
+- `apps/api/src/integrations/phynecrm/__tests__/phynecrm-engagement.service.spec.ts` — HMAC signing, soft-fail, fire-and-forget (10 tests)
