@@ -183,3 +183,53 @@ export interface PaginatedResponse<T> {
   offset: number;
   hasMore: boolean;
 }
+
+// ============================================================================
+// Intelligence API (price history, vendor comparison, regional comparison)
+//
+// These types back Cotiza's `forgesight.service.ts` helpers. The upstream
+// endpoints may not be available on every Forgesight deployment; the service
+// layer handles missing routes by returning empty/neutral defaults.
+// ============================================================================
+
+export interface MaterialPriceHistoryPoint {
+  /** ISO 8601 timestamp of the sample. */
+  at: string;
+  price: number;
+  currency: Currency;
+}
+
+export interface MaterialPriceHistory {
+  materialId: string;
+  materialName: string;
+  currency: Currency;
+  dataPoints: MaterialPriceHistoryPoint[];
+}
+
+export interface VendorPriceQuote {
+  vendorId: string;
+  vendorName: string;
+  pricePerUnit: number;
+  currency: Currency;
+  leadDays: number;
+  /** 0–5 quality rating. */
+  rating: number;
+}
+
+export interface VendorPriceComparison {
+  materialId: string;
+  currency: Currency;
+  averagePrice: number;
+  vendors: VendorPriceQuote[];
+}
+
+export interface RegionalPricingEntry {
+  averagePrice: number;
+  currency: Currency;
+}
+
+export interface RegionalComparison {
+  materialId: string;
+  service: ServiceType;
+  regions: Record<string, RegionalPricingEntry>;
+}

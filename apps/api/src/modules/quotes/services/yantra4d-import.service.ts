@@ -134,7 +134,9 @@ export class Yantra4dImportService {
             surface_area_cm2: dto.geometry.surface_area_cm2,
             bounding_box_mm: dto.geometry.bounding_box_mm,
           },
-        } as Prisma.InputJsonValue,
+          // BoundingBoxDto is a class; InputJsonValue doesn't see it as
+          // structurally overlapping — round-trip via unknown.
+        } as unknown as Prisma.InputJsonValue,
       },
     });
 

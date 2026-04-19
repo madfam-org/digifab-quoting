@@ -132,8 +132,10 @@ export class FilesService {
         })
         .promise();
 
+      // Node 22 tightened `BinaryLike` to exclude Buffer; wrap in Uint8Array
+      // (Buffer extends Uint8Array, so this is a zero-copy cast).
       const hash = createHash('sha256')
-        .update(fileData.Body as Buffer)
+        .update(new Uint8Array(fileData.Body as Buffer))
         .digest('hex');
 
       // Update file record

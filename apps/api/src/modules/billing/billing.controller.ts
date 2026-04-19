@@ -62,7 +62,15 @@ export class BillingController {
         .update(rawBody)
         .digest('hex');
 
-      if (!crypto.timingSafeEqual(Buffer.from(signature || ''), Buffer.from(expectedSignature))) {
+      // Node 22 types narrow `timingSafeEqual` to ArrayBufferView; Buffer extends
+      // Uint8Array but the current @types/node overload rejects plain Buffer.
+      // Wrap with Uint8Array to satisfy the signature without copying the bytes.
+      const sigBuf = Buffer.from(signature || '');
+      const expBuf = Buffer.from(expectedSignature);
+      if (
+        sigBuf.length !== expBuf.length ||
+        !crypto.timingSafeEqual(new Uint8Array(sigBuf), new Uint8Array(expBuf))
+      ) {
         this.logger.error('Janua webhook signature verification failed');
         return { received: false, error: 'Invalid signature' };
       }
