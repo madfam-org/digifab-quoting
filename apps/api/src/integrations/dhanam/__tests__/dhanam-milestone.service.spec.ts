@@ -135,10 +135,10 @@ describe('DhanamMilestoneService', () => {
         currency: 'MXN',
         description: 'Q-2026-04-0001 — Discovery',
         metadata: {
-          quoteId: 'quote-abc',
-          quoteItemId: 'item-1',
-          milestoneId: 'ms-1',
-          engagementId: 'eng-tablaco-001',
+          cotiza_quote_id: 'quote-abc',
+          cotiza_quote_item_id: 'item-1',
+          milestone_id: 'ms-1',
+          engagement_id: 'eng-tablaco-001',
           source: 'cotiza',
         },
       });

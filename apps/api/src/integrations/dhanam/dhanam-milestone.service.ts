@@ -47,12 +47,18 @@ export interface DhanamInvoiceRequest {
   currency: string;
   description: string;
   dueDate?: string;
+  /**
+   * snake_case so downstream services (Stripe PI metadata, Dhanam's
+   * `extractEcosystemMetadata`, Karafiel CFDI mapper) all pick it up
+   * without key-case translation. Matches the ecosystem convention
+   * used by RouteCraft and other payment producers.
+   */
   metadata: {
-    quoteId: string;
-    quoteItemId: string;
-    milestoneId: string;
-    quoteNumber?: string;
-    engagementId?: string;
+    cotiza_quote_id: string;
+    cotiza_quote_item_id: string;
+    milestone_id: string;
+    quote_number?: string;
+    engagement_id?: string;
     source: 'cotiza';
   };
 }
@@ -112,11 +118,11 @@ export class DhanamMilestoneService {
       dueDate: item.dueDate,
       description: `${ctx.quoteNumber} — ${item.name}`,
       metadata: {
-        quoteId: ctx.quoteId,
-        quoteItemId: item.quoteItemId,
-        milestoneId: item.milestoneId,
-        quoteNumber: ctx.quoteNumber,
-        engagementId: ctx.engagementId,
+        cotiza_quote_id: ctx.quoteId,
+        cotiza_quote_item_id: item.quoteItemId,
+        milestone_id: item.milestoneId,
+        quote_number: ctx.quoteNumber,
+        engagement_id: ctx.engagementId,
         source: 'cotiza',
       },
     };
