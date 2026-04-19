@@ -1,4 +1,11 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JobsService } from '../jobs/jobs.service';
 import { OrderStatus, PaymentStatus, QuoteStatus, InvoiceStatus } from '@cotiza/shared';
@@ -6,6 +13,7 @@ import { JobType } from '../jobs/interfaces/job.interface';
 import { QuoteItem } from '@prisma/client';
 import { Decimal } from 'decimal.js';
 import { customAlphabet } from 'nanoid';
+import { QuotesService } from '../quotes/quotes.service';
 
 const generateOrderNumber = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 10);
 
@@ -16,6 +24,8 @@ export class OrdersService {
   constructor(
     private prisma: PrismaService,
     private jobsService: JobsService,
+    @Inject(forwardRef(() => QuotesService))
+    private quotesService: QuotesService,
   ) {}
 
   async createOrderFromQuote(
@@ -123,6 +133,12 @@ export class OrdersService {
       recipientEmail: 'customer@example.com',
       templateData: { orderId: order.id },
     });
+
+    // Phase D: fire outbound integrations (CFDI stamping, milestone
+    // invoicing, MES dispatch) — fire-and-forget, never blocks the
+    // order-creation response. handleOrdered internally uses
+    // Promise.allSettled so one failing integration can't affect others.
+    void this.quotesService.handleOrdered(tenantId, quoteId);
 
     this.logger.log(`Created order ${order.orderNumber} from quote ${quoteId}`);
     return order;

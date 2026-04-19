@@ -1,10 +1,10 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PricingService } from '../pricing/pricing.service';
 import { QuoteCacheService } from '../redis/quote-cache.service';
 import { Cacheable, CacheInvalidate } from '../redis/decorators/cache.decorator';
 import { Quote as PrismaQuote, QuoteItem as PrismaQuoteItem, Prisma } from '@prisma/client';
-import { QuoteStatus, Currency, ProcessType } from '@cotiza/shared';
+import { QuoteStatus, Currency, ProcessType, QuoteType, ServicesBillableType } from '@cotiza/shared';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { AddQuoteItemDto } from './dto/add-quote-item.dto';
 import { CalculateQuoteDto } from './dto/calculate-quote.dto';
@@ -16,9 +16,21 @@ import { TenantCacheService } from '../tenants/services/tenant-cache.service';
 import { JobsService } from '../jobs/jobs.service';
 import { JobType } from '../jobs/interfaces/job.interface';
 import { FilesService } from '../files/files.service';
+import { PhyneCrmEngagementService } from '../../integrations/phynecrm/phynecrm-engagement.service';
+import { KarafielComplianceService } from '../../integrations/karafiel/karafiel-compliance.service';
+import {
+  DhanamMilestoneService,
+  DhanamMilestoneItem,
+} from '../../integrations/dhanam/dhanam-milestone.service';
+import {
+  PravaraDispatchService,
+  PravaraJobItem,
+} from '../../integrations/pravara/pravara-dispatch.service';
 
 @Injectable()
 export class QuotesService {
+  private readonly logger = new Logger(QuotesService.name);
+
   constructor(
     private prisma: PrismaService,
     private pricingService: PricingService,
@@ -26,9 +38,26 @@ export class QuotesService {
     private tenantCacheService: TenantCacheService,
     private jobsService: JobsService,
     private filesService: FilesService,
+    private phynecrmEngagement: PhyneCrmEngagementService,
+    private karafielCompliance: KarafielComplianceService,
+    private dhanamMilestone: DhanamMilestoneService,
+    private pravaraDispatch: PravaraDispatchService,
   ) {}
 
   async create(tenantId: string, customerId: string, dto: CreateQuoteDto): Promise<PrismaQuote> {
+    const quoteType = dto.quoteType ?? QuoteType.FAB;
+
+    // Services mode is feature-flagged per-tenant. Fail fast at create
+    // time rather than carrying an unusable quote around.
+    if (quoteType === QuoteType.SERVICES) {
+      const features = await this.tenantCacheService.getTenantFeatures(tenantId);
+      if (!features.servicesQuotes) {
+        throw new BadRequestException(
+          'Services-mode quoting is not enabled for this tenant',
+        );
+      }
+    }
+
     // Get quote validity days from tenant configuration
     const tenantConfig = await this.tenantCacheService.getTenantConfig(tenantId);
     const validityDays = (tenantConfig.settings.quoteValidityDays as number) || 14;
@@ -43,6 +72,7 @@ export class QuotesService {
         tenantId,
         customerId,
         number: quoteNumber,
+        quoteType,
         currency: dto.currency,
         objective: dto.objective,
         validityUntil,
@@ -191,6 +221,13 @@ export class QuotesService {
   async calculate(tenantId: string, quoteId: string, dto: CalculateQuoteDto): Promise<{ quote: PrismaQuote & { items: Array<PrismaQuoteItem & { files: unknown[]; dfmReport: unknown }> }; errors?: Array<{ itemId?: string; error: string }> }> {
     const quote = await this.findOne(tenantId, quoteId);
 
+    // Services mode: no pricing engine, no DFM, no cache lookup. Items
+    // already carry unitPrice + quantity from their dto at add-time;
+    // we only recompute totals here.
+    if ((quote as unknown as { quoteType?: string }).quoteType === QuoteType.SERVICES) {
+      return this.calculateServices(tenantId, quoteId);
+    }
+
     // Update objective if provided
     if (dto.objective) {
       await this.prisma.quote.update({
@@ -314,6 +351,70 @@ export class QuotesService {
     };
   }
 
+  // Services-mode pricing: no engine, no DFM, no cache. Items already
+  // carry unitPrice + quantity from addItem (dto). We sum them for the
+  // subtotal and run the same tax/shipping rules as fab so the
+  // PDF/totals view works unchanged.
+  private async calculateServices(
+    tenantId: string,
+    quoteId: string,
+  ): Promise<{
+    quote: PrismaQuote & {
+      items: Array<PrismaQuoteItem & { files: unknown[]; dfmReport: unknown }>;
+    };
+  }> {
+    const quote = await this.findOne(tenantId, quoteId);
+
+    const items = quote.items;
+    for (const item of items) {
+      if (item.unitPrice == null) {
+        throw new BadRequestException(
+          `Services quote item ${item.id} is missing unitPrice; set it at addItem time.`,
+        );
+      }
+      const total = new Decimal(item.unitPrice).mul(item.quantity);
+      if (
+        item.totalPrice == null ||
+        !new Decimal(item.totalPrice).equals(total)
+      ) {
+        await this.prisma.quoteItem.update({
+          where: { id: item.id },
+          data: { totalPrice: total },
+        });
+      }
+    }
+
+    const refreshed = await this.prisma.quote.findUniqueOrThrow({
+      where: { id: quoteId },
+      include: {
+        items: {
+          include: { files: true, dfmReport: true },
+        },
+      },
+    });
+
+    const totals = await this.calculateTotals(
+      tenantId,
+      refreshed.items,
+      refreshed.currency as Currency,
+    );
+
+    const updated = await this.prisma.quote.update({
+      where: { id: quoteId },
+      data: {
+        status: QuoteStatus.QUOTED,
+        totals,
+      },
+      include: {
+        items: {
+          include: { files: true, dfmReport: true },
+        },
+      },
+    });
+
+    return { quote: updated };
+  }
+
   async approve(
     tenantId: string,
     quoteId: string,
@@ -338,8 +439,259 @@ export class QuotesService {
       data: { status: QuoteStatus.APPROVED },
     });
 
+    // Fire-and-forget: announce the approval into the client's PhyneCRM
+    // portal timeline + push the signed-proposal PDF as an artifact so
+    // the client can open it from the portal. Failures never block the
+    // approve flow; the integration service logs its own errors.
+    const engagementId = this.phynecrmEngagement.getEngagementId(
+      updatedQuote.metadata as Record<string, unknown> | null,
+    );
+    if (engagementId) {
+      const quoteTypeLabel =
+        (updatedQuote as unknown as { quoteType?: string }).quoteType === QuoteType.SERVICES
+          ? 'services'
+          : 'fabrication';
+
+      void this.phynecrmEngagement.recordEvent({
+        engagement_id: engagementId,
+        source: 'cotiza',
+        event_type: 'quote.approved',
+        status: 'in_progress',
+        message: `${quoteTypeLabel === 'services' ? 'Services' : 'Fabrication'} proposal approved`,
+        timestamp: new Date().toISOString(),
+        dedup_key: `cotiza:quote.approved:${updatedQuote.id}`,
+        metadata: {
+          quote_id: updatedQuote.id,
+          quote_number: updatedQuote.number,
+          quote_type: quoteTypeLabel,
+          total: (updatedQuote.total ?? updatedQuote.totalPrice ?? 0).toString(),
+          currency: updatedQuote.currency,
+        },
+      });
+
+      // Push the signed-proposal artifact. generatePdf() either returns
+      // a fresh 7-day presigned S3 URL (when an existing PDF is on hand)
+      // or a placeholder status URL (when generation is queued). Either
+      // way, surfacing it in the portal is non-blocking.
+      void this.pushProposalArtifact(tenantId, engagementId, updatedQuote);
+    }
+
     // Return just the quote for now - payment integration will be handled separately
     return { quote: updatedQuote };
+  }
+
+  private async pushProposalArtifact(
+    tenantId: string,
+    engagementId: string,
+    quote: PrismaQuote,
+  ): Promise<void> {
+    try {
+      const { url } = await this.generatePdf(tenantId, quote.id);
+      await this.phynecrmEngagement.recordArtifact({
+        engagement_id: engagementId,
+        type: 'signed_proposal',
+        entity_type: 'quote',
+        entity_id: quote.id,
+        url,
+        title: `Proposal ${quote.number}`,
+        metadata: {
+          quote_id: quote.id,
+          quote_number: quote.number,
+          currency: quote.currency,
+        },
+      });
+    } catch {
+      // Non-blocking. Staff can add the PDF to the engagement manually
+      // via engagements.addArtifact if the auto-push fails.
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Phase D outbound integrations — fired when a quote reaches ORDERED
+  // (post-payment). Called from OrdersService.createOrderFromQuote
+  // after the status flip to ORDERED.
+  //
+  // Each integration is fire-and-forget: Promise.allSettled ensures one
+  // failing downstream service never blocks the others, and no
+  // exception bubbles up to break the order-creation flow.
+  //
+  // Branches:
+  //  - Karafiel — CFDI stamping (skipped unless receptor RFC present)
+  //  - Dhanam   — milestone invoices (services-mode MILESTONE items)
+  //  - Pravara  — MES dispatch (FAB items only)
+  // ---------------------------------------------------------------
+  async handleOrdered(tenantId: string, quoteId: string): Promise<void> {
+    let quote: PrismaQuote & { items: PrismaQuoteItem[] };
+    try {
+      const loaded = await this.prisma.quote.findFirst({
+        where: { id: quoteId, tenantId },
+        include: { items: true },
+      });
+      if (!loaded) {
+        this.logger.warn(
+          'handleOrdered: quote not found (tenant=%s quote=%s)',
+          tenantId,
+          quoteId,
+        );
+        return;
+      }
+      quote = loaded;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error('handleOrdered: failed to load quote=%s: %s', quoteId, msg);
+      return;
+    }
+
+    const metadata = (quote.metadata ?? {}) as Record<string, unknown>;
+    const engagementId = this.phynecrmEngagement.getEngagementId(metadata);
+
+    // Load tenant for RFC/branding. Non-fatal if missing.
+    let tenantSettings: Record<string, unknown> = {};
+    let tenantBranding: Record<string, unknown> = {};
+    try {
+      const tenant = await this.prisma.tenant.findUnique({
+        where: { id: tenantId },
+      });
+      if (tenant) {
+        tenantSettings = (tenant.settings ?? {}) as Record<string, unknown>;
+        tenantBranding = (tenant.branding ?? {}) as Record<string, unknown>;
+      }
+    } catch {
+      // best-effort
+    }
+
+    // --- Karafiel: CFDI stamping ------------------------------------
+    const receptorRfc = this.karafielCompliance.resolveReceptorRfc(
+      metadata,
+      tenantSettings,
+    );
+    const emisorRfc =
+      (typeof tenantBranding.emisorRfc === 'string' && tenantBranding.emisorRfc) ||
+      (typeof tenantSettings.emisorRfc === 'string' && tenantSettings.emisorRfc) ||
+      undefined;
+
+    const karafielPromise = receptorRfc
+      ? this.karafielCompliance.issueCfdi({
+          quoteId: quote.id,
+          quoteNumber: quote.number,
+          receptorRfc,
+          emisorRfc,
+          subtotal: Number(quote.subtotal ?? 0),
+          total: Number(quote.total ?? quote.totalPrice ?? 0),
+          moneda: quote.currency,
+          items: quote.items.map((it) => ({
+            descripcion: it.name,
+            cantidad: it.quantity,
+            valor_unitario: Number(it.unitPrice ?? 0),
+            importe: Number(it.totalPrice ?? 0),
+          })),
+          metadata: { engagement_id: engagementId ?? undefined },
+        })
+      : Promise.resolve();
+
+    // --- Dhanam: milestone invoices ---------------------------------
+    const milestoneItems = this.extractMilestoneItems(quote.items, quote.currency);
+    const dhanamPromise = this.dhanamMilestone.createInvoicesForMilestones({
+      tenantId,
+      quoteId: quote.id,
+      quoteNumber: quote.number,
+      customerId: quote.customerId ?? '',
+      currency: quote.currency,
+      engagementId: engagementId ?? undefined,
+      items: milestoneItems,
+    });
+
+    // --- Pravara: MES dispatch (FAB items only) ---------------------
+    const fabItems = this.extractFabItems(
+      quote.items,
+      (quote as unknown as { quoteType?: string }).quoteType,
+    );
+    const pravaraPromise = this.pravaraDispatch.dispatchJob({
+      tenantId,
+      quoteId: quote.id,
+      quoteNumber: quote.number,
+      engagementId: engagementId ?? undefined,
+      currency: quote.currency,
+      items: fabItems,
+    });
+
+    const results = await Promise.allSettled([
+      karafielPromise,
+      dhanamPromise,
+      pravaraPromise,
+    ]);
+    results.forEach((r, i) => {
+      if (r.status === 'rejected') {
+        const names = ['karafiel', 'dhanam', 'pravara'];
+        this.logger.warn(
+          'handleOrdered[%s] settled as rejected for quote=%s: %s',
+          names[i],
+          quoteId,
+          r.reason instanceof Error ? r.reason.message : String(r.reason),
+        );
+      }
+    });
+  }
+
+  private extractMilestoneItems(
+    items: PrismaQuoteItem[],
+    fallbackCurrency: string,
+  ): DhanamMilestoneItem[] {
+    const out: DhanamMilestoneItem[] = [];
+    for (const item of items) {
+      const details = item.servicesDetails as
+        | { billableType?: string; milestones?: Array<Record<string, unknown>> }
+        | null;
+      if (!details || details.billableType !== ServicesBillableType.MILESTONE) {
+        continue;
+      }
+      const milestones = Array.isArray(details.milestones)
+        ? details.milestones
+        : [];
+      for (const ms of milestones) {
+        if (typeof ms.id !== 'string' || typeof ms.name !== 'string') continue;
+        const amount = typeof ms.amount === 'number' ? ms.amount : 0;
+        out.push({
+          quoteItemId: item.id,
+          milestoneId: ms.id,
+          name: ms.name,
+          amount,
+          currency: fallbackCurrency,
+          dueDate: typeof ms.dueDate === 'string' ? ms.dueDate : undefined,
+        });
+      }
+    }
+    return out;
+  }
+
+  private extractFabItems(
+    items: PrismaQuoteItem[],
+    quoteType: string | undefined,
+  ): PravaraJobItem[] {
+    // SERVICES-only quote with zero fab items: return empty list
+    // (service will skip the dispatch). A mixed/FAB quote contributes
+    // every item that has no servicesDetails block (= fab item).
+    return items
+      .filter((it) => {
+        const hasServicesDetails =
+          it.servicesDetails !== null && it.servicesDetails !== undefined;
+        if (quoteType === QuoteType.SERVICES) {
+          // defensively allow fab items inside services-mode quotes
+          return !hasServicesDetails;
+        }
+        return !hasServicesDetails;
+      })
+      .map<PravaraJobItem>((it) => ({
+        quoteItemId: it.id,
+        process: it.process,
+        material: it.material,
+        quantity: it.quantity,
+        selections: (it.selections ?? {}) as Record<string, unknown>,
+        files: [],
+        leadTimeDays: it.leadTime ?? it.leadDays ?? undefined,
+        unitPrice: it.unitPrice ? Number(it.unitPrice) : undefined,
+        totalPrice: it.totalPrice ? Number(it.totalPrice) : undefined,
+      }));
   }
 
   @CacheInvalidate('quote:detail:*')
