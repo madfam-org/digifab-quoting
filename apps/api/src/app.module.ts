@@ -1,4 +1,4 @@
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
@@ -85,6 +85,20 @@ import { GeoModule } from './modules/geo/geo.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TenantContextMiddleware).forRoutes('*');
+    // Exclude health + docs endpoints from tenant resolution. The
+    // middleware's internal `isPublicEndpoint` check was not reliably
+    // bypassing probes in production (observed during 2026-04-20
+    // remediation — K8s probes got 401 "Tenant context required" and
+    // the status page had to probe /api/docs instead of /health).
+    // Excluding at the consumer level skips the middleware entirely.
+    consumer
+      .apply(TenantContextMiddleware)
+      .exclude(
+        { path: 'health', method: RequestMethod.ALL },
+        { path: 'api/health', method: RequestMethod.ALL },
+        { path: 'api/docs', method: RequestMethod.ALL },
+        { path: 'api/docs/(.*)', method: RequestMethod.ALL },
+      )
+      .forRoutes('*');
   }
 }
