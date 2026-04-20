@@ -47,7 +47,14 @@ COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 # `turbo run db:generate`; turbo is a devDep (skipped under --prod) and
 # Prisma generate already ran in the builder stage — the runtime + client
 # are layered below from /app/deploy/api-prisma.
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+#
+# After install, pnpm leaves symlinks under apps/api/node_modules/@prisma
+# (pointing into .pnpm/@prisma+client@X/…). BuildKit's subsequent `COPY`
+# can't overwrite those symlinks with a directory ("cannot copy to
+# non-directory"), so rm -rf the symlinks first to make room for the
+# real runtime layered in from the builder stage.
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
+    rm -rf apps/api/node_modules/@prisma apps/api/node_modules/.prisma
 
 # Layer the Prisma runtime + generated client into the production
 # node_modules tree at the location NestJS runtime will require() from.
