@@ -69,4 +69,7 @@ EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:4000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))" || exit 1
 
-CMD ["node", "dist/main.js"]
+# nest-cli.json sets `sourceRoot: src`; with the default tsconfig
+# (no rootDir flattening) tsc preserves the src/ path in dist/, so the
+# compiled entrypoint is `dist/src/main.js`, not `dist/main.js`.
+CMD ["node", "dist/src/main.js"]
