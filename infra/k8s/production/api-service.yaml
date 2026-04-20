@@ -9,5 +9,5 @@ spec:
     app: digifab-quoting-api
   ports:
   - port: 80
-    targetPort: 4500
+    targetPort: 4000
     protocol: TCP

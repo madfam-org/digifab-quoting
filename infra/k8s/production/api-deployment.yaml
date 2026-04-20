@@ -31,7 +31,7 @@ spec:
       - name: digifab-quoting-api
         image: ghcr.io/madfam-org/digifab-quoting/api:latest
         ports:
-        - containerPort: 4500
+        - containerPort: 4000
           name: http
         envFrom:
         - secretRef:
@@ -52,17 +52,17 @@ spec:
         startupProbe:
           httpGet:
             path: /health
-            port: 4500
+            port: 4000
           initialDelaySeconds: 5
           periodSeconds: 5
           failureThreshold: 30
         readinessProbe:
           httpGet:
             path: /health
-            port: 4500
+            port: 4000
           periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /health
-            port: 4500
+            port: 4000
           periodSeconds: 30
