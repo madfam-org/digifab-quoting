@@ -56,11 +56,17 @@ export const createWinstonLogger = () => {
     );
   }
 
-  // File transport for errors
-  if (isProduction) {
+  // File transport in production — write to a path the non-root runtime
+  // user (uid 1001) can actually create. `/app/apps/api/logs/` is
+  // root-owned in the runner image. `/tmp/logs/` is writable by any
+  // uid. Operators collect logs via stdout → Loki/Fluent Bit anyway,
+  // so the file transport is just a local backup. Opt out entirely
+  // by setting LOG_TO_FILE=false in the env.
+  if (isProduction && process.env.LOG_TO_FILE !== 'false') {
+    const logDir = process.env.LOG_DIR || '/tmp/logs';
     transports.push(
       new winston.transports.File({
-        filename: 'logs/error.log',
+        filename: `${logDir}/error.log`,
         level: 'error',
         format: jsonFormat,
         maxsize: 10 * 1024 * 1024, // 10MB
@@ -68,10 +74,9 @@ export const createWinstonLogger = () => {
       }),
     );
 
-    // File transport for all logs
     transports.push(
       new winston.transports.File({
-        filename: 'logs/combined.log',
+        filename: `${logDir}/combined.log`,
         format: jsonFormat,
         maxsize: 10 * 1024 * 1024, // 10MB
         maxFiles: 10,
