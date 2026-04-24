@@ -20,4 +20,13 @@ COPY apps/worker/ .
 EXPOSE 8000
 
 # Run the application
+
+
+# Audit 2026-04-23 (cross-cutting I.1): run as non-root UID 10001 to
+# satisfy Kyverno restricted pod-security. No special caps or privileged
+# paths are needed — standard uvicorn / module entrypoint.
+RUN groupadd -r app -g 10001 && useradd -r -u 10001 -g app app \
+    && chown -R app:app /app
+USER app
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
