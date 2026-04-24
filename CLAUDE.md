@@ -320,3 +320,10 @@ PRAVARA_WEBHOOK_TIMEOUT
 - **Forgesight Webhook**: Inbound price update webhook with cache invalidation
 - **Yantra4D Webhook**: Outbound quote lifecycle notifications to Yantra4D platform
 - **Dhanam Billing Relay**: Payment event relay to centralized billing platform
+
+## Known Issues — Audit 2026-04-23
+
+See `/Users/aldoruizluna/labspace/claudedocs/ECOSYSTEM_AUDIT_2026-04-23.md` for the full ecosystem audit.
+
+- ~~**🔴 R3: Three unauthenticated admin geo endpoints**~~ — Fixed 2026-04-23: all three (`GET /geo/analytics`, `GET /currency/analytics`, `POST /currency/admin/refresh-rates`) now require `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(Role.ADMIN)` (pattern from `enterprise.controller.ts`).
+- **🟡 H13: `.env` committed to git** — move to `.env.example`, rotate any real secrets.

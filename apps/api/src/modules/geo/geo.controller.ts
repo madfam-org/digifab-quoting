@@ -15,6 +15,9 @@ import { Throttle } from '@nestjs/throttler';
 import { GeoService } from './geo.service';
 import { CurrencyService } from './currency.service';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '@/modules/auth/guards/roles.guard';
+import { Roles } from '@/modules/auth/decorators/roles.decorator';
+import { Role } from '@/common/enums';
 // import { OptionalJwtAuthGuard } from '@/modules/auth/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '@/modules/auth/decorators/current-user.decorator';
 import { GeoDetection, Currency, ConversionResult, ConversionOptions } from '@cotiza/shared';
@@ -133,15 +136,16 @@ export class GeoController {
   }
 
   @Get('analytics')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get geo analytics',
     description: 'Get geographic analytics and usage statistics (admin only)',
   })
   @ApiResponse({ status: 200, description: 'Analytics retrieved successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden — admin role required' })
   async getAnalytics(@Query('days') days?: string) {
-    // TODO: Add role-based authorization for admin endpoints
     const dayCount = days ? parseInt(days) : 30;
     return this.geoService.getGeoAnalytics(dayCount);
   }
@@ -259,30 +263,32 @@ export class CurrencyController {
   }
 
   @Get('analytics')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get currency analytics',
     description: 'Get currency conversion analytics (admin only)',
   })
   @ApiResponse({ status: 200, description: 'Analytics retrieved successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden — admin role required' })
   async getCurrencyAnalytics(@Query('days') days?: string) {
-    // TODO: Add role-based authorization for admin endpoints
     const dayCount = days ? parseInt(days) : 30;
     return this.currencyService.getConversionAnalytics(dayCount);
   }
 
   @Post('admin/refresh-rates')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Force refresh exchange rates',
     description: 'Manually trigger exchange rate update (admin only)',
   })
   @ApiResponse({ status: 200, description: 'Rate refresh initiated' })
-  async forceRateRefresh(@CurrentUser() user: { id: string; roles: string[] }) {
-    // TODO: Add role-based authorization for admin endpoints
+  @ApiResponse({ status: 403, description: 'Forbidden — admin role required' })
+  async forceRateRefresh(@CurrentUser() _user: { id: string; roles: string[] }) {
     return this.currencyService.forceRateUpdate();
   }
 }
