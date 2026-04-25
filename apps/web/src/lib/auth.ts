@@ -53,7 +53,11 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/login',
-    error: '/auth/error',
+    // Reuse the login page for error display — it already reads
+    // ?error=<code> from the query string and renders an Alert.
+    // Avoids the 404 that next-auth's default '/auth/error' redirect
+    // produces when no dedicated error page exists.
+    error: '/auth/login',
   },
   callbacks: {
     async jwt({ token, user, account }) {

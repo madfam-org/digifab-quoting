@@ -14,9 +14,17 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const errorMessages: Record<string, string> = {
+    Configuration: 'Authentication is not yet fully configured for this environment. Contact support.',
+    AccessDenied: 'Access denied. Your account may not have permission to use this application.',
+    Verification: 'The sign-in link is invalid or has expired. Please try again.',
     OAuthSignin: 'Could not start the sign-in flow. Please try again.',
     OAuthCallback: 'Authentication callback failed. Please try again.',
+    OAuthCreateAccount: 'Could not create an account. Please contact support.',
+    EmailCreateAccount: 'Could not create an account from this email. Please try again.',
     OAuthAccountNotLinked: 'This email is already associated with another account.',
+    EmailSignin: 'The email sign-in link could not be sent. Please try again.',
+    CredentialsSignin: 'Invalid sign-in credentials. Please try again.',
+    SessionRequired: 'Please sign in to access this page.',
     Callback: 'An error occurred during authentication.',
     Default: 'An unexpected error occurred. Please try again.',
   };
