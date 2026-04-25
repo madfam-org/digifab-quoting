@@ -1,98 +1,244 @@
 {
   "nav": {
     "home": "Inicio",
-    "try": "Pruébalo Gratis",
+    "try": "Pruébalo gratis",
     "pricing": "Precios",
-    "features": "Características",
+    "features": "Capacidades",
+    "forFabricators": "Para fabricantes",
+    "forDesigners": "Para consultores",
+    "forMakerspaces": "Para makerspaces",
     "dashboard": "Panel",
-    "quotes": "Mis Cotizaciones",
-    "newQuote": "Nueva Cotización",
-    "signIn": "Iniciar Sesión",
-    "signOut": "Cerrar Sesión",
+    "quotes": "Mis cotizaciones",
+    "newQuote": "Nueva cotización",
+    "signIn": "Iniciar sesión",
+    "signOut": "Cerrar sesión",
     "settings": "Configuración"
   },
   "hero": {
-    "title": "Costos de Manufactura",
-    "subtitle": "Resueltos en Segundos",
-    "description": "Obtén cotizaciones instantáneas para impresión 3D, mecanizado CNC y corte láser. Compara materiales, optimiza costos y toma decisiones informadas.",
-    "cta": "Prueba Demo Interactiva",
-    "ctaSecondary": "No requiere registro • Resultados en segundos • Gratis para siempre"
+    "eyebrow": "Para makers, fabricantes y despachos de ingeniería",
+    "title": "Deja de sangrar 5 días por cotización.",
+    "subtitle": "Obtén una en 60 segundos.",
+    "description": "Cotiza Studio convierte archivos CAD, links de BOM o alcances de servicio en cotizaciones precias y listas para CFDI — al instante. Impresión 3D, CNC, corte láser y modo-servicios (por hora / cuota fija / hito). Construido como realmente trabajan los talleres en México.",
+    "cta": "Pruébalo sin registrarte",
+    "ctaSecondary": "Sin tarjeta. Sin email. Análisis real de geometría.",
+    "ctaTertiary": "Ver precios"
+  },
+  "trustBar": {
+    "title": "Construido sobre la plataforma MADFAM",
+    "subtitle": "Cotiza es un nodo dentro de un stack integrado, no una herramienta aislada.",
+    "items": {
+      "karafiel": "CFDI 4.0 + NOM-151 vía Karafiel",
+      "dhanam": "Stripe + SPEI + OXXO vía Dhanam",
+      "pravara": "Despacho MES vía Pravara",
+      "phynecrm": "Sincronía de engagements vía PhyneCRM",
+      "forgesight": "Precios de mercado en vivo vía Forgesight"
+    }
+  },
+  "pains": {
+    "title": "Los dolores que matamos",
+    "subtitle": "No son features. Son dolores. De los que te hacen cancelar juntas.",
+    "items": {
+      "quoteTurnaround": {
+        "pain": "5 días esperando una cotización del taller de siempre.",
+        "fix": "60 segundos. Misma geometría, mismo modelo de costo, sin humano en el bucle."
+      },
+      "bomExtraction": {
+        "pain": "Una hora transcribiendo un BOM de Instructables a una hoja de cálculo.",
+        "fix": "Pega el link. Extraemos el BOM. Cotizamos cada línea."
+      },
+      "cfdiPaperwork": {
+        "pain": "Fabricantes mexicanos ahogándose en CFDI 4.0, complemento de pago y NOM-151.",
+        "fix": "Karafiel timbra cada orden automáticamente. Admisible legalmente desde el primer día."
+      },
+      "multiVendor": {
+        "pain": "Compras persiguiendo a 5 proveedores con 5 formatos de cotización distintos.",
+        "fix": "Una sola especificación. Comparación manzana-con-manzana. Notas de DFM estandarizadas."
+      },
+      "designIteration": {
+        "pain": "Diseñadores iterando sin saber qué es manufacturable.",
+        "fix": "Análisis DFM en cada subida. Sugerencias de sustitución de material antes de cerrar el diseño."
+      },
+      "currencyChaos": {
+        "pain": "Compradores transfronterizos viendo un precio en MXN, otro en USD, ninguno cuadra.",
+        "fix": "30+ divisas. Geo-detectadas. Tipos de cambio en vivo vía Dhanam (RFC 0011)."
+      }
+    }
   },
   "stats": {
-    "users": "Usuarios Felices",
-    "quoteTime": "Tiempo de Cotización",
-    "savings": "Ahorro Promedio",
-    "uptime": "Disponibilidad"
+    "title": "Lo que sí medimos",
+    "subtitle": "Sin métricas de vanidad. Sin '10,000+ Makers Felices' de copia genérica. Targets reales con el SLO detrás.",
+    "items": {
+      "apiLatency": {
+        "value": "< 400ms",
+        "label": "Tiempo de respuesta API",
+        "context": "SLO p95. Medido continuamente. Status page abajo."
+      },
+      "fullQuote": {
+        "value": "< 60s",
+        "label": "Cotización completa",
+        "context": "Impresión 3D + láser. CNC hasta 120s con DFM completo."
+      },
+      "currencies": {
+        "value": "30+",
+        "label": "Divisas soportadas",
+        "context": "Geo-detectadas. Vía Dhanam FX (RFC 0011)."
+      },
+      "uptime": {
+        "value": "99.9%",
+        "label": "SLO de disponibilidad",
+        "context": "Targeted, aún no verificado operacionalmente. Status page en camino."
+      }
+    },
+    "honestyNote": "Eliminamos deliberadamente las métricas infladas de 'miles de usuarios' de esta página el 2026-04-25. Las reemplazaremos por números reales cuando los tengamos."
   },
-  "persona": {
-    "title": "Elige Tu Camino de Manufactura",
-    "description": "Ya seas un maker DIY decidiendo si construir tú mismo, o un dueño de taller necesitando herramientas profesionales de cotización - te tenemos cubierto",
-    "diyMaker": {
-      "title": "Maker DIY y Hobbyista",
-      "description": "¿Debo hacerlo yo mismo o pagar a alguien más?"
+  "personas": {
+    "title": "Para quién lo construimos",
+    "subtitle": "Si alguno suena como tú, la plataforma fue diseñada alrededor de tu flujo.",
+    "fabricator": {
+      "title": "Fabricante mexicano",
+      "tagline": "10–500 trabajos/mes, CFDI no es opcional",
+      "description": "Operas un taller. No te puedes dar el lujo de embarcar sin CFDI 4.0. Tus clientes quieren comparar precio + tiempo de entrega antes de firmar. Pasas 4 horas al día cotizando y otras 2 en papeleo de cumplimiento.",
+      "fixes": [
+        "Cotiza cualquier geometría en 60s — pega un link, sube un STEP, o describe un servicio",
+        "CFDI se timbra vía Karafiel en el momento que la cotización se vuelve orden",
+        "Sello de admisibilidad legal NOM-151 incluido",
+        "Despacha trabajos a Pravara MES con vínculo de engagement a tu CRM",
+        "Multi-tenant: trae tu propia e.firma, tu propia identidad de emisor"
+      ],
+      "cta": "Ver capacidades para fabricantes"
     },
-    "shopOwner": {
-      "title": "Dueño de Taller y Makerspace",
-      "description": "Necesito herramientas profesionales de cotización para mi negocio"
+    "consultant": {
+      "title": "Despacho de diseño o ingeniería",
+      "tagline": "Facturas horas de diseño, no solo piezas",
+      "description": "Cotizas revisiones de DFM, diseño de fixtures, corridas de prototipo, ingeniería de producto completa. Facturas en horas, cuotas fijas e hitos. Tu CRM, tu facturación y tus proveedores de fabricación no se hablan.",
+      "fixes": [
+        "Modo-servicios: por hora, cuota fija, por hito — tipos de facturación de primera clase",
+        "Agrupa cotizaciones de fabricación + servicios bajo un mismo engagement (sincroniza con PhyneCRM)",
+        "Facturación por hito sale a Dhanam automáticamente",
+        "DFM corre en cada subida CAD — incluido en cada cotización de servicios",
+        "Forgesight market pricing en vivo — para que tu DFM cite números reales"
+      ],
+      "cta": "Ver capacidades para consultores"
     },
-    "designer": {
-      "title": "Diseñador e Ingeniero de Producto",
-      "description": "Necesito insights de diseño para manufactura"
+    "makerspace": {
+      "title": "Dueño de makerspace o service bureau",
+      "tagline": "Quieres que tus miembros coticen. Quieres tu corte.",
+      "description": "Operas un makerspace, un híbrido coworking-fab, o una franquicia de service bureau. Quieres dar a tus miembros cotización al instante sin construir tu propia plataforma. Quieres mantener tu marca, cobrar comisión por transacción, y dejar de ser mesa de ayuda.",
+      "fixes": [
+        "White-label completo: tu dominio, tu marca, tu lista de clientes",
+        "Infraestructura multi-tenant: prefijos S3 por tenant, llaves KMS, audit logs",
+        "Cobro de comisión transaccional en cada orden — split automático a Dhanam",
+        "Gestión de miembros con RBAC (owner/admin/contributor/viewer)",
+        "API + webhooks para todo: conecta Slack, Notion, tu CRM existente"
+      ],
+      "cta": "Agendar demo de makerspace"
     },
-    "procurement": {
-      "title": "Especialista en Compras",
-      "description": "Necesito precios competitivos e inteligencia de proveedores"
-    },
-    "educator": {
-      "title": "Educador y Estudiante",
-      "description": "Necesito datos reales de costos de manufactura para aprender"
+    "diy": {
+      "title": "Maker o aficionado DIY",
+      "tagline": "¿Imprimo esto en casa o le pago a un taller?",
+      "description": "Construyes cosas. Quieres saber si conviene imprimir en casa, mandar a un service bureau, o comprarlo hecho. No quieres aprender cinco herramientas de cotización para averiguarlo.",
+      "fixes": [
+        "Tier gratis: 3 cotizaciones al mes, 100MB de storage, sin tarjeta",
+        "Calculadora DIY-vs-pro: tiempo + costo de máquina + tu hora vs. precio del taller",
+        "Pega un link de Instructables/Thingiverse — extraemos el BOM",
+        "Compara materiales lado a lado antes de gastar un peso"
+      ],
+      "cta": "Empieza gratis"
     }
   },
   "linkQuote": {
-    "title": "Convierte Cualquier Proyecto Maker en una Cotización Instantánea",
-    "description": "Solo pega un enlace de Instructables, Thingiverse, GitHub, o cualquier plataforma maker. Nuestra IA extrae la lista de materiales y genera cotizaciones personalizadas en segundos."
+    "title": "Pega un link. Obtén una cotización.",
+    "description": "Instructables, Thingiverse, GitHub, Hackaday, Make: Magazine. Suelta una URL y extraemos el bill of materials, cotizamos cada línea en tu divisa, y te decimos si conviene DIY o service-bureau para tu volumen específico.",
+    "examples": "Pruébalo con un proyecto real →"
+  },
+  "features": {
+    "title": "Lo que realmente trae la plataforma",
+    "subtitle": "Cotiza es el nodo de cotización + cumplimiento de la plataforma MADFAM. Aquí la superficie.",
+    "fast": {
+      "title": "Cotizaciones multi-proceso al instante",
+      "description": "Impresión 3D FFF/SLA, CNC 3-ejes (aluminio/acero/plásticos), corte láser 2D. Una sola spec, comparación lado-a-lado."
+    },
+    "services": {
+      "title": "Modo-servicios B2B",
+      "description": "Tipos de facturación por hora, cuota fija e hito como ciudadanos de primera clase. El mismo motor que cotiza una pieza CNC cotiza una revisión de ingeniería de 40 horas."
+    },
+    "compliance": {
+      "title": "CFDI 4.0 + NOM-151 listos",
+      "description": "Karafiel timbra cada orden automáticamente. Admisibilidad legal desde el primer día. Subida de e.firma por tenant (Wave E, en camino)."
+    },
+    "ecosystem": {
+      "title": "Fan-out de ecosistema pre-cableado",
+      "description": "En cada orden: CFDI Karafiel, facturación Dhanam, despacho MES Pravara, update de engagement PhyneCRM, webhook Yantra4D. Sin código de pegamento."
+    },
+    "intelligence": {
+      "title": "Precios de mercado en vivo",
+      "description": "El feed de precios Forgesight corre en tu análisis DFM. Cuando el aluminio 6061 sube 12%, tu cotización lo sabe antes que tú."
+    },
+    "multitenant": {
+      "title": "Multi-tenant + white-label",
+      "description": "Aislamiento por tenant a nivel fila. Prefijos S3 por tenant, llaves KMS, audit trails. Trae tu marca, trae tu e.firma."
+    },
+    "api": {
+      "title": "API REST + webhooks firmados",
+      "description": "Cada cotización, orden, pago y evento CFDI disponible vía API y webhook saliente (HMAC-SHA256). Cabléalo a lo que sea."
+    },
+    "i18n": {
+      "title": "Bilingüe ES / EN",
+      "description": "Construido MX-first. Español de verdad, no Google-Translate de relleno. 30+ divisas, geo-detectadas."
+    },
+    "dfm": {
+      "title": "Análisis design-for-manufacturing",
+      "description": "Worker Python de geometría analiza cada subida CAD. Sustitución de material. Recomendación de proceso. Hints de rediseño que reducen costo."
+    }
   },
   "pricing": {
-    "title": "Precios Simples y Transparentes",
-    "subtitle": "Elige el plan perfecto para tus necesidades. Empieza gratis, actualiza cuando quieras, cancela cuando sea.",
+    "title": "Precios",
+    "subtitle": "Gratis para aficionados. Paga solo cuando la plataforma te esté generando dinero. Cancela cuando quieras.",
     "monthly": "Mensual",
-    "yearly": "Anual",
+    "yearly": "Anual — ahorra 20%",
     "save": "Ahorra",
-    "showDetails": "Mostrar Detalles",
-    "hideDetails": "Ocultar Detalles",
+    "showDetails": "Ver matriz completa de capacidades",
+    "hideDetails": "Ocultar detalles",
     "subtotal": "Subtotal",
-    "tax": "Impuestos",
+    "tax": "IVA",
     "fees": "Comisiones",
     "discount": "Descuento",
     "total": "Total",
     "free": {
       "name": "Maker",
-      "description": "Perfecto para hobbyistas y proyectos DIY"
+      "description": "Aficionados DIY, estudiantes, evaluadores",
+      "limits": "3 cotizaciones/mes • 100MB storage • Materiales básicos"
     },
     "pro": {
       "name": "Creator Pro",
-      "description": "Para makers serios y pequeños negocios"
+      "description": "Freelancers, despachos de diseño solo, talleres pequeños",
+      "limits": "50 cotizaciones/mes • 1GB storage • Todos los procesos • Acceso API"
     },
     "business": {
-      "name": "Negocio",
-      "description": "Para talleres, makerspaces y negocios en crecimiento"
+      "name": "Business",
+      "description": "Talleres multi-job, consultorías de servicios, makerspaces",
+      "limits": "Cotizaciones ilimitadas • 10GB • 5 asientos • White-label básico"
     },
     "enterprise": {
-      "name": "Empresa",
-      "description": "Para operaciones grandes con necesidades personalizadas"
-    }
+      "name": "Enterprise",
+      "description": "Fabricantes, integraciones MES, flujos CFDI personalizados",
+      "limits": "Todo ilimitado • SLA • CSM dedicado • e.firma por tenant"
+    },
+    "compareTitle": "Compara cada capacidad",
+    "salesNote": "¿Necesitas trial de 6 meses, SLA multi-tenant, o CFDI por tenant? Háblanos — la mayoría de clientes enterprise entran por una llamada de 30 minutos, no por checkout self-serve."
   },
   "cta": {
-    "ready": "¿Listo para Ahorrar en Tu Próximo Proyecto?",
-    "description": "Has visto los ahorros. Has comparado las opciones. Ahora hagámoslo realidad con tus proyectos reales.",
-    "startTrial": "Iniciar Prueba Gratis de 14 Días",
-    "continueGuest": "o continuar como invitado",
-    "noCreditCard": "Sin Tarjeta de Crédito",
-    "unlimitedQuotes": "Cotizaciones Ilimitadas",
-    "cancelAnytime": "Cancela Cuando Quieras"
+    "ready": "Deja de cotizar como si fuera 2014.",
+    "description": "Corre una cotización real por la plataforma. Si no te ahorra 4 horas para el viernes, el tier gratis es tuyo para siempre.",
+    "startTrial": "Empezar trial Business de 14 días",
+    "continueGuest": "o corre una cotización como invitado →",
+    "noCreditCard": "Sin tarjeta de crédito",
+    "unlimitedQuotes": "Cotizaciones ilimitadas durante el trial",
+    "cancelAnytime": "Cancela cuando quieras"
   },
   "footer": {
-    "tagline": "Tecnología previamente disponible solo para compañías Fortune 500.",
-    "joinCommunity": "Únete a más de 10,000 Makers Ahorrando Dinero Cada Día"
+    "tagline": "Inteligencia de manufactura que antes costaba $50K/año. Ahora $0–$499/mes.",
+    "ecosystem": "Parte de la plataforma MADFAM — Karafiel · Dhanam · Pravara · PhyneCRM · Forgesight",
+    "joinCommunity": "Construido en abierto. Operado con transparencia."
   }
 }
