@@ -22,7 +22,10 @@ import { PricingModule } from './modules/pricing/pricing.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './modules/health/health.module';
 import { JobsModule } from './modules/jobs/jobs.module';
-import { PaymentModule } from './modules/payment/payment.module';
+// PaymentModule (direct Stripe) deleted 2026-04-25 — all payment ops now
+// route through DhanamRelayService + JanuaBillingService in BillingModule.
+// Architecture per operator directive: ONE set of Stripe keys at Dhanam,
+// every other platform funnels through Dhanam's billing API.
 import { OrdersModule } from './modules/orders/orders.module';
 import { GuestModule } from './modules/guest/guest.module';
 import { LinkProcessingModule } from './modules/link-processing/link-processing.module';
@@ -62,7 +65,6 @@ import { GeoModule } from './modules/geo/geo.module';
     AdminModule,
     HealthModule,
     JobsModule,
-    PaymentModule,
     OrdersModule,
     GuestModule,
     LinkProcessingModule,

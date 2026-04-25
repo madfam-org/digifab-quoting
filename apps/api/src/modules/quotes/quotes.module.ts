@@ -9,7 +9,10 @@ import { DhanamMilestoneService } from '../../integrations/dhanam/dhanam-milesto
 import { PravaraDispatchService } from '../../integrations/pravara/pravara-dispatch.service';
 import { FilesModule } from '../files/files.module';
 import { PricingModule } from '../pricing/pricing.module';
-import { PaymentModule } from '../payment/payment.module';
+// PaymentModule deleted 2026-04-25 — quotes route to Dhanam via the
+// DhanamMilestoneService import (per-milestone HMAC-signed invoice
+// creation) and the BillingModule's JanuaBillingService for checkout.
+// Quote-acceptance to-checkout flow lives in QuotesService.
 import { TenantsModule } from '../tenants/tenants.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { EngagementsModule } from '../engagements/engagements.module';
@@ -18,7 +21,6 @@ import { EngagementsModule } from '../engagements/engagements.module';
   imports: [
     FilesModule,
     PricingModule,
-    PaymentModule,
     TenantsModule,
     forwardRef(() => JobsModule),
     EngagementsModule,

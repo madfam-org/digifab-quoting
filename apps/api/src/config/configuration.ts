@@ -39,9 +39,10 @@ export default () => {
       },
     },
 
-    stripe: {
-      secretKey: validatedConfig.STRIPE_SECRET_KEY,
-      webhookSecret: validatedConfig.STRIPE_WEBHOOK_SECRET,
+    // Dhanam billing relay (replaces direct Stripe per 2026-04-25 directive)
+    dhanam: {
+      apiUrl: validatedConfig.DHANAM_API_URL,
+      billingSecret: validatedConfig.DHANAM_BILLING_SECRET,
     },
 
     currency: {

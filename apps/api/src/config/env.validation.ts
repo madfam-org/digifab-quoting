@@ -27,9 +27,15 @@ const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   KMS_KEY_ID: z.string().optional(),
 
-  // Stripe
-  STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
-  STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_'),
+  // Stripe — REMOVED 2026-04-25.
+  //
+  // Cotiza no longer holds Stripe keys. All payment operations route
+  // through Dhanam's billing API (per operator directive: ONE set of
+  // Stripe keys at Dhanam, every other platform funnels through it).
+  //
+  // Dhanam-relay envs that REPLACE these:
+  DHANAM_API_URL: z.string().url(),
+  DHANAM_BILLING_SECRET: z.string().min(32),
 
   // Currency
   DEFAULT_CURRENCY: z.enum(['MXN', 'USD', 'EUR']).default('MXN'),
