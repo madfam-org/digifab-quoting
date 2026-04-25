@@ -321,6 +321,12 @@ PRAVARA_WEBHOOK_TIMEOUT
 - **Yantra4D Webhook**: Outbound quote lifecycle notifications to Yantra4D platform
 - **Dhanam Billing Relay**: Payment event relay to centralized billing platform
 
+## Pricing + PMF
+
+- **Pricing source-of-truth**: `internal-devops/decisions/2026-04-25-tulana-ecosystem-pricing.md`. Cotiza tiers per Tulana intel: Maker $0 / Creator Pro 399 MXN / Business 1,699 MXN / Enterprise 8,499 MXN. **Confidence: low** — landing currently shows USD ($0/$19/$99/$499); operator decision pending whether to flip to Tulana MXN ladder or maintain USD positioning. See decisions log.
+- **PMF measurement**: per RFC 0013 (`internal-devops/rfcs/0013-pmf-via-coforma-and-tulana.md`), NPS + Sean Ellis + retention via `@madfam/pmf-widget` → Tulana `/v1/pmf/*` endpoints. Composite PMF Score informs `recommended_action` (enable_paywall / measure_more / sunset / keep_measuring).
+- **5 audience pages live** (post-overhaul cotiza#32 + #33): `/for/fabricators`, `/for/consultants`, `/for/makerspaces`, `/for/procurement`, plus DIY routed via `/try`. Each page source-tagged via `?source=<persona>` query param for conversion attribution.
+
 ## Known Issues — Audit 2026-04-23
 
 See `/Users/aldoruizluna/labspace/claudedocs/ECOSYSTEM_AUDIT_2026-04-23.md` for the full ecosystem audit.
