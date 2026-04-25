@@ -11,6 +11,23 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
+  # ─── Security: prevent TODO-flagged auth from shipping (Audit R3 follow-up) ──
+  security-todo-auth-grep:
+    name: Security — No TODO-auth markers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if TODO comments mention auth in source
+        run: |
+          # Reject patterns like "TODO: Add auth", "TODO add authn", "// TODO: Authz".
+          # Source dirs only — vendored deps and build artefacts excluded.
+          if grep -RInE "TODO[^\n]*[Aa]uth" apps packages 2>/dev/null \
+              | grep -vE "(node_modules|__pycache__|\.next|dist/|build/|\.turbo)"; then
+            echo "::error::Found TODO comment referencing auth. Fix or remove the TODO before merge."
+            exit 1
+          fi
+          echo "OK: no TODO-auth markers in source."
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
