@@ -1,65 +1,204 @@
 {
   "nav": {
     "home": "Home",
-    "try": "Try It Free",
+    "try": "Try Free",
     "pricing": "Pricing",
     "features": "Features",
+    "forFabricators": "For fabricators",
+    "forDesigners": "For consultants",
+    "forMakerspaces": "For makerspaces",
     "dashboard": "Dashboard",
-    "quotes": "My Quotes",
-    "newQuote": "New Quote",
-    "signIn": "Sign In",
-    "signOut": "Sign Out",
+    "quotes": "My quotes",
+    "newQuote": "New quote",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
     "settings": "Settings"
   },
   "hero": {
-    "title": "Manufacturing Costs",
-    "subtitle": "Solved in Seconds",
-    "description": "Get instant quotes for 3D printing, CNC machining, and laser cutting. Compare materials, optimize costs, and make informed decisions.",
-    "cta": "Try Interactive Demo",
-    "ctaSecondary": "No signup required • Results in seconds • Free forever"
+    "eyebrow": "For makers, fabricators, and design consultancies",
+    "title": "Stop bleeding 5 days on every quote.",
+    "subtitle": "Get one in 60 seconds.",
+    "description": "Cotiza Studio turns CAD files, BOM links, or service scopes into priced, compliance-ready quotes — instantly. 3D printing, CNC, laser cutting, and services-mode (hourly / fixed-fee / milestone). Built for the way real shops work in Mexico and beyond.",
+    "cta": "Try without signing up",
+    "ctaSecondary": "No card. No email. Real geometry analysis.",
+    "ctaTertiary": "See pricing"
+  },
+  "trustBar": {
+    "title": "Built on the MADFAM platform",
+    "subtitle": "Cotiza is one node in an integrated stack — not a standalone tool.",
+    "items": {
+      "karafiel": "CFDI 4.0 + NOM-151 via Karafiel",
+      "dhanam": "Stripe + SPEI + OXXO via Dhanam",
+      "pravara": "MES dispatch via Pravara",
+      "phynecrm": "Engagement sync via PhyneCRM",
+      "forgesight": "Live market pricing via Forgesight"
+    }
+  },
+  "pains": {
+    "title": "The pains we kill",
+    "subtitle": "Not features. Pains. The kind that make you cancel meetings.",
+    "items": {
+      "quoteTurnaround": {
+        "pain": "5 days waiting for a quote from your usual shop.",
+        "fix": "60 seconds. Same geometry, same cost model, no human in the loop."
+      },
+      "bomExtraction": {
+        "pain": "An hour transcribing a BOM from an Instructables page into a spreadsheet.",
+        "fix": "Paste the link. We extract the BOM. We price every line."
+      },
+      "cfdiPaperwork": {
+        "pain": "Mexican fabricators drowning in CFDI 4.0, complemento de pago, NOM-151 timestamps.",
+        "fix": "Karafiel auto-stamps every order. Legally admissible from day one."
+      },
+      "multiVendor": {
+        "pain": "Procurement chasing 5 vendors for 5 different quote formats.",
+        "fix": "One spec in. Apples-to-apples comparison out. Standardized DFM notes."
+      },
+      "designIteration": {
+        "pain": "Designers iterating without knowing what's manufacturable.",
+        "fix": "DFM analysis on every upload. Material substitution suggestions before you tape out."
+      },
+      "currencyChaos": {
+        "pain": "Cross-border buyers seeing one price in MXN, another in USD, neither matches.",
+        "fix": "30+ currencies. Geo-detected. Live rates funneled through Dhanam (RFC 0011)."
+      }
+    }
   },
   "stats": {
-    "users": "Happy Makers",
-    "quoteTime": "Quote Time",
-    "savings": "Average Savings",
-    "uptime": "Uptime"
+    "title": "What we actually measure",
+    "subtitle": "No vanity metrics. No '10,000+ Happy Makers' stock copy. Real targets, with the SLO behind them.",
+    "items": {
+      "apiLatency": {
+        "value": "< 400ms",
+        "label": "API response time",
+        "context": "p95 SLO. Measured continuously. Status page link below."
+      },
+      "fullQuote": {
+        "value": "< 60s",
+        "label": "Full quote generation",
+        "context": "3D printing + laser. CNC up to 120s with full DFM."
+      },
+      "currencies": {
+        "value": "30+",
+        "label": "Currencies supported",
+        "context": "Geo-detected. Funneled through Dhanam FX (RFC 0011)."
+      },
+      "uptime": {
+        "value": "99.9%",
+        "label": "Availability SLO",
+        "context": "Targeted, not yet operationally verified. Live status page coming."
+      }
+    },
+    "honestyNote": "We deliberately removed inflated 'thousands of users' metrics from this page on 2026-04-25. We'll replace them with real numbers when we have them."
   },
-  "persona": {
-    "title": "Choose Your Manufacturing Journey",
-    "description": "Whether you're a DIY maker deciding if you should build it yourself, or a shop owner needing professional quoting tools - we've got you covered",
-    "diyMaker": {
-      "title": "DIY Maker & Hobbyist",
-      "description": "Should I make this myself or pay someone else?"
+  "personas": {
+    "title": "Who we built this for",
+    "subtitle": "If any of these sound like you, the platform was designed around your workflow.",
+    "fabricator": {
+      "title": "Mexican fabricator",
+      "tagline": "10–500 jobs/mo, CFDI is non-negotiable",
+      "description": "You run a fab shop. You can't afford to ship a job without a CFDI 4.0. Your customers want to compare price + lead time before they sign. You spend 4 hours a day quoting and another 2 in compliance paperwork.",
+      "fixes": [
+        "Quote any geometry in 60s — paste a link, upload a STEP, or scope a service",
+        "CFDI auto-stamps via Karafiel the moment a quote becomes an order",
+        "NOM-151 legal admissibility timestamping built in",
+        "Dispatch fab jobs to Pravara MES with engagement linkage to your CRM",
+        "Multi-tenant: bring your own e.firma, your own emisor identity"
+      ],
+      "cta": "See fabricator features"
     },
-    "shopOwner": {
-      "title": "Shop & Makerspace Owner",
-      "description": "I need professional quoting tools for my business"
+    "consultant": {
+      "title": "Design consultant or engineering firm",
+      "tagline": "You bill design hours, not just parts",
+      "description": "You quote design-for-manufacturing reviews, fixture design, prototype runs, full product engineering. You bill in hours, fixed fees, and milestones. Your CRM, your invoicing, and your fab vendors don't talk to each other.",
+      "fixes": [
+        "Services-mode quoting: hourly, fixed-fee, milestone — first-class billing types",
+        "Group fabrication + services quotes under one client engagement (PhyneCRM-synced)",
+        "Per-milestone invoicing fans out to Dhanam automatically",
+        "DFM analysis runs on every CAD upload — included in every services quote",
+        "Live Forgesight market pricing so your DFM advice cites real numbers"
+      ],
+      "cta": "See consultant features"
     },
-    "designer": {
-      "title": "Product Designer & Engineer",
-      "description": "I need design-for-manufacturing insights"
+    "makerspace": {
+      "title": "Makerspace owner or service bureau",
+      "tagline": "You want your members quoting. You want a cut.",
+      "description": "You run a makerspace, a coworking-fab hybrid, or a service bureau franchise. You want to give your members instant quoting without standing up your own platform. You want to keep your branding, take a transaction fee, and stop being a help desk.",
+      "fixes": [
+        "Full white-label: your domain, your branding, your customer list",
+        "Multi-tenant infrastructure: per-tenant S3 prefixes, KMS keys, audit logs",
+        "Transaction-fee collection on every order — automatic split to Dhanam",
+        "Member management with role-based access (owner/admin/contributor/viewer)",
+        "API + webhooks for everything: connect Slack, Notion, your existing CRM"
+      ],
+      "cta": "Schedule a makerspace demo"
     },
-    "procurement": {
-      "title": "Procurement Specialist",
-      "description": "I need competitive pricing & supplier intelligence"
-    },
-    "educator": {
-      "title": "Educator & Student",
-      "description": "I need real manufacturing cost data for learning"
+    "diy": {
+      "title": "DIY maker or hobbyist",
+      "tagline": "Should I print this or pay someone?",
+      "description": "You build things. You want to know if it's cheaper to print at home, ship to a service bureau, or buy off-the-shelf. You don't want to learn five quoting tools to find out.",
+      "fixes": [
+        "Free tier: 3 quotes a month, 100MB storage, no credit card",
+        "DIY-vs-pro calculator: time + machine cost + your hourly rate vs. service price",
+        "Paste an Instructables/Thingiverse link — we extract the BOM",
+        "Compare materials side-by-side before you spend a peso"
+      ],
+      "cta": "Start free"
     }
   },
   "linkQuote": {
-    "title": "Turn Any Maker Project Into an Instant Quote",
-    "description": "Just paste a link from Instructables, Thingiverse, GitHub, or any maker platform. Our AI extracts the bill of materials and generates personalized quotes in seconds."
+    "title": "Paste a link. Get a quote.",
+    "description": "Instructables, Thingiverse, GitHub, Hackaday, Make: Magazine. Drop a URL and we'll extract the bill of materials, price every line in your currency, and tell you whether DIY or service-bureau is cheaper for your specific volume.",
+    "examples": "Try with a real project →"
+  },
+  "features": {
+    "title": "What's actually in the platform",
+    "subtitle": "Cotiza is the quoting + compliance node of the MADFAM platform. Here's the surface.",
+    "fast": {
+      "title": "Instant multi-process quotes",
+      "description": "FFF/SLA 3D printing, 3-axis CNC (aluminum/steel/plastics), 2D laser cutting. One spec in, side-by-side comparison out."
+    },
+    "services": {
+      "title": "Services-mode B2B billing",
+      "description": "First-class hourly, fixed-fee, and milestone billable types. The same engine that prices a CNC part prices a 40-hour engineering review."
+    },
+    "compliance": {
+      "title": "CFDI 4.0 + NOM-151 ready",
+      "description": "Karafiel stamps every order automatically. Legal admissibility from day one. Per-tenant e.firma upload (Wave E, shipping)."
+    },
+    "ecosystem": {
+      "title": "Pre-wired ecosystem fan-out",
+      "description": "On every order: Karafiel CFDI, Dhanam invoicing, Pravara MES dispatch, PhyneCRM engagement update, Yantra4D webhook. No glue code."
+    },
+    "intelligence": {
+      "title": "Live market pricing",
+      "description": "Forgesight pricing feed runs in your DFM analysis. When aluminum 6061 spikes 12%, your quote knows before you do."
+    },
+    "multitenant": {
+      "title": "Multi-tenant + white-label",
+      "description": "Row-level tenant isolation. Per-tenant S3 prefixes, KMS keys, audit trails. Bring your own brand, your own e.firma."
+    },
+    "api": {
+      "title": "REST API + signed webhooks",
+      "description": "Every quote, order, payment, CFDI event available via API and outbound webhook (HMAC-SHA256). Wire it into anything."
+    },
+    "i18n": {
+      "title": "Bilingual ES / EN",
+      "description": "Built MX-first. Real Spanish, not a Google-translated afterthought. 30+ currencies, geo-detected."
+    },
+    "dfm": {
+      "title": "Design-for-manufacturing analysis",
+      "description": "Python geometry worker analyzes every CAD upload. Material substitution. Process recommendation. Cost-reducing redesign hints."
+    }
   },
   "pricing": {
-    "title": "Simple, Transparent Pricing",
-    "subtitle": "Choose the perfect plan for your needs. Start free, upgrade anytime, cancel whenever.",
+    "title": "Pricing",
+    "subtitle": "Free for hobbyists. Pay only when the platform is making you money. Cancel anytime.",
     "monthly": "Monthly",
-    "yearly": "Yearly",
+    "yearly": "Yearly — save 20%",
     "save": "Save",
-    "showDetails": "Show Details",
-    "hideDetails": "Hide Details",
+    "showDetails": "Show full feature matrix",
+    "hideDetails": "Hide details",
     "subtotal": "Subtotal",
     "tax": "Tax",
     "fees": "Fees",
@@ -67,32 +206,39 @@
     "total": "Total",
     "free": {
       "name": "Maker",
-      "description": "Perfect for hobbyists and DIY projects"
+      "description": "DIY hobbyists, students, evaluators",
+      "limits": "3 quotes/mo • 100MB storage • Basic materials"
     },
     "pro": {
       "name": "Creator Pro",
-      "description": "For serious makers and small businesses"
+      "description": "Freelancers, solo design firms, small shops",
+      "limits": "50 quotes/mo • 1GB storage • All processes • API access"
     },
     "business": {
       "name": "Business",
-      "description": "For shops, makerspaces, and growing businesses"
+      "description": "Multi-job shops, services consultancies, makerspaces",
+      "limits": "Unlimited quotes • 10GB • 5 seats • White-label basic"
     },
     "enterprise": {
       "name": "Enterprise",
-      "description": "For large operations with custom needs"
-    }
+      "description": "Fabricators, MES integrations, custom CFDI flows",
+      "limits": "Unlimited everything • SLA • dedicated CSM • per-tenant e.firma"
+    },
+    "compareTitle": "Compare every feature",
+    "salesNote": "Need a 6-month trial, multi-tenant SLA, or per-tenant CFDI? Talk to us — most enterprise customers come in via a 30-minute call, not a self-serve checkout."
   },
   "cta": {
-    "ready": "Ready to Save on Your Next Project?",
-    "description": "You've seen the savings. You've compared the options. Now let's make it happen with your actual projects.",
-    "startTrial": "Start Free 14-Day Trial",
-    "continueGuest": "or continue as guest",
-    "noCreditCard": "No Credit Card",
-    "unlimitedQuotes": "Unlimited Quotes",
-    "cancelAnytime": "Cancel Anytime"
+    "ready": "Stop quoting like it's 2014.",
+    "description": "Run one real quote through the platform. If it doesn't save you 4 hours by Friday, the free tier is yours forever.",
+    "startTrial": "Start 14-day Business trial",
+    "continueGuest": "or run one quote as a guest →",
+    "noCreditCard": "No credit card required",
+    "unlimitedQuotes": "Unlimited quotes during trial",
+    "cancelAnytime": "Cancel any time"
   },
   "footer": {
-    "tagline": "Technology previously only available to Fortune 500 companies.",
-    "joinCommunity": "Join 10,000+ Makers Saving Money Every Day"
+    "tagline": "Manufacturing intelligence that previously cost $50K/yr. Now $0–$499/mo.",
+    "ecosystem": "Part of the MADFAM platform — Karafiel · Dhanam · Pravara · PhyneCRM · Forgesight",
+    "joinCommunity": "Built openly. Operated transparently."
   }
 }
