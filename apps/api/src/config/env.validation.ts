@@ -36,6 +36,11 @@ const envSchema = z.object({
   // Dhanam-relay envs that REPLACE these:
   DHANAM_API_URL: z.string().url(),
   DHANAM_BILLING_SECRET: z.string().min(32),
+  // Bearer token for synchronous Dhanam billing API calls (e.g. POST
+  // /v1/billing/upgrade for checkout URL generation). Issued by Dhanam
+  // and rotated via the Wave A runbook. Required because Cotiza is the
+  // billing-API CLIENT — Stripe keys live solely at Dhanam.
+  DHANAM_API_TOKEN: z.string().min(16),
 
   // Currency
   DEFAULT_CURRENCY: z.enum(['MXN', 'USD', 'EUR']).default('MXN'),
