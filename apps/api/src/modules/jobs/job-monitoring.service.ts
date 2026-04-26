@@ -15,7 +15,7 @@ export class JobMonitoringService {
   async getQueueStats() {
     const [quoteStats, fileStats, emailStats] = await Promise.all([
       this.getQueueInfo(this.quoteQueue, 'quote-calculation'),
-      this.getQueueInfo(this.fileQueue, 'file-analysis'), 
+      this.getQueueInfo(this.fileQueue, 'file-analysis'),
       this.getQueueInfo(this.emailQueue, 'email-notification'),
     ]);
 

@@ -7,10 +7,7 @@ import { Request } from 'express';
 import { firstValueFrom } from 'rxjs';
 import {
   GeoDetection,
-  GeoMapping,
   Currency,
-  COUNTRY_CURRENCY_MAP,
-  COUNTRY_LOCALE_MAP,
   GEO_MAPPINGS,
   getDefaultCurrencyForCountry,
   getDefaultLocaleForCountry,

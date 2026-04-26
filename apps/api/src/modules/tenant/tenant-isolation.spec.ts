@@ -169,8 +169,22 @@ describe('Multi-Tenant Isolation (Integration)', () => {
       await tenantContext.run(context, async () => {
         await prismaService.material.createMany({
           data: [
-            { tenantId: 'tenant-123', name: 'Material 1', code: 'M1', process: '3d_printing', density: 1.0, costPerUnit: 10 } as any,
-            { tenantId: 'tenant-123', name: 'Material 2', code: 'M2', process: '3d_printing', density: 1.0, costPerUnit: 20 } as any,
+            {
+              tenantId: 'tenant-123',
+              name: 'Material 1',
+              code: 'M1',
+              process: '3d_printing',
+              density: 1.0,
+              costPerUnit: 10,
+            } as any,
+            {
+              tenantId: 'tenant-123',
+              name: 'Material 2',
+              code: 'M2',
+              process: '3d_printing',
+              density: 1.0,
+              costPerUnit: 20,
+            } as any,
           ],
         });
       });

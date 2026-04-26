@@ -132,6 +132,7 @@ terraform destroy
 - `GET /api/v1/admin/*` - Admin configuration endpoints (role-protected)
 
 For complete route documentation, see:
+
 - [docs/ROUTES.md](docs/ROUTES.md) - Comprehensive route listing with auth requirements
 - [docs/API_REFERENCE.md](docs/API_REFERENCE.md) - Full API documentation with examples
 - [docs/NAVIGATION_AUDIT.md](docs/NAVIGATION_AUDIT.md) - Navigation audit and user flows
@@ -151,6 +152,7 @@ Key files: `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules
 ### Ecosystem Webhook Integrations
 
 **Forgesight Webhook** (`POST /api/v1/webhooks/forgesight`):
+
 - Receives `price.updated` events from Forgesight pricing feed
 - HMAC-SHA256 signature verification via `x-forgesight-signature` header
 - Invalidates all cached Forgesight pricing data (4 cache patterns)
@@ -158,6 +160,7 @@ Key files: `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules
 - Env: `FORGESIGHT_WEBHOOK_SECRET`
 
 **Yantra4D Webhook Service** (`Yantra4dWebhookService`):
+
 - Fires outbound webhooks to Yantra4D when quotes originated from Yantra4D reach terminal status
 - Identifies Yantra4D quotes via `metadata.source === 'yantra4d'` and `metadata.yantra4dProject`
 - HMAC-SHA256 signed via `x-cotiza-signature` header
@@ -166,6 +169,7 @@ Key files: `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules
 - Env: `YANTRA4D_API_URL`, `YANTRA4D_WEBHOOK_SECRET`, `YANTRA4D_WEBHOOK_TIMEOUT`
 
 **Dhanam Billing Relay** (`DhanamRelayService`):
+
 - Relays payment events to Dhanam billing platform
 - HMAC-SHA256 signed via `x-cotiza-signature` header
 - Key files: `apps/api/src/modules/billing/services/dhanam-relay.service.ts`
@@ -204,6 +208,7 @@ Services-mode (`Quote.quoteType === 'services'`) is feature-flag gated per tenan
 On ORDERED (post-payment) transitions, `QuotesService.handleOrdered(tenantId, quoteId)` fans out three fire-and-forget outbound integrations via `Promise.allSettled` from `OrdersService.createOrderFromQuote`:
 
 **Karafiel CFDI/NOM-151 Compliance** (`KarafielComplianceService`):
+
 - POSTs `/api/v1/cfdi/issue/` with conceptos mapped from quote items (one concepto per QuoteItem, `tipo_comprobante='I'`)
 - Auth: Janua-minted bearer (`KARAFIEL_SERVICE_TOKEN`), not HMAC — Karafiel sits behind Janua OIDC
 - Skips when `receptorRfc` (from `quote.metadata.receptorRfc` or `tenant.settings.receptorRfc`) is missing
@@ -211,6 +216,7 @@ On ORDERED (post-payment) transitions, `QuotesService.handleOrdered(tenantId, qu
 - Env: `KARAFIEL_API_URL`, `KARAFIEL_SERVICE_TOKEN`, `KARAFIEL_EMISOR_RFC`, `KARAFIEL_CREDENTIAL_ID`, `KARAFIEL_WEBHOOK_TIMEOUT` (default 15000)
 
 **Dhanam Milestone Invoicing** (`DhanamMilestoneService`):
+
 - Iterates `servicesDetails.milestones[]` for each `billableType='milestone'` QuoteItem and POSTs one invoice per milestone to `/api/v1/invoices`
 - HMAC-SHA256 signed (same pattern as PhyneCRM) + stable `Idempotency-Key: dhanam-milestone:<quoteItemId>:<milestoneId>` header
 - Per-milestone fire-and-forget (one failure doesn't stop siblings)
@@ -218,6 +224,7 @@ On ORDERED (post-payment) transitions, `QuotesService.handleOrdered(tenantId, qu
 - Env: `DHANAM_API_URL`, `DHANAM_BILLING_SECRET`, `DHANAM_WEBHOOK_TIMEOUT` (default 10000)
 
 **Pravara MES Dispatch** (`PravaraDispatchService`):
+
 - POSTs a job spec to `/api/v1/mes/jobs` with every QuoteItem that has no `servicesDetails` (i.e. fab items)
 - Includes `engagement_id` so Pravara's status-webhook writes back with the right engagement linkage
 - HMAC-SHA256 signed; skips when the quote is services-only

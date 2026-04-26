@@ -117,19 +117,19 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm run db:generate --workspace=@cotiza/api
+        run: pnpm --filter @cotiza/api run db:generate
 
       - name: Run migrations
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-        run: pnpm run db:push --workspace=@cotiza/api
+        run: pnpm --filter @cotiza/api run db:push
 
       - name: Run API tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-secret
-        run: pnpm run test --workspace=@cotiza/api
+        run: pnpm --filter @cotiza/api run test
 
   test-worker:
     name: Worker Tests
@@ -151,7 +151,9 @@ jobs:
 
       - name: Run worker tests
         working-directory: ./apps/worker
-        run: pytest
+        run: |
+          # Allow exit code 5 (no tests collected) until worker test suite is built out.
+          pytest || [ $? -eq 5 ]
 
   build:
     name: Build
@@ -224,7 +226,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run type checking
-        run: |
-          pnpm run typecheck --workspace=@cotiza/shared
-          pnpm run typecheck --workspace=@cotiza/pricing-engine
-          pnpm run typecheck --workspace=@cotiza/ui
+        # Use turbo so the `^build` dependency in turbo.json fires first
+        # (pricing-engine's tsc needs @cotiza/shared's dist/ to exist).
+        run: pnpm exec turbo run typecheck --filter=@cotiza/shared --filter=@cotiza/pricing-engine --filter=@cotiza/ui

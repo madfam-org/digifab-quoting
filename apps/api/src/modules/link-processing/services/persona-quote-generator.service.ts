@@ -1,10 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UserPersona, ProcessType } from '@cotiza/shared';
-import { 
-  BOMItemDto, 
-  QuoteRecommendationDto, 
-  PersonaQuoteDto 
-} from '../dto/analyze-link.dto';
+import { BOMItemDto, QuoteRecommendationDto, PersonaQuoteDto } from '../dto/analyze-link.dto';
 import { ParsedBOM } from './bom-parser.service';
 
 interface PersonaRules {
@@ -35,17 +31,19 @@ export class PersonaQuoteGeneratorService {
     tenantId: string,
     parsedBOM: ParsedBOM,
     requestedPersona?: UserPersona,
-    preferences?: any
+    preferences?: any,
   ): Promise<PersonaQuoteDto[]> {
     this.logger.log(`Generating persona-based quotes for ${parsedBOM.items.length} items`);
 
-    const personasToGenerate = requestedPersona ? [requestedPersona] : [
-      UserPersona.DIY_MAKER,
-      UserPersona.PROFESSIONAL_SHOP,
-      UserPersona.EDUCATOR,
-      UserPersona.PRODUCT_DESIGNER,
-      UserPersona.PROCUREMENT_SPECIALIST
-    ];
+    const personasToGenerate = requestedPersona
+      ? [requestedPersona]
+      : [
+          UserPersona.DIY_MAKER,
+          UserPersona.PROFESSIONAL_SHOP,
+          UserPersona.EDUCATOR,
+          UserPersona.PRODUCT_DESIGNER,
+          UserPersona.PROCUREMENT_SPECIALIST,
+        ];
 
     const quotes: PersonaQuoteDto[] = [];
 
@@ -65,13 +63,13 @@ export class PersonaQuoteGeneratorService {
     tenantId: string,
     parsedBOM: ParsedBOM,
     persona: UserPersona,
-    preferences?: any
+    preferences?: any,
   ): Promise<PersonaQuoteDto> {
     const rules = this.getPersonaRules(persona);
-    
+
     // Filter and prioritize items based on persona preferences
     const relevantItems = this.filterItemsForPersona(parsedBOM.items, rules);
-    
+
     // Generate recommendations for each item
     const recommendations: QuoteRecommendationDto[] = [];
     const alternatives: QuoteRecommendationDto[] = [];
@@ -123,13 +121,13 @@ export class PersonaQuoteGeneratorService {
           educational_content: true,
         },
       },
-      
+
       [UserPersona.PROFESSIONAL_SHOP]: {
         priorities: ['quality', 'speed', 'reliability'],
         manufacturing_preferences: [
-          ProcessType.CNC_MILLING_3AXIS, 
-          ProcessType.PRINTING_3D_SLA, 
-          ProcessType.LASER_CUTTING
+          ProcessType.CNC_MILLING_3AXIS,
+          ProcessType.PRINTING_3D_SLA,
+          ProcessType.LASER_CUTTING,
         ],
         budget_sensitivity: 'medium',
         time_flexibility: 'low',
@@ -145,7 +143,7 @@ export class PersonaQuoteGeneratorService {
           technical_support: true,
         },
       },
-      
+
       [UserPersona.EDUCATOR]: {
         priorities: ['educational_value', 'safety', 'cost'],
         manufacturing_preferences: [ProcessType.PRINTING_3D_FFF, ProcessType.LASER_CUTTING],
@@ -160,13 +158,13 @@ export class PersonaQuoteGeneratorService {
           bulk_discounts: true,
         },
       },
-      
+
       [UserPersona.PRODUCT_DESIGNER]: {
         priorities: ['quality', 'aesthetics', 'functionality'],
         manufacturing_preferences: [
-          ProcessType.PRINTING_3D_SLA, 
+          ProcessType.PRINTING_3D_SLA,
           ProcessType.CNC_MILLING_3AXIS,
-          ProcessType.PRINTING_3D_FFF
+          ProcessType.PRINTING_3D_FFF,
         ],
         budget_sensitivity: 'medium',
         time_flexibility: 'medium',
@@ -179,13 +177,13 @@ export class PersonaQuoteGeneratorService {
           quality_certifications: true,
         },
       },
-      
+
       [UserPersona.PROCUREMENT_SPECIALIST]: {
         priorities: ['cost', 'supplier_reliability', 'scalability'],
         manufacturing_preferences: [
           ProcessType.CNC_MILLING_3AXIS,
           ProcessType.PRINTING_3D_SLA,
-          ProcessType.LASER_CUTTING
+          ProcessType.LASER_CUTTING,
         ],
         budget_sensitivity: 'high',
         time_flexibility: 'medium',
@@ -207,12 +205,14 @@ export class PersonaQuoteGeneratorService {
   }
 
   private filterItemsForPersona(items: BOMItemDto[], rules: PersonaRules): BOMItemDto[] {
-    return items.filter(item => {
+    return items.filter((item) => {
       // Filter out items that don't match persona preferences
-      if (item.manufacturingMethod && !rules.manufacturing_preferences.includes(item.manufacturingMethod)) {
+      if (
+        item.manufacturingMethod &&
+        !rules.manufacturing_preferences.includes(item.manufacturingMethod)
+      ) {
         // For professional personas, skip DIY-only items
-        if (rules.recommendations.include_diy_options === false && 
-            item.category === 'diy_tool') {
+        if (rules.recommendations.include_diy_options === false && item.category === 'diy_tool') {
           return false;
         }
       }
@@ -220,10 +220,14 @@ export class PersonaQuoteGeneratorService {
       // Filter by safety requirements for educators
       if (rules.priorities.includes('safety')) {
         const unsafeKeywords = ['sharp', 'dangerous', 'toxic', 'high voltage'];
-        if (unsafeKeywords.some(keyword => 
-          item.name.toLowerCase().includes(keyword) ||
-          (item.specifications?.notes && item.specifications.notes.toLowerCase().includes(keyword))
-        )) {
+        if (
+          unsafeKeywords.some(
+            (keyword) =>
+              item.name.toLowerCase().includes(keyword) ||
+              (item.specifications?.notes &&
+                item.specifications.notes.toLowerCase().includes(keyword)),
+          )
+        ) {
           return false;
         }
       }
@@ -235,7 +239,7 @@ export class PersonaQuoteGeneratorService {
   private async generateItemRecommendation(
     tenantId: string,
     item: BOMItemDto,
-    rules: PersonaRules
+    rules: PersonaRules,
   ): Promise<QuoteRecommendationDto> {
     let recommendedService = item.manufacturingMethod;
     let material = item.material;
@@ -247,7 +251,7 @@ export class PersonaQuoteGeneratorService {
         // Standard component - no manufacturing needed
         return this.createPurchaseRecommendation(item, rules);
       }
-      
+
       // Suggest manufacturing method based on persona preferences
       recommendedService = this.suggestManufacturingMethod(item, rules);
       confidence = 0.6;
@@ -260,11 +264,11 @@ export class PersonaQuoteGeneratorService {
 
     // Get pricing estimate
     const costBreakdown = await this.estimateManufacturingCost(
-      tenantId, 
-      recommendedService, 
-      material, 
+      tenantId,
+      recommendedService,
+      material,
       item,
-      rules
+      rules,
     );
 
     // Generate reason code
@@ -281,7 +285,7 @@ export class PersonaQuoteGeneratorService {
 
   private createPurchaseRecommendation(
     item: BOMItemDto,
-    rules: PersonaRules
+    rules: PersonaRules,
   ): QuoteRecommendationDto {
     const unitCost = item.unitCost || this.estimateComponentCost(item, rules);
     const total = unitCost * item.quantity;
@@ -302,20 +306,26 @@ export class PersonaQuoteGeneratorService {
 
   private suggestManufacturingMethod(item: BOMItemDto, rules: PersonaRules): ProcessType {
     const itemName = item.name.toLowerCase();
-    
+
     // Suggest based on item characteristics and persona preferences
-    if (itemName.includes('bracket') || itemName.includes('mount') || itemName.includes('housing')) {
-      if (rules.quality_requirements === 'production' && 
-          rules.manufacturing_preferences.includes(ProcessType.CNC_MILLING_3AXIS)) {
+    if (
+      itemName.includes('bracket') ||
+      itemName.includes('mount') ||
+      itemName.includes('housing')
+    ) {
+      if (
+        rules.quality_requirements === 'production' &&
+        rules.manufacturing_preferences.includes(ProcessType.CNC_MILLING_3AXIS)
+      ) {
         return ProcessType.CNC_MILLING_3AXIS;
       }
       return ProcessType.PRINTING_3D_FFF;
     }
-    
+
     if (itemName.includes('panel') || itemName.includes('plate') || itemName.includes('flat')) {
       return ProcessType.LASER_CUTTING;
     }
-    
+
     // Default to first preference
     return rules.manufacturing_preferences[0] || ProcessType.PRINTING_3D_FFF;
   }
@@ -327,25 +337,25 @@ export class PersonaQuoteGeneratorService {
           return 'PETG';
         }
         return 'PLA';
-        
+
       case ProcessType.PRINTING_3D_SLA:
         if (rules.priorities.includes('aesthetics')) {
           return 'Clear Resin';
         }
         return 'Standard Resin';
-        
+
       case ProcessType.CNC_MILLING_3AXIS:
         if (rules.quality_requirements === 'production') {
           return 'Aluminum 6061';
         }
         return 'Aluminum 6061';
-        
+
       case ProcessType.LASER_CUTTING:
         if (rules.priorities.includes('aesthetics')) {
           return 'Acrylic Clear 3mm';
         }
         return 'Plywood 3mm';
-        
+
       default:
         return 'PLA';
     }
@@ -356,20 +366,20 @@ export class PersonaQuoteGeneratorService {
     process: ProcessType,
     material: string,
     item: BOMItemDto,
-    rules: PersonaRules
+    rules: PersonaRules,
   ): Promise<{ material: number; manufacturing: number; margin: number; total: number }> {
     try {
       // Use actual pricing service if available
       // For now, we'll use simplified estimation
       const baseManufacturingCost = this.getBaseManufacturingCost(process);
       const materialCost = this.getMaterialCost(material, process);
-      
+
       const subtotal = (baseManufacturingCost + materialCost) * item.quantity;
-      
+
       // Apply persona-specific margin
       const marginRate = this.getMarginRate(rules);
       const margin = subtotal * marginRate;
-      
+
       return {
         material: materialCost * item.quantity,
         manufacturing: baseManufacturingCost * item.quantity,
@@ -395,22 +405,22 @@ export class PersonaQuoteGeneratorService {
       [ProcessType.CNC_MILLING_3AXIS]: 25,
       [ProcessType.LASER_CUTTING]: 12,
     };
-    
+
     return costs[process] || 10;
   }
 
   private getMaterialCost(material: string, _process: ProcessType): number {
     const materialCosts = {
-      'PLA': 3,
-      'PETG': 4,
-      'ABS': 3.5,
+      PLA: 3,
+      PETG: 4,
+      ABS: 3.5,
       'Standard Resin': 8,
       'Clear Resin': 12,
       'Aluminum 6061': 15,
       'Acrylic Clear 3mm': 5,
       'Plywood 3mm': 2,
     };
-    
+
     return materialCosts[material] || 5;
   }
 
@@ -427,29 +437,25 @@ export class PersonaQuoteGeneratorService {
 
   private estimateComponentCost(item: BOMItemDto, rules: PersonaRules): number {
     const baseCosts = {
-      'electronics': 15,
-      'hardware': 2,
-      'wiring': 5,
-      'component': 10,
+      electronics: 15,
+      hardware: 2,
+      wiring: 5,
+      component: 10,
     };
-    
+
     let cost = baseCosts[item.category] || 10;
-    
+
     // Adjust for persona preferences
     if (rules.quality_requirements === 'production') {
       cost *= 1.5; // Higher quality components cost more
     }
-    
+
     return cost;
   }
 
-  private generateReasonCode(
-    process: ProcessType,
-    rules: PersonaRules,
-    _item: BOMItemDto
-  ): string {
+  private generateReasonCode(process: ProcessType, rules: PersonaRules, _item: BOMItemDto): string {
     if (!process) return 'standard_purchase';
-    
+
     if (rules.priorities[0] === 'cost') {
       return 'cost_optimized';
     }
@@ -459,28 +465,29 @@ export class PersonaQuoteGeneratorService {
     if (rules.priorities[0] === 'speed') {
       return 'time_optimized';
     }
-    
+
     return 'persona_matched';
   }
 
   private async generateAlternatives(
     tenantId: string,
     item: BOMItemDto,
-    rules: PersonaRules
+    rules: PersonaRules,
   ): Promise<QuoteRecommendationDto[]> {
     const alternatives: QuoteRecommendationDto[] = [];
-    
+
     // Generate alternative manufacturing methods
-    const alternativeMethods = rules.manufacturing_preferences.filter(method => 
-      method !== item.manufacturingMethod
+    const alternativeMethods = rules.manufacturing_preferences.filter(
+      (method) => method !== item.manufacturingMethod,
     );
-    
-    for (const method of alternativeMethods.slice(0, 2)) { // Limit to 2 alternatives
+
+    for (const method of alternativeMethods.slice(0, 2)) {
+      // Limit to 2 alternatives
       try {
         const altRecommendation = await this.generateItemRecommendation(
           tenantId,
           { ...item, manufacturingMethod: method },
-          rules
+          rules,
         );
         altRecommendation.reasonCode = 'alternative_method';
         alternatives.push(altRecommendation);
@@ -488,45 +495,51 @@ export class PersonaQuoteGeneratorService {
         this.logger.error(`Failed to generate alternative for ${method}:`, error);
       }
     }
-    
+
     return alternatives;
   }
 
-  private calculateLeadTime(recommendations: QuoteRecommendationDto[], rules: PersonaRules): number {
+  private calculateLeadTime(
+    recommendations: QuoteRecommendationDto[],
+    rules: PersonaRules,
+  ): number {
     const baseTimes = {
       [ProcessType.PRINTING_3D_FFF]: 2,
       [ProcessType.PRINTING_3D_SLA]: 3,
       [ProcessType.CNC_MILLING_3AXIS]: 7,
       [ProcessType.LASER_CUTTING]: 1,
     };
-    
+
     let maxLeadTime = 0;
-    
-    recommendations.forEach(rec => {
+
+    recommendations.forEach((rec) => {
       if (rec.recommendedService) {
         const baseTime = baseTimes[rec.recommendedService] || 3;
-        
+
         // Add buffer time based on persona requirements
         let leadTime = baseTime;
         if (rules.quality_requirements === 'production') {
           leadTime += 2; // Extra time for quality checks
         }
-        
+
         maxLeadTime = Math.max(maxLeadTime, leadTime);
       }
     });
-    
+
     // Add shipping time
     return maxLeadTime + 2;
   }
 
-  private generatePersonaCustomizations(rules: PersonaRules, _preferences?: any): Array<{
+  private generatePersonaCustomizations(
+    rules: PersonaRules,
+    _preferences?: any,
+  ): Array<{
     type: string;
     description: string;
     value: any;
   }> {
     const customizations = [];
-    
+
     if (rules.recommendations.bulk_discounts) {
       customizations.push({
         type: 'bulk_discount',
@@ -534,7 +547,7 @@ export class PersonaQuoteGeneratorService {
         value: { threshold: 10, discount: 0.15 },
       });
     }
-    
+
     if (rules.recommendations.quality_certifications) {
       customizations.push({
         type: 'quality_certification',
@@ -542,7 +555,7 @@ export class PersonaQuoteGeneratorService {
         value: { certification: 'ISO 9001', cost_addon: 50 },
       });
     }
-    
+
     if (rules.recommendations.lead_time_guarantees) {
       customizations.push({
         type: 'lead_time_guarantee',
@@ -550,7 +563,7 @@ export class PersonaQuoteGeneratorService {
         value: { guarantee: true, penalty: 0.1 },
       });
     }
-    
+
     if (rules.recommendations.educational_content) {
       customizations.push({
         type: 'educational_resources',
@@ -558,7 +571,7 @@ export class PersonaQuoteGeneratorService {
         value: { included: true },
       });
     }
-    
+
     return customizations;
   }
 }

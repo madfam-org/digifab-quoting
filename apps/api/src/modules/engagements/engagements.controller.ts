@@ -7,13 +7,7 @@
  *   the PhyneCRM portal to render the two-cards-per-engagement layout
  *   (e.g. for the tablaco flow: physical + digital quotes side-by-side).
  */
-import {
-  Controller,
-  Get,
-  Param,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -51,10 +45,7 @@ export class EngagementsController {
     @Req() req: AuthenticatedRequest,
     @Param('phynecrmEngagementId') phynecrmEngagementId: string,
   ) {
-    return this.engagements.findByPhynecrmId(
-      req.user.tenantId,
-      phynecrmEngagementId,
-    );
+    return this.engagements.findByPhynecrmId(req.user.tenantId, phynecrmEngagementId);
   }
 
   @Get(':phynecrmEngagementId/quotes')
@@ -68,9 +59,6 @@ export class EngagementsController {
     @Req() req: AuthenticatedRequest,
     @Param('phynecrmEngagementId') phynecrmEngagementId: string,
   ) {
-    return this.engagements.listQuotesForEngagement(
-      req.user.tenantId,
-      phynecrmEngagementId,
-    );
+    return this.engagements.listQuotesForEngagement(req.user.tenantId, phynecrmEngagementId);
   }
 }

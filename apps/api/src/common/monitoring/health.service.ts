@@ -65,11 +65,11 @@ export class HealthService {
 
   private async checkDatabase(): Promise<HealthCheck> {
     const startTime = Date.now();
-    
+
     try {
       await this.prisma.$queryRaw`SELECT 1`;
       const duration = Date.now() - startTime;
-      
+
       return {
         name: 'database',
         status: duration < 100 ? 'healthy' : 'degraded',
@@ -89,13 +89,13 @@ export class HealthService {
 
   private async checkRedis(): Promise<HealthCheck> {
     const startTime = Date.now();
-    
+
     try {
       // Check if Redis is connected instead of ping (which doesn't exist in our RedisService)
       const isConnected = await this.redis.isConnected();
       if (!isConnected) throw new Error('Redis not connected');
       const duration = Date.now() - startTime;
-      
+
       return {
         name: 'redis',
         status: duration < 50 ? 'healthy' : 'degraded',
@@ -141,10 +141,10 @@ export class HealthService {
   private async checkDisk(): Promise<HealthCheck> {
     try {
       const { promises: fs } = await import('fs');
-      
+
       // Check if we can access the filesystem
       await fs.access('.', fs.constants.R_OK | fs.constants.W_OK);
-      
+
       return {
         name: 'disk',
         status: 'healthy',
@@ -171,8 +171,8 @@ export class HealthService {
   }
 
   private determineOverallStatus(checks: HealthCheck[]): 'healthy' | 'unhealthy' | 'degraded' {
-    const hasUnhealthy = checks.some(check => check.status === 'unhealthy');
-    const hasDegraded = checks.some(check => check.status === 'degraded');
+    const hasUnhealthy = checks.some((check) => check.status === 'unhealthy');
+    const hasDegraded = checks.some((check) => check.status === 'degraded');
 
     if (hasUnhealthy) return 'unhealthy';
     if (hasDegraded) return 'degraded';

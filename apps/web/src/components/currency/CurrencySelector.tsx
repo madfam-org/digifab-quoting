@@ -13,11 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Currency, 
-  getCurrencySymbol, 
-  getCurrencyName 
-} from '@cotiza/shared';
+import { Currency, getCurrencySymbol, getCurrencyName } from '@cotiza/shared';
 import { useCurrency } from '@/hooks/useCurrency';
 
 interface CurrencySelectorProps {
@@ -118,12 +114,12 @@ export function CurrencySelector({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedCurrency = value || defaultCurrency;
-  
+
   // Use provided currencies or all supported ones
   const availableCurrencies = supportedCurrencies || Object.values(Currency);
 
   // Filter currencies based on search query
-  const filteredCurrencies = availableCurrencies.filter(curr => {
+  const filteredCurrencies = availableCurrencies.filter((curr) => {
     const query = searchQuery.toLowerCase();
     const name = getCurrencyName(curr).toLowerCase();
     const code = curr.toLowerCase();
@@ -185,15 +181,16 @@ export function CurrencySelector({
               </span>
             )}
             <span className="font-medium">{selectedCurrency}</span>
-            <span className="text-muted-foreground">
-              {getCurrencySymbol(selectedCurrency)}
-            </span>
+            <span className="text-muted-foreground">{getCurrencySymbol(selectedCurrency)}</span>
           </div>
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className={`${currentSize.content} max-h-80 overflow-hidden`} align="end">
+      <DropdownMenuContent
+        className={`${currentSize.content} max-h-80 overflow-hidden`}
+        align="end"
+      >
         {/* Search */}
         <div className="p-2">
           <div className="relative">
@@ -214,9 +211,7 @@ export function CurrencySelector({
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>Available Currencies</span>
           {showRates && (
-            <span className="text-xs font-normal text-muted-foreground">
-              vs {selectedCurrency}
-            </span>
+            <span className="text-xs font-normal text-muted-foreground">vs {selectedCurrency}</span>
           )}
         </DropdownMenuLabel>
 
@@ -231,13 +226,11 @@ export function CurrencySelector({
               const isSelected = curr === selectedCurrency;
               const rate = rates[curr];
               const trend = MOCK_TRENDS[curr];
-              
+
               return (
                 <DropdownMenuItem
                   key={curr}
-                  className={`${currentSize.item} cursor-pointer ${
-                    isSelected ? 'bg-accent' : ''
-                  }`}
+                  className={`${currentSize.item} cursor-pointer ${isSelected ? 'bg-accent' : ''}`}
                   onSelect={() => handleCurrencySelect(curr)}
                 >
                   <div className="flex items-center justify-between w-full">
@@ -276,8 +269,8 @@ export function CurrencySelector({
                             trend > 0
                               ? 'text-green-700 bg-green-50'
                               : trend < 0
-                              ? 'text-red-700 bg-red-50'
-                              : 'text-gray-700 bg-gray-50'
+                                ? 'text-red-700 bg-red-50'
+                                : 'text-gray-700 bg-gray-50'
                           }`}
                         >
                           <div className="flex items-center gap-1">
@@ -292,9 +285,7 @@ export function CurrencySelector({
                       )}
 
                       {/* Selected Indicator */}
-                      {isSelected && (
-                        <Check className="h-4 w-4 text-primary" />
-                      )}
+                      {isSelected && <Check className="h-4 w-4 text-primary" />}
                     </div>
                   </div>
                 </DropdownMenuItem>
@@ -318,15 +309,15 @@ export function CurrencySelector({
 }
 
 // Simplified version for inline use
-export function CurrencyBadge({ 
-  currency, 
-  showFlag = true, 
-  showSymbol = true, 
-  className = '' 
-}: { 
-  currency: Currency; 
-  showFlag?: boolean; 
-  showSymbol?: boolean; 
+export function CurrencyBadge({
+  currency,
+  showFlag = true,
+  showSymbol = true,
+  className = '',
+}: {
+  currency: Currency;
+  showFlag?: boolean;
+  showSymbol?: boolean;
   className?: string;
 }) {
   return (
@@ -338,20 +329,18 @@ export function CurrencyBadge({
       )}
       <span className="font-medium">{currency}</span>
       {showSymbol && (
-        <span className="text-muted-foreground text-sm">
-          {getCurrencySymbol(currency)}
-        </span>
+        <span className="text-muted-foreground text-sm">{getCurrencySymbol(currency)}</span>
       )}
     </div>
   );
 }
 
 // Quick currency toggle for common pairs
-export function CurrencyToggle({ 
-  currencies, 
-  value, 
+export function CurrencyToggle({
+  currencies,
+  value,
   onChange,
-  className = ''
+  className = '',
 }: {
   currencies: [Currency, Currency];
   value: Currency;
@@ -359,15 +348,13 @@ export function CurrencyToggle({
   className?: string;
 }) {
   const [primary, secondary] = currencies;
-  
+
   return (
     <div className={`inline-flex rounded-lg border p-1 ${className}`}>
       <button
         onClick={() => onChange(primary)}
         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-          value === primary
-            ? 'bg-primary text-primary-foreground'
-            : 'hover:bg-muted'
+          value === primary ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
         }`}
       >
         <CurrencyBadge currency={primary} showFlag={false} />
@@ -375,9 +362,7 @@ export function CurrencyToggle({
       <button
         onClick={() => onChange(secondary)}
         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-          value === secondary
-            ? 'bg-primary text-primary-foreground'
-            : 'hover:bg-muted'
+          value === secondary ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
         }`}
       >
         <CurrencyBadge currency={secondary} showFlag={false} />

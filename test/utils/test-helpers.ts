@@ -91,15 +91,7 @@ export const mockData = {
 // Test database helpers
 export const testDb = {
   async clearAll(prisma: any) {
-    const tables = [
-      'quoteItem',
-      'quote',
-      'file',
-      'payment',
-      'order',
-      'user',
-      'tenant',
-    ];
+    const tables = ['quoteItem', 'quote', 'file', 'payment', 'order', 'user', 'tenant'];
 
     for (const table of tables) {
       await prisma[table].deleteMany();
@@ -213,31 +205,27 @@ export const asyncHelpers = {
   async waitForCondition(
     condition: () => boolean | Promise<boolean>,
     timeout = 5000,
-    interval = 100
+    interval = 100,
   ): Promise<void> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       if (await condition()) {
         return;
       }
-      await new Promise(resolve => setTimeout(resolve, interval));
+      await new Promise((resolve) => setTimeout(resolve, interval));
     }
-    
+
     throw new Error('Condition not met within timeout');
   },
 
-  async retryAsync<T>(
-    fn: () => Promise<T>,
-    retries = 3,
-    delay = 1000
-  ): Promise<T> {
+  async retryAsync<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
     for (let i = 0; i < retries; i++) {
       try {
         return await fn();
       } catch (error) {
         if (i === retries - 1) throw error;
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
     throw new Error('All retries failed');
@@ -269,7 +257,7 @@ export const fileHelpers = {
   async mockFileUpload(file: File) {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     return {
       fileId: faker.string.uuid(),
       fileName: file.name,
@@ -285,7 +273,7 @@ export const perfHelpers = {
     const start = performance.now();
     const result = fn();
     const end = performance.now();
-    
+
     return {
       result,
       duration: end - start,
@@ -296,7 +284,7 @@ export const perfHelpers = {
     const start = performance.now();
     const result = await fn();
     const end = performance.now();
-    
+
     return {
       result,
       duration: end - start,
@@ -307,7 +295,7 @@ export const perfHelpers = {
     return Array.from({ length: count }, () => ({
       quote: mockData.quote(),
       items: Array.from({ length: faker.number.int({ min: 1, max: 5 }) }, () =>
-        mockData.quoteItem()
+        mockData.quoteItem(),
       ),
     }));
   },
@@ -320,12 +308,7 @@ export const assertHelpers = {
     expect(diff).toBeLessThanOrEqual(toleranceMs);
   },
 
-  assertPriceCalculation(
-    unitPrice: number,
-    quantity: number,
-    total: number,
-    tolerance = 0.01
-  ) {
+  assertPriceCalculation(unitPrice: number, quantity: number, total: number, tolerance = 0.01) {
     const expected = unitPrice * quantity;
     expect(Math.abs(total - expected)).toBeLessThanOrEqual(tolerance);
   },
@@ -371,18 +354,22 @@ export const cleanupHelpers = {
   },
 
   async cleanupTestFiles(s3Client: any, bucket: string, prefix: string) {
-    const objects = await s3Client.listObjectsV2({
-      Bucket: bucket,
-      Prefix: prefix,
-    }).promise();
+    const objects = await s3Client
+      .listObjectsV2({
+        Bucket: bucket,
+        Prefix: prefix,
+      })
+      .promise();
 
     if (objects.Contents && objects.Contents.length > 0) {
-      await s3Client.deleteObjects({
-        Bucket: bucket,
-        Delete: {
-          Objects: objects.Contents.map((obj: any) => ({ Key: obj.Key })),
-        },
-      }).promise();
+      await s3Client
+        .deleteObjects({
+          Bucket: bucket,
+          Delete: {
+            Objects: objects.Contents.map((obj: any) => ({ Key: obj.Key })),
+          },
+        })
+        .promise();
     }
   },
 };

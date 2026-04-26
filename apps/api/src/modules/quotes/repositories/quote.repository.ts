@@ -98,7 +98,13 @@ export class QuoteRepository extends BaseRepositoryImpl<
     const orderBy = this.buildOrderBy(sort);
 
     const [items, total] = await Promise.all([
-      this.findMany(tenantId, { where, orderBy: Array.isArray(orderBy) ? orderBy[0] : orderBy, skip, take, include }),
+      this.findMany(tenantId, {
+        where,
+        orderBy: Array.isArray(orderBy) ? orderBy[0] : orderBy,
+        skip,
+        take,
+        include,
+      }),
       this.count(tenantId, where),
     ]);
 

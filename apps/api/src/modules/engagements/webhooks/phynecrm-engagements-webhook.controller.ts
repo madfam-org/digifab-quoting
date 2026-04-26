@@ -30,12 +30,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
 import { EngagementsService } from '../engagements.service';
 
@@ -95,9 +90,7 @@ export class PhynecrmEngagementsWebhookController {
       throw new UnauthorizedException('invalid webhook signature');
     }
     if (!payload.engagement_id || !payload.tenant_id || !payload.event_type) {
-      throw new BadRequestException(
-        'engagement_id, tenant_id, event_type are required',
-      );
+      throw new BadRequestException('engagement_id, tenant_id, event_type are required');
     }
 
     const eventType = payload.event_type;
@@ -140,10 +133,7 @@ export class PhynecrmEngagementsWebhookController {
 
   private verifySignature(rawBody: string, signature: string | undefined): boolean {
     if (!this.secret || !signature) return false;
-    const expected = crypto
-      .createHmac('sha256', this.secret)
-      .update(rawBody)
-      .digest('hex');
+    const expected = crypto.createHmac('sha256', this.secret).update(rawBody).digest('hex');
     if (signature.length !== expected.length) return false;
     const sigBuf = Buffer.from(signature, 'utf-8');
     const expBuf = Buffer.from(expected, 'utf-8');

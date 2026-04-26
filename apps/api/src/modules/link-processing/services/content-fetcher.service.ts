@@ -24,36 +24,36 @@ export class ContentFetcherService {
   async fetchContent(url: string): Promise<RawContent> {
     try {
       this.logger.log(`Fetching content from: ${url}`);
-      
+
       // Validate and normalize URL
       const normalizedUrl = this.normalizeUrl(url);
       const sourceType = this.detectSourceType(normalizedUrl);
-      
+
       // Fetch with appropriate headers and size limits
       const response = await firstValueFrom(
         this.httpService.get(normalizedUrl, {
           headers: {
             'User-Agent': 'Cotiza Studio-Bot/1.0 (Maker Quote Analysis)',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5',
             'Accept-Encoding': 'gzip, deflate',
-            'DNT': '1',
-            'Connection': 'keep-alive',
+            DNT: '1',
+            Connection: 'keep-alive',
           },
           timeout: 30000, // 30 second timeout
           maxRedirects: 5,
           maxContentLength: 10 * 1024 * 1024, // 10MB limit
           maxBodyLength: 10 * 1024 * 1024, // 10MB limit
-        })
+        }),
       );
 
       const html = response.data;
-      
+
       // Validate content size before DOM parsing
       if (typeof html === 'string' && html.length > 5 * 1024 * 1024) {
         throw new BadRequestException('Content too large to process');
       }
-      
+
       // Create DOM with resource limits
       const dom = new JSDOM(html, {
         resources: 'usable',
@@ -68,9 +68,13 @@ export class ContentFetcherService {
       const description = this.extractDescription(document);
       const images = this.extractImages(document, normalizedUrl);
       const links = this.extractLinks(document, normalizedUrl);
-      
+
       // Extract additional metadata based on source type
-      const metadata = await this.extractSourceSpecificMetadata(document, sourceType, normalizedUrl);
+      const metadata = await this.extractSourceSpecificMetadata(
+        document,
+        sourceType,
+        normalizedUrl,
+      );
 
       return {
         url: normalizedUrl,
@@ -82,25 +86,34 @@ export class ContentFetcherService {
         links,
         metadata,
       };
-
     } catch (error) {
       this.logger.error(`Failed to fetch content from ${url}:`, error);
-      throw new BadRequestException(`Unable to fetch content from the provided URL: ${error.message}`);
+      throw new BadRequestException(
+        `Unable to fetch content from the provided URL: ${error.message}`,
+      );
     }
   }
 
   private normalizeUrl(url: string): string {
     try {
       const urlObj = new URL(url);
-      
+
       // Validate protocol
       if (!['http:', 'https:'].includes(urlObj.protocol)) {
         throw new Error('Only HTTP and HTTPS URLs are supported');
       }
 
       // Remove tracking parameters
-      const trackingParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'ref', 'source'];
-      trackingParams.forEach(param => urlObj.searchParams.delete(param));
+      const trackingParams = [
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'utm_term',
+        'utm_content',
+        'ref',
+        'source',
+      ];
+      trackingParams.forEach((param) => urlObj.searchParams.delete(param));
 
       return urlObj.toString();
     } catch (error) {
@@ -110,13 +123,14 @@ export class ContentFetcherService {
 
   private detectSourceType(url: string): SourceType {
     const hostname = new URL(url).hostname.toLowerCase();
-    
+
     if (hostname.includes('instructables.com')) return SourceType.INSTRUCTABLES;
     if (hostname.includes('thingiverse.com')) return SourceType.THINGIVERSE;
     if (hostname.includes('github.com')) return SourceType.GITHUB;
     if (hostname.includes('hackster.io')) return SourceType.HACKSTER;
-    if (hostname.includes('makezine.com') || hostname.includes('make.co')) return SourceType.MAKE_MAGAZINE;
-    
+    if (hostname.includes('makezine.com') || hostname.includes('make.co'))
+      return SourceType.MAKE_MAGAZINE;
+
     return SourceType.CUSTOM_BLOG;
   }
 
@@ -181,7 +195,7 @@ export class ContentFetcherService {
 
     for (const selector of imageSelectors) {
       const imgElements = document.querySelectorAll(selector);
-      imgElements.forEach(img => {
+      imgElements.forEach((img) => {
         const src = img.getAttribute('src') || img.getAttribute('data-src');
         if (src) {
           try {
@@ -202,8 +216,8 @@ export class ContentFetcherService {
   private extractLinks(document: Document, baseUrl: string): string[] {
     const links: string[] = [];
     const linkElements = document.querySelectorAll('a[href]');
-    
-    linkElements.forEach(link => {
+
+    linkElements.forEach((link) => {
       const href = link.getAttribute('href');
       if (href) {
         try {
@@ -223,23 +237,37 @@ export class ContentFetcherService {
 
   private isRelevantFileLink(url: string): boolean {
     const relevantExtensions = [
-      '.stl', '.obj', '.ply', '.3mf', // 3D files
-      '.step', '.stp', '.iges', '.igs', // CAD files
-      '.dwg', '.dxf', // 2D CAD files
-      '.zip', '.rar', '.7z', // Archives
+      '.stl',
+      '.obj',
+      '.ply',
+      '.3mf', // 3D files
+      '.step',
+      '.stp',
+      '.iges',
+      '.igs', // CAD files
+      '.dwg',
+      '.dxf', // 2D CAD files
+      '.zip',
+      '.rar',
+      '.7z', // Archives
       '.pdf', // Documentation
-      '.csv', '.xlsx', // BOM files
-      '.ino', '.py', '.cpp', '.c', '.h', // Code files
+      '.csv',
+      '.xlsx', // BOM files
+      '.ino',
+      '.py',
+      '.cpp',
+      '.c',
+      '.h', // Code files
     ];
 
     const urlLower = url.toLowerCase();
-    return relevantExtensions.some(ext => urlLower.includes(ext));
+    return relevantExtensions.some((ext) => urlLower.includes(ext));
   }
 
   private async extractSourceSpecificMetadata(
-    document: Document, 
-    sourceType: SourceType, 
-    url: string
+    document: Document,
+    sourceType: SourceType,
+    url: string,
   ): Promise<Record<string, any>> {
     const metadata: Record<string, any> = {};
 
@@ -276,14 +304,18 @@ export class ContentFetcherService {
     return metadata;
   }
 
-  private extractInstructablesSupplies(document: Document): Array<{ name: string; quantity?: string; notes?: string }> {
+  private extractInstructablesSupplies(
+    document: Document,
+  ): Array<{ name: string; quantity?: string; notes?: string }> {
     const supplies: Array<{ name: string; quantity?: string; notes?: string }> = [];
-    
+
     // Look for supplies section
-    const suppliesSection = document.querySelector('.supplies-section, .step-supplies, [data-macro="supplies"]');
+    const suppliesSection = document.querySelector(
+      '.supplies-section, .step-supplies, [data-macro="supplies"]',
+    );
     if (suppliesSection) {
       const items = suppliesSection.querySelectorAll('li, .supply-item');
-      items.forEach(item => {
+      items.forEach((item) => {
         const text = item.textContent?.trim();
         if (text) {
           // Try to parse quantity from text like "2x Arduino Uno"
@@ -306,10 +338,10 @@ export class ContentFetcherService {
   private extractInstructablesTools(document: Document): string[] {
     const tools: string[] = [];
     const toolsSection = document.querySelector('.tools-section, .step-tools');
-    
+
     if (toolsSection) {
       const items = toolsSection.querySelectorAll('li');
-      items.forEach(item => {
+      items.forEach((item) => {
         const text = item.textContent?.trim();
         if (text) tools.push(text);
       });
@@ -318,16 +350,20 @@ export class ContentFetcherService {
     return tools;
   }
 
-  private extractInstructablesSteps(document: Document): Array<{ title: string; content: string; images: string[] }> {
+  private extractInstructablesSteps(
+    document: Document,
+  ): Array<{ title: string; content: string; images: string[] }> {
     const steps: Array<{ title: string; content: string; images: string[] }> = [];
     const stepElements = document.querySelectorAll('.step, .step-item');
 
     stepElements.forEach((step, index) => {
-      const title = step.querySelector('.step-title, .step-header h2, h3')?.textContent?.trim() || `Step ${index + 1}`;
+      const title =
+        step.querySelector('.step-title, .step-header h2, h3')?.textContent?.trim() ||
+        `Step ${index + 1}`;
       const content = step.querySelector('.step-body, .step-content p')?.textContent?.trim() || '';
-      
+
       const images: string[] = [];
-      step.querySelectorAll('img').forEach(img => {
+      step.querySelectorAll('img').forEach((img) => {
         const src = img.getAttribute('src');
         if (src) images.push(src);
       });
@@ -346,28 +382,28 @@ export class ContentFetcherService {
   private extractInstructablesTime(document: Document): number {
     const timeEl = document.querySelector('.time-required, .duration');
     const timeText = timeEl?.textContent?.trim();
-    
+
     if (timeText) {
       const hourMatch = timeText.match(/(\d+)\s*hours?/i);
       const minMatch = timeText.match(/(\d+)\s*minutes?/i);
-      
+
       let hours = hourMatch ? parseInt(hourMatch[1]) : 0;
       const minutes = minMatch ? parseInt(minMatch[1]) : 0;
-      
+
       hours += minutes / 60;
       return hours;
     }
-    
+
     return 2; // Default 2 hours
   }
 
   private extractThingiverseSettings(document: Document): Record<string, any> {
     const settings: Record<string, any> = {};
-    
+
     const settingsSection = document.querySelector('.thing-print-settings, .print-settings');
     if (settingsSection) {
       const items = settingsSection.querySelectorAll('li, .setting-item');
-      items.forEach(item => {
+      items.forEach((item) => {
         const text = item.textContent?.trim();
         if (text && text.includes(':')) {
           const [key, value] = text.split(':');
@@ -379,15 +415,17 @@ export class ContentFetcherService {
     return settings;
   }
 
-  private extractThingiverseFiles(document: Document): Array<{ name: string; url: string; size?: string }> {
+  private extractThingiverseFiles(
+    document: Document,
+  ): Array<{ name: string; url: string; size?: string }> {
     const files: Array<{ name: string; url: string; size?: string }> = [];
-    
+
     const fileElements = document.querySelectorAll('.thing-file, .file-item');
-    fileElements.forEach(fileEl => {
+    fileElements.forEach((fileEl) => {
       const nameEl = fileEl.querySelector('.file-name');
       const linkEl = fileEl.querySelector('a[href*="download"]');
       const sizeEl = fileEl.querySelector('.file-size');
-      
+
       if (nameEl && linkEl) {
         files.push({
           name: nameEl.textContent?.trim() || '',
@@ -410,20 +448,23 @@ export class ContentFetcherService {
     return licenseEl?.textContent?.trim() || 'Creative Commons';
   }
 
-  private async extractGitHubFiles(document: Document, _url: string): Promise<Array<{ name: string; path: string; type: string }>> {
+  private async extractGitHubFiles(
+    document: Document,
+    _url: string,
+  ): Promise<Array<{ name: string; path: string; type: string }>> {
     const files: Array<{ name: string; path: string; type: string }> = [];
-    
+
     // Extract files from repository file list
     const fileElements = document.querySelectorAll('.js-navigation-item');
-    fileElements.forEach(fileEl => {
+    fileElements.forEach((fileEl) => {
       const nameEl = fileEl.querySelector('.js-navigation-open');
       const typeEl = fileEl.querySelector('.octicon-file, .octicon-file-directory');
-      
+
       if (nameEl) {
         const name = nameEl.textContent?.trim() || '';
         const href = nameEl.getAttribute('href') || '';
         const isDirectory = typeEl?.classList.contains('octicon-file-directory');
-        
+
         files.push({
           name,
           path: href,
@@ -441,18 +482,22 @@ export class ContentFetcherService {
   }
 
   private extractGitHubLanguage(document: Document): string {
-    const langEl = document.querySelector('.BorderGrid-cell [data-testid="repository-language-stats"] span');
+    const langEl = document.querySelector(
+      '.BorderGrid-cell [data-testid="repository-language-stats"] span',
+    );
     return langEl?.textContent?.trim() || '';
   }
 
-  private extractGitHubReleases(document: Document): Array<{ tag: string; name: string; url: string }> {
+  private extractGitHubReleases(
+    document: Document,
+  ): Array<{ tag: string; name: string; url: string }> {
     const releases: Array<{ tag: string; name: string; url: string }> = [];
-    
+
     const releaseElements = document.querySelectorAll('.release-entry');
-    releaseElements.forEach(releaseEl => {
+    releaseElements.forEach((releaseEl) => {
       const tagEl = releaseEl.querySelector('.release-header a');
       const nameEl = releaseEl.querySelector('.release-title');
-      
+
       if (tagEl) {
         releases.push({
           tag: tagEl.textContent?.trim() || '',
@@ -465,13 +510,15 @@ export class ContentFetcherService {
     return releases;
   }
 
-  private extractHacksterComponents(document: Document): Array<{ name: string; quantity?: string }> {
+  private extractHacksterComponents(
+    document: Document,
+  ): Array<{ name: string; quantity?: string }> {
     const components: Array<{ name: string; quantity?: string }> = [];
-    
+
     const componentsSection = document.querySelector('.components-section, .project-components');
     if (componentsSection) {
       const items = componentsSection.querySelectorAll('li, .component-item');
-      items.forEach(item => {
+      items.forEach((item) => {
         const text = item.textContent?.trim();
         if (text) {
           const quantityMatch = text.match(/^(\d+)x?\s*(.+)$/i);
@@ -498,8 +545,8 @@ export class ContentFetcherService {
   private extractHacksterPlatforms(document: Document): string[] {
     const platforms: string[] = [];
     const platformElements = document.querySelectorAll('.platform-tag, .used-platform');
-    
-    platformElements.forEach(el => {
+
+    platformElements.forEach((el) => {
       const platform = el.textContent?.trim();
       if (platform) platforms.push(platform);
     });

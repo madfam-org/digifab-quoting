@@ -20,9 +20,8 @@ export interface ApiVersionOptions {
 }
 
 export const ApiVersion = (options: ApiVersionOptions | string) => {
-  const versionOptions: ApiVersionOptions = typeof options === 'string' 
-    ? { version: options } 
-    : options;
+  const versionOptions: ApiVersionOptions =
+    typeof options === 'string' ? { version: options } : options;
   return Reflect.metadata(API_VERSION_KEY, versionOptions);
 };
 
@@ -33,7 +32,7 @@ export class ApiVersionInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
-    
+
     // Get version from multiple sources
     const requestedVersion = this.extractVersion(request);
     const handlerVersion = this.reflector.get<ApiVersionOptions>(
@@ -43,7 +42,7 @@ export class ApiVersionInterceptor implements NestInterceptor {
 
     // Set default version if none specified
     const currentVersion = handlerVersion?.version || 'v1';
-    
+
     // Validate version compatibility
     if (requestedVersion && !this.isVersionCompatible(requestedVersion, currentVersion)) {
       throw new BadRequestException({
@@ -59,16 +58,16 @@ export class ApiVersionInterceptor implements NestInterceptor {
 
     // Handle deprecation warnings
     if (handlerVersion?.deprecated) {
-      const deprecationMessage = handlerVersion.deprecationMessage || 
-        `API version ${currentVersion} is deprecated`;
-      
+      const deprecationMessage =
+        handlerVersion.deprecationMessage || `API version ${currentVersion} is deprecated`;
+
       response.setHeader('Deprecation', 'true');
       response.setHeader('Sunset', handlerVersion.sunset?.toISOString() || '');
       response.setHeader('Warning', `299 - "${deprecationMessage}"`);
     }
 
     return next.handle().pipe(
-      map(data => {
+      map((data) => {
         // Wrap response with version metadata
         if (data && typeof data === 'object') {
           return {
@@ -107,7 +106,7 @@ export class ApiVersionInterceptor implements NestInterceptor {
     if (request.query?.version) {
       const queryVersion = request.query.version;
       let versionStr: string;
-      
+
       if (Array.isArray(queryVersion)) {
         versionStr = String(queryVersion[0]);
       } else if (typeof queryVersion === 'string') {
@@ -115,7 +114,7 @@ export class ApiVersionInterceptor implements NestInterceptor {
       } else {
         versionStr = JSON.stringify(queryVersion);
       }
-      
+
       return this.normalizeVersion(versionStr);
     }
 
@@ -130,10 +129,12 @@ export class ApiVersionInterceptor implements NestInterceptor {
   private isVersionCompatible(requested: string, current: string): boolean {
     const requestedNum = this.extractVersionNumber(requested);
     const currentNum = this.extractVersionNumber(current);
-    
+
     // Simple compatibility: exact match or backwards compatible within major version
-    return requestedNum === currentNum || 
-           (Math.floor(requestedNum) === Math.floor(currentNum) && requestedNum <= currentNum);
+    return (
+      requestedNum === currentNum ||
+      (Math.floor(requestedNum) === Math.floor(currentNum) && requestedNum <= currentNum)
+    );
   }
 
   private extractVersionNumber(version: string): number {

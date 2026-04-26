@@ -29,8 +29,7 @@ const features = [
   {
     icon: Cpu,
     title: 'AI-Powered Optimization',
-    description:
-      'Reduce costs while maintaining quality with smart suggestions.',
+    description: 'Reduce costs while maintaining quality with smart suggestions.',
     benefits: [
       'Automatic process recommendations',
       'Material substitution analysis',
@@ -41,8 +40,7 @@ const features = [
   {
     icon: Layers,
     title: 'Multiple Manufacturing Processes',
-    description:
-      'Compare 3D printing, CNC machining, laser cutting, and more.',
+    description: 'Compare 3D printing, CNC machining, laser cutting, and more.',
     benefits: [
       'FFF and SLA 3D printing',
       '3-axis CNC for aluminum, steel, plastics',
@@ -53,8 +51,7 @@ const features = [
   {
     icon: Briefcase,
     title: 'Business-Ready Features',
-    description:
-      'Professional tools for shops, makerspaces, and enterprises.',
+    description: 'Professional tools for shops, makerspaces, and enterprises.',
     benefits: [
       'Customer management',
       'Team collaboration',
@@ -91,12 +88,10 @@ export default function FeaturesPage() {
     <main className="min-h-screen bg-background">
       <section className="container mx-auto px-4 py-16 lg:py-24">
         <header className="text-center max-w-3xl mx-auto mb-12">
-          <h1 className="text-4xl lg:text-5xl font-bold mb-4">
-            Powerful Features for Every Need
-          </h1>
+          <h1 className="text-4xl lg:text-5xl font-bold mb-4">Powerful Features for Every Need</h1>
           <p className="text-lg text-muted-foreground">
-            From instant quotes to market intelligence, Cotiza Studio provides
-            everything you need to make informed manufacturing decisions.
+            From instant quotes to market intelligence, Cotiza Studio provides everything you need
+            to make informed manufacturing decisions.
           </p>
         </header>
 
@@ -114,7 +109,9 @@ export default function FeaturesPage() {
               <ul className="space-y-2 text-sm">
                 {benefits.map((b) => (
                   <li key={b} className="flex items-start gap-2">
-                    <span aria-hidden className="text-primary">✓</span>
+                    <span aria-hidden className="text-primary">
+                      ✓
+                    </span>
                     <span>{b}</span>
                   </li>
                 ))}

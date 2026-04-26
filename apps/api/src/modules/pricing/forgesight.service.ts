@@ -4,7 +4,6 @@ import {
   ForgesightClient,
   ServiceType,
   Currency,
-  ForgesightConfig,
 } from '../../integrations/forgesight';
 import { Cacheable } from '../redis/decorators/cache.decorator';
 import { ProcessType } from '@cotiza/shared';

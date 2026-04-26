@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
 
     // NextAuth logging endpoint - silently accept logs
     // These can be forwarded to backend logging service if needed
-    
+
     return new NextResponse(null, { status: 204 });
   } catch {
     // Silently handle errors to prevent client-side noise

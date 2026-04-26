@@ -89,15 +89,18 @@ export class DedicatedSupportService {
     private readonly configService: ConfigService,
   ) {}
 
-  async createTicket(tenantId: string, ticketData: {
-    userId?: string;
-    subject: string;
-    description: string;
-    priority: TicketPriority;
-    category: string;
-    tags?: string[];
-    metadata?: Record<string, unknown>;
-  }): Promise<SupportTicket> {
+  async createTicket(
+    tenantId: string,
+    ticketData: {
+      userId?: string;
+      subject: string;
+      description: string;
+      priority: TicketPriority;
+      category: string;
+      tags?: string[];
+      metadata?: Record<string, unknown>;
+    },
+  ): Promise<SupportTicket> {
     // Auto-assign based on category and agent availability
     const assignedAgent = await this.autoAssignTicket(ticketData.category, ticketData.priority);
 
@@ -123,26 +126,36 @@ export class DedicatedSupportService {
     await this.updateTicketMetrics(tenantId, 'created', ticketData.priority);
 
     // Log audit trail
-    await this.auditTrail.log(tenantId, ticketData.userId || 'system', 'support_ticket_created', 'support_ticket', ticket.id, {
-      subject: ticketData.subject,
-      priority: ticketData.priority,
-      category: ticketData.category,
-    });
+    await this.auditTrail.log(
+      tenantId,
+      ticketData.userId || 'system',
+      'support_ticket_created',
+      'support_ticket',
+      ticket.id,
+      {
+        subject: ticketData.subject,
+        priority: ticketData.priority,
+        category: ticketData.category,
+      },
+    );
 
     this.logger.log(`Created support ticket ${ticket.id} for tenant ${tenantId}`);
 
     return this.mapTicketToInterface(ticket);
   }
 
-  async getTickets(tenantId: string, filters?: {
-    status?: string;
-    priority?: string;
-    category?: string;
-    assignedToId?: string;
-    userId?: string;
-    limit?: number;
-    offset?: number;
-  }): Promise<SupportTicket[]> {
+  async getTickets(
+    tenantId: string,
+    filters?: {
+      status?: string;
+      priority?: string;
+      category?: string;
+      assignedToId?: string;
+      userId?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<SupportTicket[]> {
     const where: any = { tenantId };
 
     if (filters?.status) where.status = filters.status;
@@ -153,10 +166,7 @@ export class DedicatedSupportService {
 
     const tickets = await this.prisma.supportTicket.findMany({
       where,
-      orderBy: [
-        { priority: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
       take: filters?.limit || 50,
       skip: filters?.offset || 0,
       include: {
@@ -203,13 +213,17 @@ export class DedicatedSupportService {
     return this.mapTicketToInterface(ticket);
   }
 
-  async updateTicket(tenantId: string, ticketId: string, updates: {
-    status?: TicketStatus;
-    priority?: TicketPriority;
-    assignedToId?: string;
-    tags?: string[];
-    metadata?: Record<string, unknown>;
-  }): Promise<SupportTicket> {
+  async updateTicket(
+    tenantId: string,
+    ticketId: string,
+    updates: {
+      status?: TicketStatus;
+      priority?: TicketPriority;
+      assignedToId?: string;
+      tags?: string[];
+      metadata?: Record<string, unknown>;
+    },
+  ): Promise<SupportTicket> {
     const existingTicket = await this.prisma.supportTicket.findFirst({
       where: { id: ticketId, tenantId },
     });
@@ -230,12 +244,18 @@ export class DedicatedSupportService {
     if (updates.metadata) updateData.metadata = updates.metadata;
 
     // Set resolution timestamp if resolved
-    if (updates.status === TicketStatus.RESOLVED && existingTicket.status !== TicketStatus.RESOLVED) {
+    if (
+      updates.status === TicketStatus.RESOLVED &&
+      existingTicket.status !== TicketStatus.RESOLVED
+    ) {
       updateData.resolvedAt = new Date();
     }
 
     // Set escalation timestamp if escalated
-    if (updates.status === TicketStatus.ESCALATED && existingTicket.status !== TicketStatus.ESCALATED) {
+    if (
+      updates.status === TicketStatus.ESCALATED &&
+      existingTicket.status !== TicketStatus.ESCALATED
+    ) {
       updateData.escalatedAt = new Date();
     }
 
@@ -255,19 +275,30 @@ export class DedicatedSupportService {
     }
 
     // Log audit trail
-    await this.auditTrail.log(tenantId, 'system', 'support_ticket_updated', 'support_ticket', ticketId, updates);
+    await this.auditTrail.log(
+      tenantId,
+      'system',
+      'support_ticket_updated',
+      'support_ticket',
+      ticketId,
+      updates,
+    );
 
     this.logger.log(`Updated support ticket ${ticketId} for tenant ${tenantId}`);
 
     return this.mapTicketToInterface(ticket);
   }
 
-  async addTicketMessage(tenantId: string, ticketId: string, messageData: {
-    userId: string;
-    content: string;
-    isInternal?: boolean;
-    attachments?: string[];
-  }): Promise<void> {
+  async addTicketMessage(
+    tenantId: string,
+    ticketId: string,
+    messageData: {
+      userId: string;
+      content: string;
+      isInternal?: boolean;
+      attachments?: string[];
+    },
+  ): Promise<void> {
     const ticket = await this.prisma.supportTicket.findFirst({
       where: { id: ticketId, tenantId },
     });
@@ -306,25 +337,32 @@ export class DedicatedSupportService {
     await this.sendMessageNotifications(ticketId, message.id);
 
     // Log audit trail
-    await this.auditTrail.log(tenantId, messageData.userId, 'support_message_added', 'support_ticket', ticketId, {
-      messageId: message.id,
-      isInternal: messageData.isInternal,
-    });
+    await this.auditTrail.log(
+      tenantId,
+      messageData.userId,
+      'support_message_added',
+      'support_ticket',
+      ticketId,
+      {
+        messageId: message.id,
+        isInternal: messageData.isInternal,
+      },
+    );
 
     this.logger.log(`Added message to support ticket ${ticketId}`);
   }
 
-  async getSupportMetrics(tenantId: string, startDate: Date, endDate: Date): Promise<SupportMetrics> {
+  async getSupportMetrics(
+    tenantId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<SupportMetrics> {
     const where = {
       tenantId,
       createdAt: { gte: startDate, lte: endDate },
     };
 
-    const [
-      totalTickets,
-      resolvedTickets,
-      tickets,
-    ] = await Promise.all([
+    const [totalTickets, resolvedTickets, tickets] = await Promise.all([
       this.prisma.supportTicket.count({ where }),
       this.prisma.supportTicket.count({
         where: { ...where, status: TicketStatus.RESOLVED },
@@ -350,37 +388,47 @@ export class DedicatedSupportService {
 
     for (const ticket of tickets) {
       if (ticket.firstResponseAt) {
-        const responseTime = (ticket.firstResponseAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60 * 60); // hours
+        const responseTime =
+          (ticket.firstResponseAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60 * 60); // hours
         responseTimes.push(responseTime);
       }
 
       if (ticket.resolvedAt) {
-        const resolutionTime = (ticket.resolvedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60 * 60); // hours
+        const resolutionTime =
+          (ticket.resolvedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60 * 60); // hours
         resolutionTimes.push(resolutionTime);
       }
     }
 
-    const averageResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length 
-      : 0;
+    const averageResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        : 0;
 
-    const averageResolutionTime = resolutionTimes.length > 0
-      ? resolutionTimes.reduce((sum, time) => sum + time, 0) / resolutionTimes.length
-      : 0;
+    const averageResolutionTime =
+      resolutionTimes.length > 0
+        ? resolutionTimes.reduce((sum, time) => sum + time, 0) / resolutionTimes.length
+        : 0;
 
     // Group by priority and category
-    const ticketsByPriority = tickets.reduce((acc, ticket) => {
-      acc[ticket.priority] = (acc[ticket.priority] || 0) + 1;
-      return acc;
-    }, {} as Record<TicketPriority, number>);
+    const ticketsByPriority = tickets.reduce(
+      (acc, ticket) => {
+        acc[ticket.priority] = (acc[ticket.priority] || 0) + 1;
+        return acc;
+      },
+      {} as Record<TicketPriority, number>,
+    );
 
-    const ticketsByCategory = tickets.reduce((acc, ticket) => {
-      acc[ticket.category] = (acc[ticket.category] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const ticketsByCategory = tickets.reduce(
+      (acc, ticket) => {
+        acc[ticket.category] = (acc[ticket.category] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     // Calculate escalation rate
-    const escalatedTickets = tickets.filter(t => t.escalatedAt).length;
+    const escalatedTickets = tickets.filter((t) => t.escalatedAt).length;
     const escalationRate = totalTickets > 0 ? escalatedTickets / totalTickets : 0;
 
     return {
@@ -415,7 +463,10 @@ export class DedicatedSupportService {
       where: { id: ticketId },
       data: {
         status: TicketStatus.ESCALATED,
-        priority: ticket.priority === TicketPriority.URGENT ? TicketPriority.CRITICAL : TicketPriority.URGENT,
+        priority:
+          ticket.priority === TicketPriority.URGENT
+            ? TicketPriority.CRITICAL
+            : TicketPriority.URGENT,
         assignedToId: seniorAgent?.id || ticket.assignedToId,
         escalatedAt: new Date(),
       },
@@ -436,19 +487,29 @@ export class DedicatedSupportService {
     await this.sendEscalationNotifications(ticketId, reason);
 
     // Log audit trail
-    await this.auditTrail.log(tenantId, 'system', 'support_ticket_escalated', 'support_ticket', ticketId, { reason });
+    await this.auditTrail.log(
+      tenantId,
+      'system',
+      'support_ticket_escalated',
+      'support_ticket',
+      ticketId,
+      { reason },
+    );
 
     this.logger.log(`Escalated support ticket ${ticketId} for tenant ${tenantId}: ${reason}`);
   }
 
-  private async autoAssignTicket(category: string, priority: TicketPriority): Promise<SupportAgent | null> {
+  private async autoAssignTicket(
+    category: string,
+    priority: TicketPriority,
+  ): Promise<SupportAgent | null> {
     // Simple round-robin assignment logic
     // In production, this would be more sophisticated based on:
     // - Agent specialties
     // - Current workload
     // - Availability/schedule
     // - SLA requirements
-    
+
     const agents = await this.getAvailableAgents(category);
     if (agents.length === 0) return null;
 
@@ -495,14 +556,20 @@ export class DedicatedSupportService {
     };
   }
 
-  private async sendTicketNotifications(ticketId: string, event: string, status?: TicketStatus): Promise<void> {
+  private async sendTicketNotifications(
+    ticketId: string,
+    event: string,
+    status?: TicketStatus,
+  ): Promise<void> {
     // Mock implementation - would integrate with email/Slack/etc
     this.logger.debug(`Should send ${event} notification for ticket ${ticketId}`);
   }
 
   private async sendMessageNotifications(ticketId: string, messageId: string): Promise<void> {
     // Mock implementation - would notify relevant parties about new message
-    this.logger.debug(`Should send message notification for ticket ${ticketId}, message ${messageId}`);
+    this.logger.debug(
+      `Should send message notification for ticket ${ticketId}, message ${messageId}`,
+    );
   }
 
   private async sendEscalationNotifications(ticketId: string, reason: string): Promise<void> {
@@ -514,7 +581,7 @@ export class DedicatedSupportService {
     // Update Redis-based real-time metrics
     const key = `support_metrics:${tenantId}`;
     const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    
+
     await this.redis.hincrby(`${key}:${date}`, action, 1);
     await this.redis.expire(`${key}:${date}`, 86400 * 30); // 30 days retention
   }

@@ -110,7 +110,7 @@ export class MetricsService {
   getHistogramStats(name: string, tags?: Record<string, string>) {
     const key = this.getMetricKey(name, tags);
     const values = this.histograms.get(key) || [];
-    
+
     if (values.length === 0) {
       return {
         count: 0,
@@ -154,7 +154,11 @@ export class MetricsService {
     }
   }
 
-  async timeAsync<T>(name: string, fn: () => Promise<T>, tags?: Record<string, string>): Promise<T> {
+  async timeAsync<T>(
+    name: string,
+    fn: () => Promise<T>,
+    tags?: Record<string, string>,
+  ): Promise<T> {
     const start = Date.now();
     try {
       const result = await fn();
@@ -171,7 +175,13 @@ export class MetricsService {
   }
 
   // Application-specific metrics
-  recordApiRequest(method: string, path: string, statusCode: number, duration: number, tenantId?: string) {
+  recordApiRequest(
+    method: string,
+    path: string,
+    statusCode: number,
+    duration: number,
+    tenantId?: string,
+  ) {
     const tags = {
       method: method.toUpperCase(),
       path: this.sanitizePath(path),
@@ -197,7 +207,7 @@ export class MetricsService {
 
     this.incrementCounter('database.queries.total', 1, tags);
     this.recordHistogram('database.queries.duration', duration, tags);
-    
+
     if (!success) {
       this.incrementCounter('database.queries.errors', 1, tags);
     }
@@ -285,7 +295,7 @@ export class MetricsService {
         Array.from(this.histograms.entries()).map(([key]) => [
           key,
           this.getHistogramStats(key.split('{')[0]),
-        ])
+        ]),
       ),
     };
   }

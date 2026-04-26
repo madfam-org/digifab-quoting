@@ -2,15 +2,15 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Upload, 
-  File, 
-  CheckCircle, 
-  AlertCircle, 
-  Zap, 
+import {
+  Upload,
+  File,
+  CheckCircle,
+  AlertCircle,
+  Zap,
   Eye,
   Download,
-  RotateCcw
+  RotateCcw,
 } from 'lucide-react';
 
 interface UploadedFile {
@@ -45,8 +45,8 @@ const DEMO_FILES: UploadedFile[] = [
       complexity: 'Simple',
       materialRecommendation: 'PETG',
       estimatedCost: '$12.50',
-      leadTime: '2 days'
-    }
+      leadTime: '2 days',
+    },
   },
   {
     id: '2',
@@ -61,9 +61,9 @@ const DEMO_FILES: UploadedFile[] = [
       complexity: 'Medium',
       materialRecommendation: 'Carbon Fiber PETG',
       estimatedCost: '$45.20',
-      leadTime: '3 days'
-    }
-  }
+      leadTime: '3 days',
+    },
+  },
 ];
 
 export function FileUploadDemo() {
@@ -74,7 +74,7 @@ export function FileUploadDemo() {
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     const droppedFiles = Array.from(e.dataTransfer.files);
     processFiles(droppedFiles);
   }, []);
@@ -86,7 +86,7 @@ export function FileUploadDemo() {
 
   const processFiles = (fileList: File[]) => {
     setIsProcessing(true);
-    
+
     fileList.forEach((file, index) => {
       const newFile: UploadedFile = {
         id: Date.now() + index + '',
@@ -94,58 +94,66 @@ export function FileUploadDemo() {
         size: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
         type: file.name.split('.').pop()?.toUpperCase() || 'Unknown',
         status: 'uploading',
-        progress: 0
+        progress: 0,
       };
 
-      setFiles(prev => [...prev, newFile]);
+      setFiles((prev) => [...prev, newFile]);
 
       // Simulate upload progress
       const uploadInterval = setInterval(() => {
-        setFiles(prev => prev.map(f => {
-          if (f.id === newFile.id) {
-            const newProgress = Math.min(f.progress + Math.random() * 30, 100);
-            if (newProgress >= 100) {
-              clearInterval(uploadInterval);
-              // Start analysis
-              setTimeout(() => {
-                setFiles(prev => prev.map(file => 
-                  file.id === newFile.id 
-                    ? { ...file, status: 'analyzing' }
-                    : file
-                ));
-                
-                // Complete analysis
+        setFiles((prev) =>
+          prev.map((f) => {
+            if (f.id === newFile.id) {
+              const newProgress = Math.min(f.progress + Math.random() * 30, 100);
+              if (newProgress >= 100) {
+                clearInterval(uploadInterval);
+                // Start analysis
                 setTimeout(() => {
-                  setFiles(prev => prev.map(file => 
-                    file.id === newFile.id 
-                      ? { 
-                          ...file, 
-                          status: 'completed',
-                          analysis: {
-                            volume: (Math.random() * 50 + 5).toFixed(1) + ' cm³',
-                            surfaceArea: (Math.random() * 200 + 20).toFixed(1) + ' cm²',
-                            complexity: ['Simple', 'Medium', 'Complex'][Math.floor(Math.random() * 3)] as 'Simple' | 'Medium' | 'Complex',
-                            materialRecommendation: ['PLA', 'PETG', 'ABS', 'Carbon Fiber'][Math.floor(Math.random() * 4)],
-                            estimatedCost: '$' + (Math.random() * 100 + 10).toFixed(2),
-                            leadTime: Math.floor(Math.random() * 7 + 1) + ' days'
-                          }
-                        }
-                      : file
-                  ));
-                  setIsProcessing(false);
-                }, 2000);
-              }, 1000);
+                  setFiles((prev) =>
+                    prev.map((file) =>
+                      file.id === newFile.id ? { ...file, status: 'analyzing' } : file,
+                    ),
+                  );
+
+                  // Complete analysis
+                  setTimeout(() => {
+                    setFiles((prev) =>
+                      prev.map((file) =>
+                        file.id === newFile.id
+                          ? {
+                              ...file,
+                              status: 'completed',
+                              analysis: {
+                                volume: (Math.random() * 50 + 5).toFixed(1) + ' cm³',
+                                surfaceArea: (Math.random() * 200 + 20).toFixed(1) + ' cm²',
+                                complexity: ['Simple', 'Medium', 'Complex'][
+                                  Math.floor(Math.random() * 3)
+                                ] as 'Simple' | 'Medium' | 'Complex',
+                                materialRecommendation: ['PLA', 'PETG', 'ABS', 'Carbon Fiber'][
+                                  Math.floor(Math.random() * 4)
+                                ],
+                                estimatedCost: '$' + (Math.random() * 100 + 10).toFixed(2),
+                                leadTime: Math.floor(Math.random() * 7 + 1) + ' days',
+                              },
+                            }
+                          : file,
+                      ),
+                    );
+                    setIsProcessing(false);
+                  }, 2000);
+                }, 1000);
+              }
+              return { ...f, progress: newProgress };
             }
-            return { ...f, progress: newProgress };
-          }
-          return f;
-        }));
+            return f;
+          }),
+        );
       }, 200);
     });
   };
 
   const removeFile = (id: string) => {
-    setFiles(prev => prev.filter(f => f.id !== id));
+    setFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
   return (
@@ -153,8 +161,8 @@ export function FileUploadDemo() {
       {/* Upload Zone */}
       <div
         className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all ${
-          isDragOver 
-            ? 'border-blue-500 bg-blue-50' 
+          isDragOver
+            ? 'border-blue-500 bg-blue-50'
             : 'border-gray-300 hover:border-gray-400 bg-gray-50'
         }`}
         onDragOver={(e) => {
@@ -173,16 +181,16 @@ export function FileUploadDemo() {
         />
 
         <motion.div
-          animate={{ 
+          animate={{
             scale: isDragOver ? 1.05 : 1,
-            rotate: isDragOver ? 5 : 0
+            rotate: isDragOver ? 5 : 0,
           }}
           className="space-y-4"
         >
           <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
             <Upload className="w-8 h-8 text-blue-600" />
           </div>
-          
+
           <div>
             <h3 className="text-xl font-semibold mb-2">
               {isDragOver ? 'Drop your files here!' : 'Upload Your 3D Files'}
@@ -216,7 +224,7 @@ export function FileUploadDemo() {
             className="space-y-4"
           >
             <h3 className="text-lg font-semibold">Your Files ({files.length})</h3>
-            
+
             <div className="space-y-3">
               {files.map((file) => (
                 <motion.div
@@ -229,18 +237,26 @@ export function FileUploadDemo() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg ${
-                        file.status === 'completed' ? 'bg-green-100' :
-                        file.status === 'error' ? 'bg-red-100' :
-                        'bg-blue-100'
-                      }`}>
-                        <File className={`w-5 h-5 ${
-                          file.status === 'completed' ? 'text-green-600' :
-                          file.status === 'error' ? 'text-red-600' :
-                          'text-blue-600'
-                        }`} />
+                      <div
+                        className={`p-2 rounded-lg ${
+                          file.status === 'completed'
+                            ? 'bg-green-100'
+                            : file.status === 'error'
+                              ? 'bg-red-100'
+                              : 'bg-blue-100'
+                        }`}
+                      >
+                        <File
+                          className={`w-5 h-5 ${
+                            file.status === 'completed'
+                              ? 'text-green-600'
+                              : file.status === 'error'
+                                ? 'text-red-600'
+                                : 'text-blue-600'
+                          }`}
+                        />
                       </div>
-                      
+
                       <div>
                         <div className="font-semibold">{file.name}</div>
                         <div className="text-sm text-gray-500">
@@ -253,10 +269,8 @@ export function FileUploadDemo() {
                       {file.status === 'completed' && (
                         <CheckCircle className="w-5 h-5 text-green-500" />
                       )}
-                      {file.status === 'error' && (
-                        <AlertCircle className="w-5 h-5 text-red-500" />
-                      )}
-                      
+                      {file.status === 'error' && <AlertCircle className="w-5 h-5 text-red-500" />}
+
                       <button
                         onClick={() => removeFile(file.id)}
                         className="text-gray-400 hover:text-gray-600 p-1"
@@ -314,11 +328,15 @@ export function FileUploadDemo() {
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-600">Complexity:</span>
-                              <span className={`font-medium ${
-                                file.analysis.complexity === 'Simple' ? 'text-green-600' :
-                                file.analysis.complexity === 'Medium' ? 'text-yellow-600' :
-                                'text-red-600'
-                              }`}>
+                              <span
+                                className={`font-medium ${
+                                  file.analysis.complexity === 'Simple'
+                                    ? 'text-green-600'
+                                    : file.analysis.complexity === 'Medium'
+                                      ? 'text-yellow-600'
+                                      : 'text-red-600'
+                                }`}
+                              >
                                 {file.analysis.complexity}
                               </span>
                             </div>
@@ -334,11 +352,15 @@ export function FileUploadDemo() {
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                               <span className="text-gray-600">Recommended:</span>
-                              <span className="font-medium">{file.analysis.materialRecommendation}</span>
+                              <span className="font-medium">
+                                {file.analysis.materialRecommendation}
+                              </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-600">Estimated Cost:</span>
-                              <span className="font-bold text-green-600">{file.analysis.estimatedCost}</span>
+                              <span className="font-bold text-green-600">
+                                {file.analysis.estimatedCost}
+                              </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-600">Lead Time:</span>
@@ -371,19 +393,25 @@ export function FileUploadDemo() {
       {/* Demo CTA */}
       {files.length === 0 && (
         <div className="text-center">
-          <p className="text-gray-600 mb-4">
-            No files yet? Try our demo with sample files
-          </p>
-          <button 
+          <p className="text-gray-600 mb-4">No files yet? Try our demo with sample files</p>
+          <button
             onClick={() => {
               const sampleFiles: File[] = [];
               if (typeof File !== 'undefined') {
                 try {
                   // Use type assertion for File constructor compatibility
-                  const FileConstructor = File as unknown as new (bits: BlobPart[], filename: string, options?: FilePropertyBag) => File;
+                  const FileConstructor = File as unknown as new (
+                    bits: BlobPart[],
+                    filename: string,
+                    options?: FilePropertyBag,
+                  ) => File;
                   sampleFiles.push(
-                    new FileConstructor([new Blob()], 'sample-bracket.stl', { type: 'application/octet-stream' }),
-                    new FileConstructor([new Blob()], 'custom-enclosure.step', { type: 'application/step' })
+                    new FileConstructor([new Blob()], 'sample-bracket.stl', {
+                      type: 'application/octet-stream',
+                    }),
+                    new FileConstructor([new Blob()], 'custom-enclosure.step', {
+                      type: 'application/step',
+                    }),
                   );
                 } catch (error) {
                   console.warn('File constructor not available, using mock files');

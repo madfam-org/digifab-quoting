@@ -26,8 +26,8 @@ const PERSONA_DESTINATIONS: Record<string, string> = {
   'diy-maker': '/try?persona=diy-maker',
   'shop-owner': '/auth/register?persona=shop-owner',
   'product-designer': '/quote/new?persona=product-designer',
-  'procurement': '/quote/new?persona=procurement&mode=rfq',
-  'educator': '/auth/register?persona=educator',
+  procurement: '/quote/new?persona=procurement&mode=rfq',
+  educator: '/auth/register?persona=educator',
 };
 
 function getPersonaDestination(personaId: string): string {
@@ -46,21 +46,21 @@ const PERSONAS: Persona[] = [
       'Time investment calculator',
       'Skill requirement assessment',
       'Tool & material sourcing',
-      'Step-by-step tutorials'
+      'Step-by-step tutorials',
     ],
     benefits: [
       'Save average of $234 per project',
       'Learn new skills confidently',
       'Make informed decisions',
-      'Access to maker community'
+      'Access to maker community',
     ],
     cta: 'Start DIY Analysis',
     journey: {
       step1: 'Upload your design or idea',
       step2: 'See DIY vs service comparison',
       step3: 'Get tool & material lists',
-      step4: 'Choose your path & save money'
-    }
+      step4: 'Choose your path & save money',
+    },
   },
   {
     id: 'shop-owner',
@@ -73,21 +73,21 @@ const PERSONAS: Persona[] = [
       'Customer management system',
       'Profit margin optimization',
       'Bulk quote processing',
-      'White-label integration'
+      'White-label integration',
     ],
     benefits: [
       '60% faster quote generation',
       'Increase revenue per job',
       'Reduce administrative time',
-      'Professional customer experience'
+      'Professional customer experience',
     ],
     cta: 'Start Free Business Trial',
     journey: {
       step1: 'Connect your existing workflow',
       step2: 'Process customer quotes instantly',
       step3: 'Optimize pricing & margins',
-      step4: 'Scale your business operations'
-    }
+      step4: 'Scale your business operations',
+    },
   },
   {
     id: 'product-designer',
@@ -100,21 +100,21 @@ const PERSONAS: Persona[] = [
       'Material selection guidance',
       'Design optimization suggestions',
       'Cost validation tools',
-      'CAD integration (coming soon)'
+      'CAD integration (coming soon)',
     ],
     benefits: [
       'Reduce design iterations',
       'Optimize manufacturing costs',
       'Validate designs early',
-      'Access industry best practices'
+      'Access industry best practices',
     ],
     cta: 'Try Design Analysis',
     journey: {
       step1: 'Upload your CAD files',
       step2: 'Get manufacturability insights',
       step3: 'See cost impact of changes',
-      step4: 'Export optimized designs'
-    }
+      step4: 'Export optimized designs',
+    },
   },
   {
     id: 'procurement',
@@ -127,21 +127,21 @@ const PERSONAS: Persona[] = [
       'Market pricing intelligence',
       'Bulk quote processing',
       'Supplier performance analytics',
-      'Cost trend analysis'
+      'Cost trend analysis',
     ],
     benefits: [
       'Negotiate better prices',
       'Reduce procurement time',
       'Access market intelligence',
-      'Track supplier performance'
+      'Track supplier performance',
     ],
     cta: 'Access Market Data',
     journey: {
       step1: 'Submit RFQ requirements',
       step2: 'Compare supplier options',
       step3: 'Analyze market trends',
-      step4: 'Make data-driven decisions'
-    }
+      step4: 'Make data-driven decisions',
+    },
   },
   {
     id: 'educator',
@@ -154,22 +154,22 @@ const PERSONAS: Persona[] = [
       'Real industry cost data',
       'Project-based learning tools',
       'Student collaboration features',
-      'Curriculum integration'
+      'Curriculum integration',
     ],
     benefits: [
       'Teach with real data',
       'Engage students practically',
       'Bridge theory & practice',
-      'Prepare industry-ready graduates'
+      'Prepare industry-ready graduates',
     ],
     cta: 'Get Educational Access',
     journey: {
       step1: 'Sign up with .edu email',
       step2: 'Access educational content',
       step3: 'Create student projects',
-      step4: 'Track learning progress'
-    }
-  }
+      step4: 'Track learning progress',
+    },
+  },
 ];
 
 export function PersonaSelector() {
@@ -197,10 +197,14 @@ export function PersonaSelector() {
             layout
           >
             {/* Gradient Background */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${persona.color} opacity-5 rounded-2xl`} />
-            
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${persona.color} opacity-5 rounded-2xl`}
+            />
+
             {/* Icon */}
-            <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${persona.color} text-white mb-4`}>
+            <div
+              className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${persona.color} text-white mb-4`}
+            >
               {persona.icon}
             </div>
 
@@ -257,7 +261,7 @@ export function PersonaSelector() {
           className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border border-gray-200"
         >
           {(() => {
-            const persona = PERSONAS.find(p => p.id === selectedPersona);
+            const persona = PERSONAS.find((p) => p.id === selectedPersona);
             if (!persona) return null;
 
             return (
@@ -265,16 +269,20 @@ export function PersonaSelector() {
                 {/* Journey Steps */}
                 <div>
                   <h4 className="text-2xl font-bold mb-6 flex items-center">
-                    <span className={`p-2 rounded-lg bg-gradient-to-r ${persona.color} text-white mr-3`}>
+                    <span
+                      className={`p-2 rounded-lg bg-gradient-to-r ${persona.color} text-white mr-3`}
+                    >
                       {persona.icon}
                     </span>
                     Your Journey
                   </h4>
-                  
+
                   <div className="space-y-4">
                     {Object.entries(persona.journey).map(([step, description], idx) => (
                       <div key={step} className="flex items-start space-x-4">
-                        <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${persona.color} text-white flex items-center justify-center font-semibold text-sm flex-shrink-0`}>
+                        <div
+                          className={`w-8 h-8 rounded-full bg-gradient-to-r ${persona.color} text-white flex items-center justify-center font-semibold text-sm flex-shrink-0`}
+                        >
                           {idx + 1}
                         </div>
                         <div>
@@ -288,14 +296,16 @@ export function PersonaSelector() {
                 {/* Features & Benefits */}
                 <div>
                   <h4 className="text-2xl font-bold mb-6">What You Get</h4>
-                  
+
                   <div className="space-y-6">
                     <div>
                       <h5 className="font-semibold mb-3 text-gray-800">Key Features</h5>
                       <div className="grid grid-cols-1 gap-2">
                         {persona.features.map((feature, idx) => (
                           <div key={idx} className="flex items-center space-x-3">
-                            <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${persona.color}`} />
+                            <div
+                              className={`w-2 h-2 rounded-full bg-gradient-to-r ${persona.color}`}
+                            />
                             <span className="text-sm text-gray-700">{feature}</span>
                           </div>
                         ))}

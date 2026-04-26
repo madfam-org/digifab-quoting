@@ -10,7 +10,13 @@
 // ============================================================================
 
 export type FeedbackType = 'IDEA' | 'BUG' | 'REQUEST' | 'RESEARCH_INSIGHT';
-export type FeedbackStatus = 'OPEN' | 'UNDER_REVIEW' | 'PLANNED' | 'IN_PROGRESS' | 'SHIPPED' | 'CLOSED';
+export type FeedbackStatus =
+  | 'OPEN'
+  | 'UNDER_REVIEW'
+  | 'PLANNED'
+  | 'IN_PROGRESS'
+  | 'SHIPPED'
+  | 'CLOSED';
 export type FeedbackPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
 // ============================================================================

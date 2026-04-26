@@ -103,7 +103,10 @@ interface AcceptResponse {
   orderId?: string;
 }
 
-const STATUS_VARIANT_MAP: Record<QuoteStatus, 'default' | 'secondary' | 'destructive' | 'outline' | 'success'> = {
+const STATUS_VARIANT_MAP: Record<
+  QuoteStatus,
+  'default' | 'secondary' | 'destructive' | 'outline' | 'success'
+> = {
   draft: 'secondary',
   submitted: 'default',
   auto_quoted: 'default',
@@ -502,9 +505,7 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t('pricing.tax')}</span>
-                    <span className="font-mono">
-                      {formatCurrency(quote.tax, quote.currency)}
-                    </span>
+                    <span className="font-mono">{formatCurrency(quote.tax, quote.currency)}</span>
                   </div>
                   {quote.shipping != null && quote.shipping > 0 && (
                     <div className="flex justify-between">

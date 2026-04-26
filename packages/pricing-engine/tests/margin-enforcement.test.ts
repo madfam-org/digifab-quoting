@@ -100,8 +100,8 @@ describe('Margin Enforcement Edge Cases', () => {
       const result = engine.calculate(input);
 
       // Check warnings for discount adjustment
-      const hasDiscountWarning = result.warnings.some(w => 
-        w.includes('Discount reduced') || w.includes('margin')
+      const hasDiscountWarning = result.warnings.some(
+        (w) => w.includes('Discount reduced') || w.includes('margin'),
       );
       expect(hasDiscountWarning).toBe(true);
 
@@ -153,7 +153,7 @@ describe('Margin Enforcement Edge Cases', () => {
       const quantities = [1, 10, 100, 1000];
       const results: { qty: number; unitPrice: number; effectiveMargin: number }[] = [];
 
-      quantities.forEach(qty => {
+      quantities.forEach((qty) => {
         const input = createInput({
           quantity: qty,
           tenantConfig: {
@@ -192,7 +192,7 @@ describe('Margin Enforcement Edge Cases', () => {
       }
 
       // All should maintain minimum margin
-      results.forEach(r => {
+      results.forEach((r) => {
         expect(r.effectiveMargin).toBeGreaterThanOrEqual(10); // Absolute minimum
       });
     });
@@ -209,10 +209,10 @@ describe('Margin Enforcement Edge Cases', () => {
       });
 
       const result = engine.calculate(input);
-      
+
       // Should return error result
       expect(result.warnings.length).toBeGreaterThan(0);
-      expect(result.warnings.some(w => w.includes('Validation failed'))).toBe(true);
+      expect(result.warnings.some((w) => w.includes('Validation failed'))).toBe(true);
     });
 
     it('should handle zero costs gracefully', () => {
@@ -237,7 +237,7 @@ describe('Margin Enforcement Edge Cases', () => {
 
       // Should still have a positive price due to margin requirements
       expect(result.unitPrice.toNumber()).toBeGreaterThan(0);
-      
+
       // Should have warnings about zero cost
       expect(result.warnings.length).toBeGreaterThan(0);
     });
@@ -255,9 +255,7 @@ describe('Margin Enforcement Edge Cases', () => {
       const result = engine.calculate(input);
 
       // Should have low margin warning
-      const hasLowMarginWarning = result.warnings.some(w => 
-        w.includes('Low margin warning')
-      );
+      const hasLowMarginWarning = result.warnings.some((w) => w.includes('Low margin warning'));
       expect(hasLowMarginWarning).toBe(true);
     });
 
@@ -276,8 +274,8 @@ describe('Margin Enforcement Edge Cases', () => {
       const result = engine.calculate(input);
 
       // Should have warning about effective margin
-      const hasMarginWarning = result.warnings.some(w => 
-        w.includes('margin') || w.includes('Discount')
+      const hasMarginWarning = result.warnings.some(
+        (w) => w.includes('margin') || w.includes('Discount'),
       );
       expect(hasMarginWarning).toBe(true);
     });

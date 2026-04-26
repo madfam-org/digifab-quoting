@@ -1,4 +1,13 @@
-import { IsEnum, IsObject, IsOptional, IsString, ValidateNested, IsNumber, Min, Max } from 'class-validator';
+import {
+  IsEnum,
+  IsObject,
+  IsOptional,
+  IsString,
+  ValidateNested,
+  IsNumber,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Currency, QuoteType } from '@cotiza/shared';

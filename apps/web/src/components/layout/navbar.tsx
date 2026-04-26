@@ -25,7 +25,10 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link href="/" className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <Link
+              href="/"
+              className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            >
               Cotiza Studio
             </Link>
 
@@ -77,11 +80,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
-            <CurrencySelector 
-              size="sm" 
-              variant="outline"
-              className="hidden sm:flex"
-            />
+            <CurrencySelector size="sm" variant="outline" className="hidden sm:flex" />
             <LanguageSwitcher />
             {session ? (
               <DropdownMenu>
@@ -114,12 +113,9 @@ export function Navbar() {
                       {t('nav.settings')}
                     </Link>
                   </DropdownMenuItem>
-                  
+
                   <div className="sm:hidden px-2 py-1">
-                    <CurrencySelector 
-                      size="sm"
-                      variant="ghost"
-                    />
+                    <CurrencySelector size="sm" variant="ghost" />
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

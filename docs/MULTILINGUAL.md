@@ -7,7 +7,7 @@ Cotiza Studio provides comprehensive multilingual support across the entire plat
 ## Supported Languages
 
 - **Spanish (es)** - Default language
-- **English (en)** 
+- **English (en)**
 - **Portuguese - Brazil (pt-BR)**
 
 ## Architecture
@@ -29,7 +29,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 function Component() {
   const { t, locale, formatCurrency } = useTranslation('namespace');
-  
+
   return (
     <div>
       <h1>{t('title')}</h1>
@@ -81,20 +81,16 @@ The backend provides a comprehensive i18n service with:
 ```typescript
 @Injectable()
 export class I18nService {
-  async translate(
-    key: string,
-    locale: Locale = 'es',
-    params?: TranslationParams
-  ): Promise<string>
-  
+  async translate(key: string, locale: Locale = 'es', params?: TranslationParams): Promise<string>;
+
   async translateEmail(
     templateKey: string,
     locale: Locale,
-    params?: TranslationParams
-  ): Promise<{ subject: string; body: string }>
-  
-  formatCurrency(amount: number, locale: Locale, currency?: string): string
-  formatDate(date: Date, locale: Locale): string
+    params?: TranslationParams,
+  ): Promise<{ subject: string; body: string }>;
+
+  formatCurrency(amount: number, locale: Locale, currency?: string): string;
+  formatDate(date: Date, locale: Locale): string;
 }
 ```
 
@@ -195,6 +191,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 ```
 
 The component automatically:
+
 - Displays current language
 - Shows available languages with flags
 - Updates URL on language change
@@ -216,6 +213,7 @@ import { SEOHead } from '@/components/SEOHead';
 ```
 
 Generates:
+
 - Localized title and description
 - hreflang alternate links
 - Open Graph locale tags
@@ -225,7 +223,7 @@ Generates:
 
 ```
 https://www.cotiza.studio/es/        # Spanish
-https://www.cotiza.studio/en/        # English  
+https://www.cotiza.studio/en/        # English
 https://www.cotiza.studio/pt-BR/     # Portuguese
 ```
 
@@ -234,16 +232,19 @@ https://www.cotiza.studio/pt-BR/     # Portuguese
 ### Setting Locale for API Requests
 
 #### Method 1: Query Parameter
+
 ```bash
 curl https://api.cotiza.studio/v1/quotes?locale=en
 ```
 
 #### Method 2: Custom Header
+
 ```bash
 curl -H "X-Locale: en" https://api.cotiza.studio/v1/quotes
 ```
 
 #### Method 3: Accept-Language Header
+
 ```bash
 curl -H "Accept-Language: en-US,en;q=0.9" https://api.cotiza.studio/v1/quotes
 ```
@@ -293,8 +294,8 @@ const { formatDate } = useTranslation();
 formatDate(new Date()); // "20/01/2024" (es)
 
 // Backend
-i18nService.formatDate(new Date(), 'es');    // "20/01/2024"
-i18nService.formatDate(new Date(), 'en');    // "01/20/2024"
+i18nService.formatDate(new Date(), 'es'); // "20/01/2024"
+i18nService.formatDate(new Date(), 'en'); // "01/20/2024"
 i18nService.formatDate(new Date(), 'pt-BR'); // "20/01/2024"
 ```
 
@@ -315,11 +316,7 @@ describe('I18nService', () => {
   });
 
   it('should interpolate parameters', async () => {
-    const result = await service.translate(
-      'common.greeting',
-      'es',
-      { name: 'Juan' }
-    );
+    const result = await service.translate('common.greeting', 'es', { name: 'Juan' });
     expect(result).toBe('Hola, Juan');
   });
 });
@@ -330,17 +327,17 @@ describe('I18nService', () => {
 ```typescript
 test('should switch language', async ({ page }) => {
   await page.goto('/es');
-  
+
   // Check Spanish content
   await expect(page.locator('h1')).toContainText('Bienvenido');
-  
+
   // Switch to English
   await page.click('[data-testid="language-switcher"]');
   await page.click('[data-value="en"]');
-  
+
   // Check English content
   await expect(page.locator('h1')).toContainText('Welcome');
-  
+
   // Verify URL changed
   await expect(page).toHaveURL('/en');
 });
@@ -351,6 +348,7 @@ test('should switch language', async ({ page }) => {
 ### Caching Strategy
 
 1. **Frontend**:
+
    - In-memory cache for loaded translations
    - localStorage for user preference
    - Static file caching via Next.js
@@ -369,16 +367,19 @@ test('should switch language', async ({ page }) => {
 ## Best Practices
 
 1. **Translation Keys**:
+
    - Use descriptive, hierarchical keys
    - Group related translations
    - Avoid hardcoding text in components
 
 2. **Placeholders**:
+
    - Use meaningful parameter names
    - Provide context for translators
    - Handle plural forms properly
 
 3. **Testing**:
+
    - Test all locales in CI/CD
    - Verify parameter interpolation
    - Check date/currency formatting

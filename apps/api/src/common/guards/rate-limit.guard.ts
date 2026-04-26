@@ -9,8 +9,7 @@ export interface RateLimitOptions {
   skipIf?: (context: ExecutionContext) => boolean;
 }
 
-export const RateLimit = (options: RateLimitOptions) => 
-  SetMetadata(RATE_LIMIT_KEY, options);
+export const RateLimit = (options: RateLimitOptions) => SetMetadata(RATE_LIMIT_KEY, options);
 
 @Injectable()
 export class RateLimitGuard implements CanActivate {
@@ -20,10 +19,7 @@ export class RateLimitGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const options = this.reflector.get<RateLimitOptions>(
-      RATE_LIMIT_KEY,
-      context.getHandler(),
-    );
+    const options = this.reflector.get<RateLimitOptions>(RATE_LIMIT_KEY, context.getHandler());
 
     if (!options) {
       return true; // No rate limit specified
@@ -39,7 +35,7 @@ export class RateLimitGuard implements CanActivate {
 
     return new Promise((resolve, reject) => {
       const rateLimiter = this.rateLimitMiddleware.createRateLimiter(options.type);
-      
+
       rateLimiter(request, response, (error?: unknown) => {
         if (error) {
           reject(error as Error);

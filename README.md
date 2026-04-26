@@ -27,35 +27,41 @@ npm run dev
 ## ✨ Key Features
 
 ### 🌍 Multilingual Platform
+
 - **Full Localization**: Spanish (default), English, and Portuguese (Brazil)
 - **Smart Detection**: Automatic language detection from browser/user preferences
 - **Localized Content**: All UI, emails, and PDFs in user's preferred language
 - **SEO Optimized**: Multilingual meta tags and structured data
 
 ### 🏢 Multi-Tenant Architecture
+
 - **Tenant Isolation**: Complete data separation between organizations
 - **Custom Branding**: White-label support with custom domains
 - **Flexible Pricing**: Per-tenant pricing rules and margins
 - **Usage Tracking**: Comprehensive billing and metering
 
 ### 🔧 Manufacturing Processes
+
 - **3D Printing**: FFF and SLA with DFM analysis
 - **CNC Machining**: 3-axis milling for metals and plastics
 - **Laser Cutting**: 2D cutting with nesting optimization
 - **Real-time Pricing**: Instant quotes with cost breakdown
 
 ### 🤖 Advanced Features
+
 - **Link-to-Quote**: Import projects from Thingiverse, GitHub, etc.
 - **Guest Quotes**: No registration required for quick quotes
 - **DIY Calculator**: Compare DIY vs professional service costs
 - **Persona Selector**: Tailored experiences for makers, businesses, designers
 
 ### 📊 Advanced Analytics
+
 - **Real-time Metrics**: Business KPIs and performance monitoring
 - **Quote Analytics**: Conversion rates and pricing optimization
 - **Sustainability Scoring**: Environmental impact assessment
 
 ### 🔒 Enterprise Security
+
 - **Multi-factor Authentication**: JWT with refresh tokens
 - **Role-based Access Control**: Granular permissions system
 - **Audit Logging**: Complete activity tracking

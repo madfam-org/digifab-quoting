@@ -94,13 +94,9 @@ describe('AuthController', () => {
     });
 
     it('should handle duplicate email error', async () => {
-      mockAuthService.register.mockRejectedValue(
-        new BadRequestException('Email already exists')
-      );
+      mockAuthService.register.mockRejectedValue(new BadRequestException('Email already exists'));
 
-      await expect(controller.register(registerDto)).rejects.toThrow(
-        BadRequestException
-      );
+      await expect(controller.register(registerDto)).rejects.toThrow(BadRequestException);
     });
 
     it('should validate password strength', async () => {
@@ -109,13 +105,9 @@ describe('AuthController', () => {
         password: '123456',
       };
 
-      mockAuthService.register.mockRejectedValue(
-        new BadRequestException('Password too weak')
-      );
+      mockAuthService.register.mockRejectedValue(new BadRequestException('Password too weak'));
 
-      await expect(controller.register(weakPasswordDto)).rejects.toThrow(
-        'Password too weak'
-      );
+      await expect(controller.register(weakPasswordDto)).rejects.toThrow('Password too weak');
     });
   });
 
@@ -161,13 +153,9 @@ describe('AuthController', () => {
         password: 'password123',
       };
 
-      mockAuthService.login.mockRejectedValue(
-        new UnauthorizedException('Invalid credentials')
-      );
+      mockAuthService.login.mockRejectedValue(new UnauthorizedException('Invalid credentials'));
 
-      await expect(controller.login(req, loginDto)).rejects.toThrow(
-        UnauthorizedException
-      );
+      await expect(controller.login(req, loginDto)).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -187,22 +175,18 @@ describe('AuthController', () => {
 
     it('should handle invalid refresh token', async () => {
       mockAuthService.refreshTokens.mockRejectedValue(
-        new UnauthorizedException('Invalid refresh token')
+        new UnauthorizedException('Invalid refresh token'),
       );
 
-      await expect(controller.refreshToken(refreshDto)).rejects.toThrow(
-        UnauthorizedException
-      );
+      await expect(controller.refreshToken(refreshDto)).rejects.toThrow(UnauthorizedException);
     });
 
     it('should handle expired refresh token', async () => {
       mockAuthService.refreshTokens.mockRejectedValue(
-        new UnauthorizedException('Refresh token expired')
+        new UnauthorizedException('Refresh token expired'),
       );
 
-      await expect(controller.refreshToken(refreshDto)).rejects.toThrow(
-        'Refresh token expired'
-      );
+      await expect(controller.refreshToken(refreshDto)).rejects.toThrow('Refresh token expired');
     });
   });
 
@@ -307,40 +291,33 @@ describe('AuthController', () => {
 
   describe('validation', () => {
     it('should validate email format on register', async () => {
-      const invalidEmails = [
-        'notanemail',
-        '@example.com',
-        'user@',
-        'user@.com',
-      ];
+      const invalidEmails = ['notanemail', '@example.com', 'user@', 'user@.com'];
 
       for (const email of invalidEmails) {
-        mockAuthService.register.mockRejectedValue(
-          new BadRequestException('Invalid email format')
-        );
+        mockAuthService.register.mockRejectedValue(new BadRequestException('Invalid email format'));
 
         await expect(
           controller.register({
             email,
             password: 'ValidPassword123!',
             name: 'Test',
-          })
+          }),
         ).rejects.toThrow('Invalid email format');
       }
     });
 
     it('should enforce password requirements on register', async () => {
       const weakPasswords = [
-        '12345',           // Too short
-        'password',        // No numbers
-        'PASSWORD123',     // No lowercase
-        'password123',     // No uppercase
-        'Password',        // No numbers
+        '12345', // Too short
+        'password', // No numbers
+        'PASSWORD123', // No lowercase
+        'password123', // No uppercase
+        'Password', // No numbers
       ];
 
       for (const password of weakPasswords) {
         mockAuthService.register.mockRejectedValue(
-          new BadRequestException('Password does not meet requirements')
+          new BadRequestException('Password does not meet requirements'),
         );
 
         await expect(
@@ -348,7 +325,7 @@ describe('AuthController', () => {
             email: 'test@example.com',
             password,
             name: 'Test',
-          })
+          }),
         ).rejects.toThrow('Password does not meet requirements');
       }
     });

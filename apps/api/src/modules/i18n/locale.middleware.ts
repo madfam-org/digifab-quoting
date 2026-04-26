@@ -79,7 +79,7 @@ export class LocaleMiddleware implements NestMiddleware {
     // Example: "en-US,en;q=0.9,es;q=0.8" -> ['en-US', 'en', 'es']
     const languages: Array<{ lang: string; q: number }> = [];
 
-    acceptLanguage.split(',').forEach(item => {
+    acceptLanguage.split(',').forEach((item) => {
       const [lang, qValue] = item.trim().split(';');
       const q = qValue ? parseFloat(qValue.split('=')[1]) : 1.0;
       languages.push({ lang: lang.trim(), q });
@@ -88,7 +88,7 @@ export class LocaleMiddleware implements NestMiddleware {
     // Sort by quality value (q)
     languages.sort((a, b) => b.q - a.q);
 
-    return languages.map(item => item.lang);
+    return languages.map((item) => item.lang);
   }
 
   private matchLocale(lang: string): Locale | null {
@@ -99,12 +99,12 @@ export class LocaleMiddleware implements NestMiddleware {
 
     // Match language code (e.g., 'en-US' -> 'en')
     const langCode = lang.split('-')[0].toLowerCase();
-    
+
     // Special case for Portuguese
     if (lang.toLowerCase().startsWith('pt-br')) {
       return 'pt-BR';
     }
-    
+
     // Match by language code
     if (langCode === 'es') return 'es';
     if (langCode === 'en') return 'en';

@@ -84,10 +84,8 @@ export class JobQueueService {
   }
 
   // Batch operations
-  async addBulkQuoteCalculations(
-    jobs: QuoteCalculationJob[],
-  ): Promise<Job<QuoteCalculationJob>[]> {
-    const bulkJobs = jobs.map(data => ({
+  async addBulkQuoteCalculations(jobs: QuoteCalculationJob[]): Promise<Job<QuoteCalculationJob>[]> {
+    const bulkJobs = jobs.map((data) => ({
       name: 'calculate',
       data,
       opts: {
@@ -131,14 +129,7 @@ export class JobQueueService {
   async getQueueMetrics(queueName: string) {
     const queue = this.getQueue(queueName);
 
-    const [
-      waiting,
-      active,
-      completed,
-      failed,
-      delayed,
-      paused,
-    ] = await Promise.all([
+    const [waiting, active, completed, failed, delayed, paused] = await Promise.all([
       queue.getWaitingCount(),
       queue.getActiveCount(),
       queue.getCompletedCount(),
@@ -196,10 +187,10 @@ export class JobQueueService {
     const queue = this.getQueue(queueName);
     const failedJobs = await queue.getFailed(0, limit);
 
-    const retryPromises = failedJobs.map(job => job.retry());
+    const retryPromises = failedJobs.map((job) => job.retry());
     const results = await Promise.allSettled(retryPromises);
 
-    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const succeeded = results.filter((r) => r.status === 'fulfilled').length;
     this.logger.log(`Retried ${succeeded}/${failedJobs.length} failed jobs in ${queueName}`);
 
     return { total: failedJobs.length, succeeded };

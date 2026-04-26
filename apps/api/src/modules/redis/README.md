@@ -226,21 +226,25 @@ POST /cache/warmup
 ## Best Practices
 
 1. **Use Appropriate TTLs**
+
    - Shorter TTLs for frequently changing data
    - Longer TTLs for static configuration
    - Consider business requirements for data freshness
 
 2. **Key Naming Conventions**
+
    - Use descriptive prefixes
    - Include version in keys if data structure changes
    - Keep keys reasonably short
 
 3. **Error Handling**
+
    - Service continues to work without Redis (graceful degradation)
    - Log cache errors but don't fail requests
    - Monitor error rates
 
 4. **Performance Optimization**
+
    - Use batch operations for multiple keys
    - Implement cache warming for critical data
    - Monitor hit rates and adjust TTLs accordingly

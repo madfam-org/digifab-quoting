@@ -63,8 +63,8 @@ export class TenantCacheService {
       subdomain: tenant.domain || '', // Use correct field name
       settings: (tenant.settings as Record<string, unknown>) || {},
       features: [], // tenant.tenantFeatures.map((tf: any) => tf.feature.code), // Remove if not in schema
-      currencies: (tenant.settings as Record<string, unknown>)?.currencies as string[] || ['MXN'],
-      locales: (tenant.settings as Record<string, unknown>)?.locales as string[] || ['es', 'en'],
+      currencies: ((tenant.settings as Record<string, unknown>)?.currencies as string[]) || ['MXN'],
+      locales: ((tenant.settings as Record<string, unknown>)?.locales as string[]) || ['es', 'en'],
     };
 
     // Cache the config
@@ -267,7 +267,9 @@ export class TenantCacheService {
       // await this.cacheService.deletePattern(pattern); // Method may not exist
       // await this.cacheService.delete(pattern); // Method may not exist either
       try {
-        await (this.cacheService as CacheService & { clearPattern?: (pattern: string) => Promise<void> }).clearPattern?.(pattern);
+        await (
+          this.cacheService as CacheService & { clearPattern?: (pattern: string) => Promise<void> }
+        ).clearPattern?.(pattern);
       } catch {
         this.logger.warn(`Could not clear cache pattern: ${pattern}`);
       }

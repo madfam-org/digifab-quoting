@@ -168,21 +168,14 @@ describe('Yantra4dImportController', () => {
 
       await controller.importFromYantra4d(req, dto as any);
 
-      expect(importService.createQuoteFromYantra4d).toHaveBeenCalledWith(
-        't-1',
-        'u-1',
-        dto,
-      );
+      expect(importService.createQuoteFromYantra4d).toHaveBeenCalledWith('t-1', 'u-1', dto);
     });
 
     it('should return the service response', async () => {
       const expected = buildResponse();
       importService.createQuoteFromYantra4d.mockResolvedValue(expected);
 
-      const result = await controller.importFromYantra4d(
-        buildRequest(),
-        buildDto() as any,
-      );
+      const result = await controller.importFromYantra4d(buildRequest(), buildDto() as any);
 
       expect(result).toEqual(expected);
     });
@@ -195,10 +188,7 @@ describe('Yantra4dImportController', () => {
       };
       importService.createQuoteFromYantra4d.mockResolvedValue(response);
 
-      const result = await controller.importFromYantra4d(
-        buildRequest(),
-        buildDto() as any,
-      );
+      const result = await controller.importFromYantra4d(buildRequest(), buildDto() as any);
 
       expect(result.warnings).toContain('Material not found in tenant catalog.');
       expect(result.status).toBe('needs_review');
@@ -211,25 +201,25 @@ describe('Yantra4dImportController', () => {
     it('should throw BadRequestException when source is not "yantra4d"', async () => {
       const dto = buildDto({ source: 'other-system' });
 
-      await expect(
-        controller.importFromYantra4d(buildRequest(), dto as any),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.importFromYantra4d(buildRequest(), dto as any)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should include the invalid source value in the error message', async () => {
       const dto = buildDto({ source: 'fakesource' });
 
-      await expect(
-        controller.importFromYantra4d(buildRequest(), dto as any),
-      ).rejects.toThrow('expected "yantra4d", got "fakesource"');
+      await expect(controller.importFromYantra4d(buildRequest(), dto as any)).rejects.toThrow(
+        'expected "yantra4d", got "fakesource"',
+      );
     });
 
     it('should throw BadRequestException when source is empty', async () => {
       const dto = buildDto({ source: '' });
 
-      await expect(
-        controller.importFromYantra4d(buildRequest(), dto as any),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.importFromYantra4d(buildRequest(), dto as any)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

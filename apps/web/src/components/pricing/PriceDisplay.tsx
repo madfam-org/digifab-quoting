@@ -7,9 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { CurrencyBadge } from '@/components/currency/CurrencySelector';
-import { 
-  Currency
-} from '@cotiza/shared';
+import { Currency } from '@cotiza/shared';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
@@ -109,13 +107,13 @@ export function PriceDisplay({
     if (hideMinorCurrencies && curr === Currency.JPY) {
       return Math.round(price).toLocaleString();
     }
-    
+
     return format(price, curr);
   };
 
   if (loading) {
     return (
-      <div className={cn("space-y-2", className)}>
+      <div className={cn('space-y-2', className)}>
         <Skeleton className="h-8 w-32" />
         {showConversion && <Skeleton className="h-4 w-24" />}
       </div>
@@ -123,10 +121,8 @@ export function PriceDisplay({
   }
 
   const renderPrice = (price: number, curr: Currency, styleClass: string) => (
-    <div className={cn("flex items-center gap-2", styleClass)}>
-      <span className="font-mono">
-        {getFormattedPrice(price, curr)}
-      </span>
+    <div className={cn('flex items-center gap-2', styleClass)}>
+      <span className="font-mono">{getFormattedPrice(price, curr)}</span>
       <CurrencyBadge currency={curr} className="opacity-75" />
     </div>
   );
@@ -138,7 +134,7 @@ export function PriceDisplay({
 
     return (
       <div className="flex items-center gap-2 opacity-75">
-        <span className={cn("text-muted-foreground", styles.original)}>
+        <span className={cn('text-muted-foreground', styles.original)}>
           ≈ {renderPrice(convertedAmount, userCurrency, '')}
         </span>
         {conversionDate && (
@@ -161,10 +157,10 @@ export function PriceDisplay({
         variant="secondary"
         className={cn(
           styles.trend,
-          "flex items-center gap-1",
-          isPositive && "text-green-700 bg-green-50",
-          isNegative && "text-red-700 bg-red-50",
-          mockTrend === 0 && "text-gray-700 bg-gray-50"
+          'flex items-center gap-1',
+          isPositive && 'text-green-700 bg-green-50',
+          isNegative && 'text-red-700 bg-red-50',
+          mockTrend === 0 && 'text-gray-700 bg-gray-50',
         )}
       >
         {isPositive && <TrendingUp className="h-3 w-3" />}
@@ -221,7 +217,7 @@ export function PriceDisplay({
 
   if (variant === 'inline') {
     return (
-      <div className={cn("inline-flex items-center gap-3", className)}>
+      <div className={cn('inline-flex items-center gap-3', className)}>
         {renderPrice(displayAmount, displayCurrency, styles.price)}
         {renderTrend()}
         {renderConversion()}
@@ -231,15 +227,15 @@ export function PriceDisplay({
 
   if (variant === 'card') {
     return (
-      <Card className={cn("w-full", className)}>
+      <Card className={cn('w-full', className)}>
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center justify-between">
             {renderPrice(displayAmount, displayCurrency, styles.price)}
             {renderTrend()}
           </div>
-          
+
           {renderConversion()}
-          
+
           {showBreakdown && (
             <Button
               variant="ghost"
@@ -252,26 +248,22 @@ export function PriceDisplay({
             </Button>
           )}
         </CardContent>
-        
-        {showDetails && (
-          <CardFooter className="pt-0 px-4 pb-4">
-            {renderBreakdown()}
-          </CardFooter>
-        )}
+
+        {showDetails && <CardFooter className="pt-0 px-4 pb-4">{renderBreakdown()}</CardFooter>}
       </Card>
     );
   }
 
   // Default variant
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn('space-y-2', className)}>
       <div className="flex items-center justify-between">
         {renderPrice(displayAmount, displayCurrency, styles.price)}
         {renderTrend()}
       </div>
-      
+
       {renderConversion()}
-      
+
       {showBreakdown && breakdown && (
         <div className="mt-3">
           <Button
@@ -283,7 +275,7 @@ export function PriceDisplay({
             {showDetails ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             {showDetails ? t('pricing.hideDetails') : t('pricing.showDetails')}
           </Button>
-          
+
           {showDetails && renderBreakdown()}
         </div>
       )}
@@ -293,13 +285,13 @@ export function PriceDisplay({
 
 // Specialized components for common use cases
 
-export function QuotePrice({ 
+export function QuotePrice({
   quote,
   showConversion = true,
-  className 
-}: { 
-  quote: { 
-    totalPrice: number; 
+  className,
+}: {
+  quote: {
+    totalPrice: number;
     currency: Currency;
     breakdown?: PriceDisplayProps['breakdown'];
   };
@@ -320,12 +312,12 @@ export function QuotePrice({
   );
 }
 
-export function ServicePrice({ 
+export function ServicePrice({
   price,
   currency,
   originalPrice,
   originalCurrency,
-  className 
+  className,
 }: {
   price: number;
   currency: Currency;
@@ -348,13 +340,13 @@ export function ServicePrice({
   );
 }
 
-export function CompactPrice({ 
-  amount, 
-  currency, 
-  className 
-}: { 
-  amount: number; 
-  currency: Currency; 
+export function CompactPrice({
+  amount,
+  currency,
+  className,
+}: {
+  amount: number;
+  currency: Currency;
   className?: string;
 }) {
   return (
@@ -372,21 +364,17 @@ export function CompactPrice({
 // Price comparison component
 export function PriceComparison({
   prices,
-  className
+  className,
 }: {
   prices: { label: string; amount: number; currency: Currency }[];
   className?: string;
 }) {
-
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn('space-y-3', className)}>
       {prices.map((price, index) => (
         <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
           <span className="font-medium">{price.label}</span>
-          <ServicePrice
-            price={price.amount}
-            currency={price.currency}
-          />
+          <ServicePrice price={price.amount} currency={price.currency} />
         </div>
       ))}
     </div>

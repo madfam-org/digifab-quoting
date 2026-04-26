@@ -554,7 +554,7 @@ export class BillingService {
    * Handle Janua subscription created event
    */
   async handleJanuaSubscriptionCreated(payload: any): Promise<void> {
-    const { customer_id, subscription_id, plan_id, provider } = payload.data;
+    const { customer_id, subscription_id: _subscription_id, plan_id, provider } = payload.data;
 
     const tenant = await this.prisma.tenant.findFirst({
       where: { januaCustomerId: customer_id },
@@ -611,7 +611,7 @@ export class BillingService {
    * Handle Janua subscription cancelled event
    */
   async handleJanuaSubscriptionCancelled(payload: any): Promise<void> {
-    const { customer_id, provider } = payload.data;
+    const { customer_id, provider: _provider } = payload.data;
 
     const tenant = await this.prisma.tenant.findFirst({
       where: { januaCustomerId: customer_id },
@@ -664,9 +664,7 @@ export class BillingService {
         period: `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`,
         dueDate: now,
         metadata: {
-          lineItems: [
-            { description: `Subscription payment via ${provider}`, amount: amount || 0 },
-          ],
+          lineItems: [{ description: `Subscription payment via ${provider}`, amount: amount || 0 }],
         },
       },
     });

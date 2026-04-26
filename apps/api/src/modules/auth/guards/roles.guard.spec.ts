@@ -10,7 +10,11 @@ describe('RolesGuard', () => {
   let reflector: Reflector;
   let tenantContext: TenantContextService;
 
-  const mockExecutionContext = (user?: { id: string; email: string; roles?: string[] }): ExecutionContext =>
+  const mockExecutionContext = (user?: {
+    id: string;
+    email: string;
+    roles?: string[];
+  }): ExecutionContext =>
     ({
       switchToHttp: jest.fn().mockReturnValue({
         getRequest: jest.fn().mockReturnValue({ user }),
@@ -157,7 +161,11 @@ describe('RolesGuard', () => {
       (reflector.getAllAndOverride as jest.Mock).mockReturnValue([USER_ROLES.SUPPORT]);
       (tenantContext.getCurrentUserRoles as jest.Mock).mockReturnValue([]);
 
-      const user = { id: 'user-1', email: 'test@example.com', roles: [USER_ROLES.CUSTOMER, USER_ROLES.SUPPORT] };
+      const user = {
+        id: 'user-1',
+        email: 'test@example.com',
+        roles: [USER_ROLES.CUSTOMER, USER_ROLES.SUPPORT],
+      };
       const context = mockExecutionContext(user);
 
       expect(guard.canActivate(context)).toBe(true);

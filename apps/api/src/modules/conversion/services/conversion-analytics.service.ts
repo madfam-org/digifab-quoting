@@ -9,7 +9,11 @@ export interface ConversionInsights {
   averageTimeToConversion: number;
   stageDropoffs: Record<ConversionStage, number>;
   topConversionActions: Array<{ action: string; impact: number }>;
-  recommendedOptimizations: Array<{ area: string; suggestion: string; impact: 'low' | 'medium' | 'high' }>;
+  recommendedOptimizations: Array<{
+    area: string;
+    suggestion: string;
+    impact: 'low' | 'medium' | 'high';
+  }>;
 }
 
 @Injectable()
@@ -21,7 +25,10 @@ export class ConversionAnalyticsService {
     private readonly redis: RedisService,
   ) {}
 
-  async getConversionInsights(tenantId?: string, period: 'day' | 'week' | 'month' = 'month'): Promise<ConversionInsights> {
+  async getConversionInsights(
+    tenantId?: string,
+    period: 'day' | 'week' | 'month' = 'month',
+  ): Promise<ConversionInsights> {
     // For now, return mock data - would implement real analytics here
     return {
       totalUsers: 100,

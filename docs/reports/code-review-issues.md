@@ -9,6 +9,7 @@ None found.
 ### HIGH
 
 1. **Exposed sensitive information in error responses**
+
    - **Location**: `apps/api/src/common/filters/all-exceptions.filter.ts:104-106`
    - **Issue**: Details are exposed in non-production environments, but the check should be more robust
    - **Current code**: `if (details && process.env.NODE_ENV !== 'production')`
@@ -24,6 +25,7 @@ None found.
 ### MEDIUM
 
 1. **Weak JWT token validation**
+
    - **Location**: `apps/api/src/auth/guards/jwt-auth.guard.ts:67-72`
    - **Issue**: Using `any` types for error handling, making it harder to validate security
    - **Current code**: `handleRequest(err: any, user: any, info: any)`
@@ -31,6 +33,7 @@ None found.
    - **Fix**: Add proper types for error handling
 
 2. **Insufficient input validation**
+
    - **Location**: `apps/api/src/common/validators/sanitization.ts:121`
    - **Issue**: Regex escape issue in path validation
    - **Current code**: Contains unnecessary escape character `\/`
@@ -48,6 +51,7 @@ None found.
 ### CRITICAL
 
 1. **Missing TypeScript dependencies**
+
    - **Location**: Multiple files
    - **Issues**:
      - `bcrypt` module not found
@@ -73,6 +77,7 @@ None found.
 ### HIGH
 
 1. **Excessive use of `any` types**
+
    - **Location**: 384 instances across the codebase
    - **Severity**: 344 warnings for `@typescript-eslint/no-explicit-any`
    - **Impact**: Loss of type safety, potential runtime errors
@@ -89,12 +94,14 @@ None found.
 ### HIGH
 
 1. **Missing database indexes**
+
    - **Location**: Database queries throughout services
    - **Issue**: No evidence of proper indexing strategy
    - **Impact**: Slow queries as data grows
    - **Fix**: Add indexes for foreign keys and commonly queried fields
 
 2. **Inefficient cache key generation**
+
    - **Location**: `apps/api/src/modules/redis/redis.service.ts:72-86`
    - **Issue**: String concatenation in hot path
    - **Impact**: Performance overhead on every cache operation
@@ -119,6 +126,7 @@ None found.
 ### HIGH
 
 1. **Unused variables and imports**
+
    - **Location**: Multiple files
    - **Examples**:
      - `ThrottlerException` imported but never used
@@ -128,6 +136,7 @@ None found.
    - **Fix**: Remove unused code
 
 2. **Console.log statements in production code**
+
    - **Location**: `apps/api/src/prisma/seed.ts`
    - **Issue**: 12 console.log statements
    - **Impact**: Log pollution, potential information disclosure
@@ -142,6 +151,7 @@ None found.
 ### MEDIUM
 
 1. **Inconsistent error handling**
+
    - **Location**: Throughout the codebase
    - **Issue**: Mix of try-catch patterns and error types
    - **Impact**: Unpredictable error behavior
@@ -158,12 +168,14 @@ None found.
 ### HIGH
 
 1. **Circular dependency risk**
+
    - **Location**: `apps/api/src/modules/payment/payment.service.ts:6`
    - **Issue**: Comment indicates circular dependency with OrdersService
    - **Impact**: Compilation issues, tight coupling
    - **Fix**: Use events or refactor to break dependency
 
 2. **Missing abstraction layers**
+
    - **Location**: Direct Prisma usage in services
    - **Issue**: No repository pattern implementation
    - **Impact**: Tight coupling to ORM, hard to test
@@ -178,6 +190,7 @@ None found.
 ### MEDIUM
 
 1. **Inconsistent multi-tenant implementation**
+
    - **Location**: Various services
    - **Issue**: Manual tenant filtering instead of automatic
    - **Impact**: Risk of data leakage between tenants

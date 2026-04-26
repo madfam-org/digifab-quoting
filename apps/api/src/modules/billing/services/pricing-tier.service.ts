@@ -50,7 +50,7 @@ export class PricingTierService {
       features: tier.features as string[],
       maxTeamMembers: tier.maxTeamMembers || 1,
       apiRateLimit: tier.apiRateLimit || 100,
-      supportLevel: tier.supportLevel as any || 'community',
+      supportLevel: (tier.supportLevel as any) || 'community',
       customBranding: tier.customBranding || false,
       whiteLabel: tier.whiteLabel || false,
       sla: tier.sla,
@@ -63,7 +63,7 @@ export class PricingTierService {
       orderBy: { monthlyPrice: 'asc' },
     });
 
-    return tiers.map(tier => ({
+    return tiers.map((tier) => ({
       id: tier.id,
       name: tier.name,
       description: tier.description || '',
@@ -74,7 +74,7 @@ export class PricingTierService {
       features: tier.features as string[],
       maxTeamMembers: tier.maxTeamMembers || 1,
       apiRateLimit: tier.apiRateLimit || 100,
-      supportLevel: tier.supportLevel as any || 'community',
+      supportLevel: (tier.supportLevel as any) || 'community',
       customBranding: tier.customBranding || false,
       whiteLabel: tier.whiteLabel || false,
       sla: tier.sla,
@@ -130,11 +130,11 @@ export class PricingTierService {
         },
         overageRates: {
           [UsageEventType.API_CALL]: 0.01,
-          [UsageEventType.QUOTE_GENERATION]: 0.50,
-          [UsageEventType.FILE_ANALYSIS]: 1.00,
-          [UsageEventType.DFM_REPORT]: 5.00,
+          [UsageEventType.QUOTE_GENERATION]: 0.5,
+          [UsageEventType.FILE_ANALYSIS]: 1.0,
+          [UsageEventType.DFM_REPORT]: 5.0,
           [UsageEventType.PDF_GENERATION]: 0.25,
-          [UsageEventType.STORAGE_GB_HOUR]: 0.10,
+          [UsageEventType.STORAGE_GB_HOUR]: 0.1,
           [UsageEventType.COMPUTE_SECONDS]: 0.05,
         },
         features: [
@@ -168,9 +168,9 @@ export class PricingTierService {
         overageRates: {
           [UsageEventType.API_CALL]: 0.005,
           [UsageEventType.QUOTE_GENERATION]: 0.25,
-          [UsageEventType.FILE_ANALYSIS]: 0.50,
-          [UsageEventType.DFM_REPORT]: 2.50,
-          [UsageEventType.PDF_GENERATION]: 0.10,
+          [UsageEventType.FILE_ANALYSIS]: 0.5,
+          [UsageEventType.DFM_REPORT]: 2.5,
+          [UsageEventType.PDF_GENERATION]: 0.1,
           [UsageEventType.STORAGE_GB_HOUR]: 0.05,
           [UsageEventType.COMPUTE_SECONDS]: 0.02,
         },
@@ -234,7 +234,7 @@ export class PricingTierService {
   async checkUsageLimit(
     tenantId: string,
     eventType: UsageEventType,
-    requestedQuantity: number = 1
+    requestedQuantity: number = 1,
   ): Promise<{ allowed: boolean; remaining: number; limit: number }> {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
@@ -315,13 +315,13 @@ export class PricingTierService {
 
     let totalOverageCost = 0;
 
-    usage.forEach(item => {
+    usage.forEach((item) => {
       const eventType = item.eventType as UsageEventType;
       const used = item._sum.quantity || 0;
       const included = includedQuotas[eventType] || 0;
       const overage = Math.max(0, used - included);
       const rate = overageRates[eventType] || 0;
-      
+
       totalOverageCost += overage * rate;
     });
 

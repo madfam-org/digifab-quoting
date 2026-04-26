@@ -99,7 +99,7 @@ export class RateLimitMiddleware implements NestMiddleware {
           // Rate limit exceeded
           const retryAfter = Math.ceil((rateLimitInfo.resetTime - Date.now()) / 1000);
           res.setHeader('Retry-After', retryAfter);
-          
+
           this.logger.warn(`Rate limit exceeded for ${key}`, {
             config: configName,
             count: rateLimitInfo.count,
@@ -125,7 +125,7 @@ export class RateLimitMiddleware implements NestMiddleware {
         if (error instanceof RateLimitExceededException) {
           throw error;
         }
-        
+
         this.logger.error('Rate limiting error', error as Error);
         next(); // Continue on Redis errors
       }
@@ -140,21 +140,21 @@ export class RateLimitMiddleware implements NestMiddleware {
       // Get current count
       const currentCountStr = await this.redisService.get<string>(key);
       let count = currentCountStr ? parseInt(currentCountStr, 10) : 0;
-      
+
       // Check if we need to reset the window
       const windowKey = `${key}:window`;
       const windowStart = await this.redisService.get<string>(windowKey);
-      
-      if (!windowStart || (now - parseInt(windowStart, 10)) >= config.windowMs) {
+
+      if (!windowStart || now - parseInt(windowStart, 10) >= config.windowMs) {
         // Reset the window
         count = 0;
         await this.redisService.set(windowKey, now.toString(), Math.ceil(config.windowMs / 1000));
       }
-      
+
       // Increment count
       count += 1;
       await this.redisService.set(key, count.toString(), Math.ceil(config.windowMs / 1000));
-      
+
       return {
         count,
         resetTime,
@@ -219,7 +219,7 @@ export class RateLimitMiddleware implements NestMiddleware {
 
   async getStats(): Promise<Record<string, RateLimitStats>> {
     const stats: Record<string, RateLimitStats> = {};
-    
+
     for (const [configName] of this.configs) {
       try {
         // For now, return basic config info since we can't easily count active keys
@@ -232,7 +232,7 @@ export class RateLimitMiddleware implements NestMiddleware {
         stats[configName] = { error: 'Failed to get stats' };
       }
     }
-    
+
     return stats;
   }
 }

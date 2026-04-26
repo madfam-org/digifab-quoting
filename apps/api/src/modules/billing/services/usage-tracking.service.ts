@@ -46,7 +46,7 @@ export class UsageTrackingService {
     try {
       const tenantId = event.tenantId || this.tenantContext.getTenantId();
       const timestamp = event.timestamp || new Date();
-      
+
       const usageEvent: UsageEvent = {
         tenantId,
         userId: event.userId,
@@ -58,7 +58,7 @@ export class UsageTrackingService {
 
       // Store in Redis for real-time aggregation
       await this.storeInRedis(usageEvent);
-      
+
       // Queue for persistent storage
       await this.queueForPersistence(usageEvent);
 
@@ -72,13 +72,13 @@ export class UsageTrackingService {
   private async storeInRedis(event: UsageEvent): Promise<void> {
     const period = this.getCurrentPeriod();
     const key = this.buildUsageKey(event.tenantId, period, event.eventType);
-    
+
     // Increment usage counter
     await this.redis.incrby(key, event.quantity);
-    
+
     // Set expiry to 3 months
     await this.redis.expire(key, 90 * 24 * 60 * 60);
-    
+
     // Store detailed event for recent lookups
     const eventKey = `${this.USAGE_KEY_PREFIX}:events:${event.tenantId}:${period}`;
     await this.redis.lpush(eventKey, JSON.stringify(event));
@@ -90,7 +90,7 @@ export class UsageTrackingService {
     // Batch events for efficient database writes
     const batchKey = `${this.USAGE_KEY_PREFIX}:batch:${this.getCurrentPeriod()}`;
     await this.redis.lpush(batchKey, JSON.stringify(event));
-    
+
     const batchSize = await this.redis.llen(batchKey);
     if (batchSize >= this.BATCH_SIZE) {
       await this.flushBatchToDatabase(batchKey);
@@ -102,10 +102,10 @@ export class UsageTrackingService {
       const events = await this.redis.lrange(batchKey, 0, this.BATCH_SIZE - 1);
       if (events.length === 0) return;
 
-      const parsedEvents = events.map(e => JSON.parse(e));
-      
+      const parsedEvents = events.map((e) => JSON.parse(e));
+
       await this.prisma.usageEvent.createMany({
-        data: parsedEvents.map(event => ({
+        data: parsedEvents.map((event) => ({
           tenantId: event.tenantId,
           userId: event.userId,
           eventType: event.eventType,
@@ -116,7 +116,7 @@ export class UsageTrackingService {
       });
 
       await this.redis.ltrim(batchKey, this.BATCH_SIZE, -1);
-      
+
       this.logger.debug(`Flushed ${events.length} usage events to database`);
     } catch (error) {
       this.logger.error(`Failed to flush usage batch: ${error.message}`);
@@ -125,7 +125,7 @@ export class UsageTrackingService {
 
   async getUsageSummary(tenantId: string, period?: string): Promise<UsageSummary> {
     const targetPeriod = period || this.getCurrentPeriod();
-    
+
     // Try Redis first for current period
     if (targetPeriod === this.getCurrentPeriod()) {
       const redisSummary = await this.getUsageFromRedis(tenantId, targetPeriod);
@@ -139,7 +139,7 @@ export class UsageTrackingService {
   private async getUsageFromRedis(tenantId: string, period: string): Promise<UsageSummary | null> {
     try {
       const events: Record<UsageEventType, number> = {} as Record<UsageEventType, number>;
-      
+
       for (const eventType of Object.values(UsageEventType)) {
         const key = this.buildUsageKey(tenantId, period, eventType);
         const count = await this.redis.get(key);
@@ -182,12 +182,12 @@ export class UsageTrackingService {
     });
 
     const events: Record<UsageEventType, number> = {} as Record<UsageEventType, number>;
-    
-    Object.values(UsageEventType).forEach(eventType => {
+
+    Object.values(UsageEventType).forEach((eventType) => {
       events[eventType] = 0;
     });
 
-    usage.forEach(item => {
+    usage.forEach((item) => {
       events[item.eventType as UsageEventType] = item._sum.quantity || 0;
     });
 
@@ -203,7 +203,10 @@ export class UsageTrackingService {
     };
   }
 
-  private async calculateCost(tenantId: string, events: Record<UsageEventType, number>): Promise<number> {
+  private async calculateCost(
+    tenantId: string,
+    events: Record<UsageEventType, number>,
+  ): Promise<number> {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
       include: { billingPlan: true },
@@ -238,7 +241,7 @@ export class UsageTrackingService {
 
   async trackApiCall(endpoint: string, method: string, responseTime: number): Promise<void> {
     const _tenantId = this.tenantContext.getTenantId();
-    
+
     await this.trackUsage({
       eventType: UsageEventType.API_CALL,
       quantity: 1,
@@ -250,7 +253,11 @@ export class UsageTrackingService {
     });
   }
 
-  async trackFileAnalysis(fileSize: number, analysisType: string, processingTime: number): Promise<void> {
+  async trackFileAnalysis(
+    fileSize: number,
+    analysisType: string,
+    processingTime: number,
+  ): Promise<void> {
     await this.trackUsage({
       eventType: UsageEventType.FILE_ANALYSIS,
       quantity: 1,
@@ -295,7 +302,7 @@ export class UsageTrackingService {
 
   async resetUsage(tenantId: string, period?: string): Promise<void> {
     const targetPeriod = period || this.getCurrentPeriod();
-    
+
     // Clear Redis counters
     for (const eventType of Object.values(UsageEventType)) {
       const key = this.buildUsageKey(tenantId, targetPeriod, eventType);

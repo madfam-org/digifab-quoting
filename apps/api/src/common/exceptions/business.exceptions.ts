@@ -2,7 +2,17 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 // Type definitions for exception details
 export interface ErrorContext {
-  [key: string]: string | number | boolean | string[] | number[] | ErrorContext | ErrorContext[] | ValidationError[] | Record<string, unknown> | undefined;
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | string[]
+    | number[]
+    | ErrorContext
+    | ErrorContext[]
+    | ValidationError[]
+    | Record<string, unknown>
+    | undefined;
 }
 
 export interface ValidationError {
@@ -61,11 +71,7 @@ export class BusinessException extends HttpException {
 // Quote-related exceptions
 export class QuoteNotFoundException extends BusinessException {
   constructor(quoteId: string) {
-    super(
-      `Quote with ID ${quoteId} not found`,
-      'QUOTE_NOT_FOUND',
-      HttpStatus.NOT_FOUND,
-    );
+    super(`Quote with ID ${quoteId} not found`, 'QUOTE_NOT_FOUND', HttpStatus.NOT_FOUND);
   }
 }
 
@@ -82,12 +88,7 @@ export class QuoteAlreadyProcessedException extends BusinessException {
 
 export class QuoteCalculationException extends BusinessException {
   constructor(message: string, details?: CalculationErrorDetails) {
-    super(
-      message,
-      'QUOTE_CALCULATION_ERROR',
-      HttpStatus.UNPROCESSABLE_ENTITY,
-      details,
-    );
+    super(message, 'QUOTE_CALCULATION_ERROR', HttpStatus.UNPROCESSABLE_ENTITY, details);
   }
 }
 
@@ -105,12 +106,7 @@ export class InvalidQuoteStateException extends BusinessException {
 // File-related exceptions
 export class FileUploadException extends BusinessException {
   constructor(message: string, details?: FileUploadErrorDetails) {
-    super(
-      message,
-      'FILE_UPLOAD_ERROR',
-      HttpStatus.BAD_REQUEST,
-      details,
-    );
+    super(message, 'FILE_UPLOAD_ERROR', HttpStatus.BAD_REQUEST, details);
   }
 }
 
@@ -150,12 +146,7 @@ export class PaymentRequiredException extends BusinessException {
 
 export class PaymentProcessingException extends BusinessException {
   constructor(message: string, details?: PaymentErrorDetails) {
-    super(
-      message,
-      'PAYMENT_PROCESSING_ERROR',
-      HttpStatus.UNPROCESSABLE_ENTITY,
-      details,
-    );
+    super(message, 'PAYMENT_PROCESSING_ERROR', HttpStatus.UNPROCESSABLE_ENTITY, details);
   }
 }
 
@@ -208,11 +199,7 @@ export class RateLimitExceededException extends BusinessException {
 // Tenant-related exceptions
 export class TenantNotFoundException extends BusinessException {
   constructor(identifier: string) {
-    super(
-      `Tenant not found: ${identifier}`,
-      'TENANT_NOT_FOUND',
-      HttpStatus.NOT_FOUND,
-    );
+    super(`Tenant not found: ${identifier}`, 'TENANT_NOT_FOUND', HttpStatus.NOT_FOUND);
   }
 }
 
@@ -230,23 +217,13 @@ export class TenantSuspendedException extends BusinessException {
 // Validation exceptions
 export class ValidationException extends BusinessException {
   constructor(errors: ValidationError[]) {
-    super(
-      'Validation failed',
-      'VALIDATION_ERROR',
-      HttpStatus.BAD_REQUEST,
-      { errors },
-    );
+    super('Validation failed', 'VALIDATION_ERROR', HttpStatus.BAD_REQUEST, { errors });
   }
 }
 
 // Generic business rule exception
 export class BusinessRuleViolationException extends BusinessException {
   constructor(rule: string, message: string, details?: ErrorContext) {
-    super(
-      message,
-      `BUSINESS_RULE_${rule.toUpperCase()}`,
-      HttpStatus.BAD_REQUEST,
-      details,
-    );
+    super(message, `BUSINESS_RULE_${rule.toUpperCase()}`, HttpStatus.BAD_REQUEST, details);
   }
 }

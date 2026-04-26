@@ -32,7 +32,7 @@ const PAINS = [
     fix: 'DFM analysis exposes the assumptions every vendor hides. Material grade, finish, tolerance — all annotated.',
   },
   {
-    pain: 'Boss wants to know if the quote is fair. Forgesight says aluminum 6061 dropped 8% this week. Your vendor didn\'t.',
+    pain: "Boss wants to know if the quote is fair. Forgesight says aluminum 6061 dropped 8% this week. Your vendor didn't.",
     fix: 'Live Forgesight market pricing in every quote. Fair-price check baked in. Negotiation leverage included.',
   },
   {
@@ -42,11 +42,31 @@ const PAINS = [
 ];
 
 const CAPABILITIES = [
-  { icon: GitCompare, title: 'Standardized multi-vendor compare', body: 'Same input → comparable outputs. DFM-annotated. Same units. Same lead-time definition. One PDF you can defend in a vendor review.' },
-  { icon: Activity, title: 'Live market price benchmarks', body: 'Forgesight pricing feed runs in your DFM analysis. Aluminum 6061 spikes 12%? Your quote knows. Your vendor\'s quote should too.' },
-  { icon: Globe2, title: '30+ currencies, geo-aware', body: 'MXN/USD/EUR/etc. Banxico FX rates. Funneled through Dhanam (RFC 0011). One number, every vendor, your buyer\'s currency.' },
-  { icon: ShieldCheck, title: 'CFDI-ready by default', body: 'Mexican vendors auto-stamp legal CFDI 4.0 invoices via Karafiel. Compliance is not a separate workflow.' },
-  { icon: Code2, title: 'API + webhook integration', body: 'Pull quotes into your existing ERP/SRM. Push approval events back. HMAC-SHA256 signed throughout.' },
+  {
+    icon: GitCompare,
+    title: 'Standardized multi-vendor compare',
+    body: 'Same input → comparable outputs. DFM-annotated. Same units. Same lead-time definition. One PDF you can defend in a vendor review.',
+  },
+  {
+    icon: Activity,
+    title: 'Live market price benchmarks',
+    body: "Forgesight pricing feed runs in your DFM analysis. Aluminum 6061 spikes 12%? Your quote knows. Your vendor's quote should too.",
+  },
+  {
+    icon: Globe2,
+    title: '30+ currencies, geo-aware',
+    body: "MXN/USD/EUR/etc. Banxico FX rates. Funneled through Dhanam (RFC 0011). One number, every vendor, your buyer's currency.",
+  },
+  {
+    icon: ShieldCheck,
+    title: 'CFDI-ready by default',
+    body: 'Mexican vendors auto-stamp legal CFDI 4.0 invoices via Karafiel. Compliance is not a separate workflow.',
+  },
+  {
+    icon: Code2,
+    title: 'API + webhook integration',
+    body: 'Pull quotes into your existing ERP/SRM. Push approval events back. HMAC-SHA256 signed throughout.',
+  },
 ];
 
 export default function ProcurementPage() {
@@ -59,15 +79,12 @@ export default function ProcurementPage() {
         </p>
         <h1 className="text-4xl lg:text-6xl font-bold tracking-tight mb-4">
           One spec in.
-          <span className="block text-primary mt-2">
-            Every quote, comparable.
-          </span>
+          <span className="block text-primary mt-2">Every quote, comparable.</span>
         </h1>
         <p className="text-lg lg:text-xl text-muted-foreground max-w-2xl mb-8">
-          For the buyer who has to defend a vendor choice in front of a cost
-          review. Stop chasing 5 different quote formats. Stop assuming
-          "lead time" means the same thing to every shop. One spec, every
-          quote, all in your currency.
+          For the buyer who has to defend a vendor choice in front of a cost review. Stop chasing 5
+          different quote formats. Stop assuming "lead time" means the same thing to every shop. One
+          spec, every quote, all in your currency.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
@@ -88,13 +105,19 @@ export default function ProcurementPage() {
 
       <section className="py-16 bg-muted/30 border-y border-border/40">
         <div className="container mx-auto px-6 max-w-5xl">
-          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">The pains we kill for procurement</h2>
+          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">
+            The pains we kill for procurement
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {PAINS.map((p, i) => (
               <article key={i} className="rounded-lg border border-border/60 bg-card p-6">
-                <p className="text-sm font-mono uppercase tracking-wider text-destructive/80 mb-2">Pain</p>
+                <p className="text-sm font-mono uppercase tracking-wider text-destructive/80 mb-2">
+                  Pain
+                </p>
                 <p className="font-medium mb-4">{p.pain}</p>
-                <p className="text-sm font-mono uppercase tracking-wider text-primary/80 mb-2">Fix</p>
+                <p className="text-sm font-mono uppercase tracking-wider text-primary/80 mb-2">
+                  Fix
+                </p>
                 <p className="text-sm text-muted-foreground">{p.fix}</p>
               </article>
             ))}
@@ -104,7 +127,9 @@ export default function ProcurementPage() {
 
       <section className="py-16">
         <div className="container mx-auto px-6 max-w-5xl">
-          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">What ships on the Business tier</h2>
+          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">
+            What ships on the Business tier
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {CAPABILITIES.map(({ icon: Icon, title, body }) => (
               <article key={title} className="rounded-lg border border-border/60 bg-card p-6">
@@ -125,9 +150,8 @@ export default function ProcurementPage() {
         <div className="container mx-auto px-6 text-center max-w-3xl">
           <h2 className="text-3xl font-bold mb-4">Defend a vendor choice in 14 days.</h2>
           <p className="text-lg text-muted-foreground mb-6">
-            Run a real RFQ through the platform during the trial. If the
-            comparison doesn't make your next vendor review meeting easier,
-            the free tier is yours forever.
+            Run a real RFQ through the platform during the trial. If the comparison doesn't make
+            your next vendor review meeting easier, the free tier is yours forever.
           </p>
           <Link
             href="/pricing"

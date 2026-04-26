@@ -36,7 +36,8 @@ export function SEOHead({
 
   // Get title and description
   const title = customTitle || (titleKey ? t(titleKey) : t('seo.defaultTitle'));
-  const description = customDescription || (descriptionKey ? t(descriptionKey) : t('seo.defaultDescription'));
+  const description =
+    customDescription || (descriptionKey ? t(descriptionKey) : t('seo.defaultDescription'));
   const siteName = 'Cotiza Studio';
 
   // Build canonical URL
@@ -45,16 +46,16 @@ export function SEOHead({
 
   // Alternate language URLs
   const alternateUrls = {
-    'es': canonicalUrl.replace(/\/(en|pt-BR)/, '/es'),
-    'en': canonicalUrl.replace(/\/(es|pt-BR)/, '/en'),
+    es: canonicalUrl.replace(/\/(en|pt-BR)/, '/es'),
+    en: canonicalUrl.replace(/\/(es|pt-BR)/, '/en'),
     'pt-BR': canonicalUrl.replace(/\/(es|en)/, '/pt-BR'),
   };
 
   // Language codes for Open Graph
   const ogLocale = locale === 'pt-BR' ? 'pt_BR' : locale;
   const alternateLocales = {
-    'es': 'es_ES',
-    'en': 'en_US',
+    es: 'es_ES',
+    en: 'en_US',
     'pt-BR': 'pt_BR',
   };
 
@@ -71,7 +72,7 @@ export function SEOHead({
       {/* Language and Locale */}
       <meta httpEquiv="content-language" content={locale} />
       <link rel="canonical" href={canonicalUrl} />
-      
+
       {/* Alternate Language Links */}
       <link rel="alternate" hrefLang="es" href={alternateUrls['es']} />
       <link rel="alternate" hrefLang="en" href={alternateUrls['en']} />
@@ -87,11 +88,12 @@ export function SEOHead({
       <meta property="og:image" content={`${baseUrl}${image}`} />
       <meta property="og:image:alt" content={title} />
       <meta property="og:locale" content={ogLocale} />
-      
+
       {/* Alternate Locales for Open Graph */}
-      {Object.entries(alternateLocales).map(([key, value]) => (
-        key !== locale && <meta key={key} property="og:locale:alternate" content={value} />
-      ))}
+      {Object.entries(alternateLocales).map(
+        ([key, value]) =>
+          key !== locale && <meta key={key} property="og:locale:alternate" content={value} />,
+      )}
 
       {/* Article specific tags */}
       {type === 'article' && article && (
@@ -102,15 +104,9 @@ export function SEOHead({
           {article.modifiedTime && (
             <meta property="article:modified_time" content={article.modifiedTime} />
           )}
-          {article.author && (
-            <meta property="article:author" content={article.author} />
-          )}
-          {article.section && (
-            <meta property="article:section" content={article.section} />
-          )}
-          {article.tags?.map((tag) => (
-            <meta key={tag} property="article:tag" content={tag} />
-          ))}
+          {article.author && <meta property="article:author" content={article.author} />}
+          {article.section && <meta property="article:section" content={article.section} />}
+          {article.tags?.map((tag) => <meta key={tag} property="article:tag" content={tag} />)}
         </>
       )}
 
@@ -141,14 +137,16 @@ export function SEOHead({
                 url: `${baseUrl}/images/logo.png`,
               },
             },
-            ...(type === 'article' && article ? {
-              datePublished: article.publishedTime,
-              dateModified: article.modifiedTime,
-              author: {
-                '@type': 'Person',
-                name: article.author || siteName,
-              },
-            } : {}),
+            ...(type === 'article' && article
+              ? {
+                  datePublished: article.publishedTime,
+                  dateModified: article.modifiedTime,
+                  author: {
+                    '@type': 'Person',
+                    name: article.author || siteName,
+                  },
+                }
+              : {}),
           }),
         }}
       />

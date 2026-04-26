@@ -97,10 +97,7 @@ export class KarafielComplianceService {
     this.apiUrl = this.config.get<string>('KARAFIEL_API_URL', '');
     this.serviceToken = this.config.get<string>('KARAFIEL_SERVICE_TOKEN', '');
     this.defaultEmisorRfc = this.config.get<string>('KARAFIEL_EMISOR_RFC', '');
-    this.defaultCredentialId = this.config.get<string>(
-      'KARAFIEL_CREDENTIAL_ID',
-      '',
-    );
+    this.defaultCredentialId = this.config.get<string>('KARAFIEL_CREDENTIAL_ID', '');
     this.timeout = this.config.get<number>('KARAFIEL_WEBHOOK_TIMEOUT', 15000);
   }
 
@@ -129,10 +126,7 @@ export class KarafielComplianceService {
     }
 
     if (!ctx.receptorRfc) {
-      this.logger.warn(
-        'Karafiel CFDI skipped: receptor_rfc missing for quote=%s',
-        ctx.quoteId,
-      );
+      this.logger.warn('Karafiel CFDI skipped: receptor_rfc missing for quote=%s', ctx.quoteId);
       return;
     }
 
@@ -204,20 +198,11 @@ export class KarafielComplianceService {
 
       const parsed = await safeJson(response);
       const pacUuid =
-        (parsed && (parsed.uuid || parsed.pac_uuid || parsed.folio_fiscal)) ??
-        '(unknown)';
-      this.logger.log(
-        'Karafiel CFDI issued: quote=%s pac_uuid=%s',
-        ctx.quoteId,
-        pacUuid,
-      );
+        (parsed && (parsed.uuid || parsed.pac_uuid || parsed.folio_fiscal)) ?? '(unknown)';
+      this.logger.log('Karafiel CFDI issued: quote=%s pac_uuid=%s', ctx.quoteId, pacUuid);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'Karafiel CFDI issue failed (quote=%s): %s',
-        ctx.quoteId,
-        msg,
-      );
+      this.logger.error('Karafiel CFDI issue failed (quote=%s): %s', ctx.quoteId, msg);
     }
   }
 }
@@ -234,9 +219,7 @@ async function safeText(response: Response): Promise<string> {
   }
 }
 
-async function safeJson(
-  response: Response,
-): Promise<Record<string, unknown> | null> {
+async function safeJson(response: Response): Promise<Record<string, unknown> | null> {
   try {
     return (await response.json()) as Record<string, unknown>;
   } catch {

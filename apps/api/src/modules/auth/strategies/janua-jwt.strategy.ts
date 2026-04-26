@@ -50,8 +50,7 @@ export class JanuaJwtStrategy extends PassportStrategy(Strategy, 'janua-jwt') {
   private readonly logger = new Logger(JanuaJwtStrategy.name);
 
   constructor(private configService: ConfigService) {
-    const jwksUri =
-      configService.get<string>('JANUA_JWKS_URI') || DEFAULT_JWKS_URI;
+    const jwksUri = configService.get<string>('JANUA_JWKS_URI') || DEFAULT_JWKS_URI;
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

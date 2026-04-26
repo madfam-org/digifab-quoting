@@ -30,7 +30,10 @@ export class CircuitBreakerService extends EventEmitter {
   private readonly logger = new Logger(CircuitBreakerService.name);
   private readonly breakers = new Map<string, CircuitBreaker>();
   private readonly metrics = new Map<string, CircuitBreakerMetrics>();
-  private readonly adaptiveSettings = new Map<string, { successRate: number; avgResponseTime: number }>();
+  private readonly adaptiveSettings = new Map<
+    string,
+    { successRate: number; avgResponseTime: number }
+  >();
 
   create(
     name: string,
@@ -98,7 +101,7 @@ export class CircuitBreakerService extends EventEmitter {
 
   async healthCheck(): Promise<{ [key: string]: string }> {
     const status: { [key: string]: string } = {};
-    
+
     for (const [name, breaker] of this.breakers) {
       if (breaker.opened) {
         status[name] = 'open';
@@ -108,7 +111,7 @@ export class CircuitBreakerService extends EventEmitter {
         status[name] = 'closed';
       }
     }
-    
+
     return status;
   }
 
@@ -216,13 +219,21 @@ export class CircuitBreakerService extends EventEmitter {
     // Adaptive error threshold
     if (successRate > 0.98) {
       // Very stable, be more sensitive to errors
-      breaker.options.errorThresholdPercentage = Math.max(30, breaker.options.errorThresholdPercentage - 5);
+      breaker.options.errorThresholdPercentage = Math.max(
+        30,
+        breaker.options.errorThresholdPercentage - 5,
+      );
     } else if (successRate < 0.7) {
       // Unstable, be more tolerant
-      breaker.options.errorThresholdPercentage = Math.min(70, breaker.options.errorThresholdPercentage + 5);
+      breaker.options.errorThresholdPercentage = Math.min(
+        70,
+        breaker.options.errorThresholdPercentage + 5,
+      );
     }
 
-    this.logger.debug(`Adapted circuit breaker ${name}: timeout=${breaker.options.timeout}, threshold=${breaker.options.errorThresholdPercentage}%`);
+    this.logger.debug(
+      `Adapted circuit breaker ${name}: timeout=${breaker.options.timeout}, threshold=${breaker.options.errorThresholdPercentage}%`,
+    );
   }
 
   private updateResponseTimeMetrics(name: string, latency: number): void {
@@ -264,7 +275,10 @@ export class CircuitBreakerService extends EventEmitter {
   }
 
   // Get recommendation for circuit breaker configuration
-  getRecommendedSettings(serviceName: string, sla: { latencyP99: number; errorRate: number }): CircuitBreakerOptions {
+  getRecommendedSettings(
+    serviceName: string,
+    sla: { latencyP99: number; errorRate: number },
+  ): CircuitBreakerOptions {
     return {
       timeout: sla.latencyP99 * 1.5, // 50% buffer over P99
       errorThresholdPercentage: Math.min(50, (1 - sla.errorRate) * 100), // Based on SLA error rate

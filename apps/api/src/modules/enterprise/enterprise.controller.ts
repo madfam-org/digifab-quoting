@@ -13,13 +13,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiConsumes,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/modules/auth/decorators/roles.decorator';
@@ -52,12 +46,13 @@ export class EnterpriseController {
   @ApiResponse({ status: HttpStatus.CREATED, description: 'SSO provider created' })
   async createSSOProvider(
     @TenantId() tenantId: string,
-    @Body() providerData: {
+    @Body()
+    providerData: {
       name: string;
       type: SSOProviderType;
       configuration: any;
       enabled?: boolean;
-    }
+    },
   ) {
     const provider = await this.ssoService.createSSOProvider(tenantId, providerData);
 
@@ -87,7 +82,7 @@ export class EnterpriseController {
   async updateSSOProvider(
     @TenantId() tenantId: string,
     @Param('providerId') providerId: string,
-    @Body() updates: Partial<SSOProvider>
+    @Body() updates: Partial<SSOProvider>,
   ) {
     const provider = await this.ssoService.updateSSOProvider(tenantId, providerId, updates);
 
@@ -101,10 +96,7 @@ export class EnterpriseController {
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Delete SSO provider' })
   @ApiResponse({ status: HttpStatus.OK, description: 'SSO provider deleted' })
-  async deleteSSOProvider(
-    @TenantId() tenantId: string,
-    @Param('providerId') providerId: string
-  ) {
+  async deleteSSOProvider(@TenantId() tenantId: string, @Param('providerId') providerId: string) {
     await this.ssoService.deleteSSOProvider(tenantId, providerId);
 
     return {
@@ -119,7 +111,7 @@ export class EnterpriseController {
   async initiateSSOLogin(
     @TenantId() tenantId: string,
     @Param('providerId') providerId: string,
-    @Body() body: { redirectUrl?: string }
+    @Body() body: { redirectUrl?: string },
   ) {
     const result = await this.ssoService.initiateSSOLogin(tenantId, providerId, body.redirectUrl);
 
@@ -135,7 +127,7 @@ export class EnterpriseController {
   async handleSSOCallback(
     @TenantId() tenantId: string,
     @Param('providerId') providerId: string,
-    @Body() callbackData: any
+    @Body() callbackData: any,
   ) {
     const result = await this.ssoService.handleSSOCallback(tenantId, providerId, callbackData);
 
@@ -153,7 +145,7 @@ export class EnterpriseController {
   @ApiResponse({ status: HttpStatus.CREATED, description: 'White-label configuration created' })
   async createWhiteLabelConfiguration(
     @TenantId() tenantId: string,
-    @Body() config: Omit<WhiteLabelConfiguration, 'tenantId'>
+    @Body() config: Omit<WhiteLabelConfiguration, 'tenantId'>,
   ) {
     const configuration = await this.whiteLabelService.createWhiteLabelConfiguration({
       ...config,
@@ -185,9 +177,12 @@ export class EnterpriseController {
   @ApiResponse({ status: HttpStatus.OK, description: 'White-label configuration updated' })
   async updateWhiteLabelConfiguration(
     @TenantId() tenantId: string,
-    @Body() updates: Partial<WhiteLabelConfiguration>
+    @Body() updates: Partial<WhiteLabelConfiguration>,
   ) {
-    const configuration = await this.whiteLabelService.updateWhiteLabelConfiguration(tenantId, updates);
+    const configuration = await this.whiteLabelService.updateWhiteLabelConfiguration(
+      tenantId,
+      updates,
+    );
 
     return {
       success: true,
@@ -204,13 +199,13 @@ export class EnterpriseController {
   async uploadBrandingAsset(
     @TenantId() tenantId: string,
     @Param('assetType') assetType: 'logo' | 'logoSquare' | 'favicon' | 'watermark',
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
   ) {
     const result = await this.whiteLabelService.uploadBrandingAsset(
       tenantId,
       assetType,
       file.buffer,
-      file.mimetype
+      file.mimetype,
     );
 
     return {
@@ -225,7 +220,7 @@ export class EnterpriseController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Branding asset deleted' })
   async deleteBrandingAsset(
     @TenantId() tenantId: string,
-    @Param('assetType') assetType: 'logo' | 'logoSquare' | 'favicon' | 'watermark'
+    @Param('assetType') assetType: 'logo' | 'logoSquare' | 'favicon' | 'watermark',
   ) {
     await this.whiteLabelService.deleteBrandingAsset(tenantId, assetType);
 
@@ -281,7 +276,7 @@ export class EnterpriseController {
     @Query('endDate') endDate?: string,
     @Query('action') action?: string,
     @Query('user') user?: string,
-    @Query('limit') limit: string = '100'
+    @Query('limit') limit: string = '100',
   ) {
     const logs = await this.complianceService.getAuditLogs(tenantId, {
       startDate: startDate ? new Date(startDate) : undefined,
@@ -303,7 +298,7 @@ export class EnterpriseController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Data export initiated' })
   async exportTenantData(
     @TenantId() tenantId: string,
-    @Query('format') format: 'json' | 'csv' = 'json'
+    @Query('format') format: 'json' | 'csv' = 'json',
   ) {
     const exportId = await this.complianceService.initiateDataExport(tenantId, format);
 
@@ -322,12 +317,13 @@ export class EnterpriseController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Data retention policy updated' })
   async configureDataRetention(
     @TenantId() tenantId: string,
-    @Body() policy: {
+    @Body()
+    policy: {
       auditLogRetentionDays: number;
       fileRetentionDays: number;
       inactiveUserRetentionDays: number;
       autoDeleteEnabled: boolean;
-    }
+    },
   ) {
     await this.complianceService.configureDataRetention(tenantId, policy);
 
@@ -345,12 +341,13 @@ export class EnterpriseController {
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Support ticket created' })
   async createSupportTicket(
     @TenantId() tenantId: string,
-    @Body() ticket: {
+    @Body()
+    ticket: {
       subject: string;
       description: string;
       priority: 'low' | 'medium' | 'high' | 'urgent';
       category: string;
-    }
+    },
   ) {
     const supportTicket = await this.dedicatedSupportService.createTicket(tenantId, ticket);
 
@@ -367,7 +364,7 @@ export class EnterpriseController {
   async getSupportTickets(
     @TenantId() tenantId: string,
     @Query('status') status?: string,
-    @Query('priority') priority?: string
+    @Query('priority') priority?: string,
   ) {
     const tickets = await this.dedicatedSupportService.getTickets(tenantId, { status, priority });
 
@@ -381,10 +378,7 @@ export class EnterpriseController {
   @Roles(Role.ADMIN, Role.MANAGER)
   @ApiOperation({ summary: 'Get support ticket details' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Support ticket details' })
-  async getSupportTicket(
-    @TenantId() tenantId: string,
-    @Param('ticketId') ticketId: string
-  ) {
+  async getSupportTicket(@TenantId() tenantId: string, @Param('ticketId') ticketId: string) {
     const ticket = await this.dedicatedSupportService.getTicket(tenantId, ticketId);
 
     return {
@@ -400,7 +394,7 @@ export class EnterpriseController {
   async addTicketMessage(
     @TenantId() tenantId: string,
     @Param('ticketId') ticketId: string,
-    @Body() message: { content: string; attachments?: string[] }
+    @Body() message: { content: string; attachments?: string[] },
   ) {
     await this.dedicatedSupportService.addTicketMessage(tenantId, ticketId, message);
 
@@ -431,7 +425,7 @@ export class EnterpriseController {
   @ApiResponse({ status: HttpStatus.OK, description: 'User analytics' })
   async getUserAnalytics(
     @TenantId() tenantId: string,
-    @Query('period') period: 'week' | 'month' | 'quarter' = 'month'
+    @Query('period') period: 'week' | 'month' | 'quarter' = 'month',
   ) {
     const analytics = await this.enterpriseService.getUserAnalytics(tenantId, period);
 
@@ -447,7 +441,7 @@ export class EnterpriseController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Usage analytics' })
   async getUsageAnalytics(
     @TenantId() tenantId: string,
-    @Query('period') period: 'week' | 'month' | 'quarter' = 'month'
+    @Query('period') period: 'week' | 'month' | 'quarter' = 'month',
   ) {
     const analytics = await this.enterpriseService.getUsageAnalytics(tenantId, period);
 

@@ -63,7 +63,6 @@ export function QuoteItemsList({
   onUpdateItem,
   isEditable = false,
 }: QuoteItemsListProps) {
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
@@ -73,10 +72,10 @@ export function QuoteItemsList({
 
   const getProcessName = (process: string) => {
     const processNames: Record<string, string> = {
-      'FFF_PLA': '3D Printing (FFF)',
-      'SLA_RESIN': '3D Printing (SLA)',
-      'CNC_ALUMINUM': 'CNC Machining',
-      'LASER_ACRYLIC': 'Laser Cutting',
+      FFF_PLA: '3D Printing (FFF)',
+      SLA_RESIN: '3D Printing (SLA)',
+      CNC_ALUMINUM: 'CNC Machining',
+      LASER_ACRYLIC: 'Laser Cutting',
     };
     return processNames[process] || process;
   };
@@ -143,9 +142,7 @@ export function QuoteItemsList({
             <div>
               <h4 className="font-semibold text-sm text-gray-600 mb-1">Price</h4>
               <p className="font-medium">{formatPrice(item.totalPrice)}</p>
-              <p className="text-sm text-gray-500">
-                {formatPrice(item.unitPrice)} each
-              </p>
+              <p className="text-sm text-gray-500">{formatPrice(item.unitPrice)} each</p>
             </div>
           </div>
 
@@ -154,9 +151,7 @@ export function QuoteItemsList({
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Volume:</span>{' '}
-                  <span className="font-medium">
-                    {item.specifications.volume?.toFixed(2)} cm³
-                  </span>
+                  <span className="font-medium">{item.specifications.volume?.toFixed(2)} cm³</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Dimensions:</span>{' '}

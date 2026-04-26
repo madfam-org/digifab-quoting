@@ -5,29 +5,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const HERO_EXAMPLES = [
   {
-    title: "Phone Case",
+    title: 'Phone Case',
     originalCost: 847,
     optimizedCost: 312,
-    process: "3D Printing → Injection Molding",
-    material: "PLA → ABS",
-    improvement: "Stronger & 63% cheaper"
+    process: '3D Printing → Injection Molding',
+    material: 'PLA → ABS',
+    improvement: 'Stronger & 63% cheaper',
   },
   {
-    title: "Drone Component", 
+    title: 'Drone Component',
     originalCost: 234,
     optimizedCost: 89,
-    process: "CNC Aluminum → 3D Print PETG",
-    material: "6061-T6 → Carbon Fiber PETG",
-    improvement: "Lighter & 62% cheaper"
+    process: 'CNC Aluminum → 3D Print PETG',
+    material: '6061-T6 → Carbon Fiber PETG',
+    improvement: 'Lighter & 62% cheaper',
   },
   {
-    title: "Medical Device Part",
+    title: 'Medical Device Part',
     originalCost: 1200,
     optimizedCost: 450,
-    process: "Traditional Machining → Precision 3D Print",
-    material: "Stainless Steel → Medical Grade Resin",
-    improvement: "Biocompatible & 62% cheaper"
-  }
+    process: 'Traditional Machining → Precision 3D Print',
+    material: 'Stainless Steel → Medical Grade Resin',
+    improvement: 'Biocompatible & 62% cheaper',
+  },
 ];
 
 export function DemoHero() {
@@ -53,7 +53,7 @@ export function DemoHero() {
       {/* Background Animation */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800" />
       <div className="absolute inset-0 bg-black/20" />
-      
+
       {/* Floating Particles */}
       <div className="absolute inset-0">
         {[...Array(20)].map((_, i) => (
@@ -80,7 +80,7 @@ export function DemoHero() {
 
       <div className="relative container mx-auto px-6 text-center text-white">
         {/* Main Headline */}
-        <motion.h1 
+        <motion.h1
           className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -94,18 +94,18 @@ export function DemoHero() {
         </motion.h1>
 
         {/* Subheadline */}
-        <motion.p 
+        <motion.p
           className="text-xl md:text-2xl mb-12 opacity-90 max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          Get instant quotes for 3D printing, CNC machining, and laser cutting. 
-          Compare materials, optimize designs, and make informed decisions.
+          Get instant quotes for 3D printing, CNC machining, and laser cutting. Compare materials,
+          optimize designs, and make informed decisions.
         </motion.p>
 
         {/* Live Example Showcase */}
-        <motion.div 
+        <motion.div
           className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-4xl mx-auto border border-white/20"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -123,7 +123,7 @@ export function DemoHero() {
                   transition={{ duration: 0.5 }}
                 >
                   <h3 className="text-2xl font-bold mb-4">{example.title}</h3>
-                  
+
                   <div className="space-y-4">
                     {/* Original Cost */}
                     <div className="flex items-center justify-between p-3 bg-red-500/20 rounded-lg border border-red-400/30">
@@ -136,7 +136,7 @@ export function DemoHero() {
                     {/* Optimized Cost */}
                     <div className="flex items-center justify-between p-3 bg-green-500/20 rounded-lg border border-green-400/30">
                       <span>Cotiza Studio Optimized:</span>
-                      <motion.span 
+                      <motion.span
                         className="text-3xl font-bold text-green-300"
                         animate={{ scale: isAnimating ? [1, 1.1, 1] : 1 }}
                         transition={{ duration: 0.5 }}
@@ -159,9 +159,11 @@ export function DemoHero() {
             {/* Process Visualization */}
             <div className="space-y-4">
               <div className="text-center">
-                <span className="text-sm uppercase tracking-wide opacity-75">Optimization Applied</span>
+                <span className="text-sm uppercase tracking-wide opacity-75">
+                  Optimization Applied
+                </span>
               </div>
-              
+
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`process-${currentExample}`}
@@ -175,7 +177,7 @@ export function DemoHero() {
                     <span className="text-sm opacity-75">Process:</span>
                     <div className="font-semibold">{example.process}</div>
                   </div>
-                  
+
                   <div className="p-3 bg-purple-500/20 rounded-lg border border-purple-400/30">
                     <span className="text-sm opacity-75">Material:</span>
                     <div className="font-semibold">{example.material}</div>
@@ -185,7 +187,7 @@ export function DemoHero() {
 
               {/* Time Indicator */}
               <div className="text-center">
-                <motion.div 
+                <motion.div
                   className="inline-flex items-center space-x-2 text-sm opacity-75"
                   animate={{ opacity: isAnimating ? [0.75, 0.3, 0.75] : 0.75 }}
                 >
@@ -220,9 +222,7 @@ export function DemoHero() {
           <button className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-8 py-4 rounded-xl font-bold text-xl hover:scale-105 transition-transform shadow-xl">
             Try It Now - Upload Your Design
           </button>
-          <p className="text-sm opacity-75 mt-2">
-            No signup required • Results in seconds
-          </p>
+          <p className="text-sm opacity-75 mt-2">No signup required • Results in seconds</p>
         </motion.div>
       </div>
     </div>

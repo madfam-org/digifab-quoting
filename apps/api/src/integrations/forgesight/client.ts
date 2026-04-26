@@ -56,7 +56,11 @@ export class ForgesightClient {
   private timeout: number;
 
   constructor(config: ForgesightConfig = {}) {
-    this.baseUrl = (config.baseUrl || process.env.FORGESIGHT_API_URL || 'http://forgesight-api:8100').replace(/\/$/, '');
+    this.baseUrl = (
+      config.baseUrl ||
+      process.env.FORGESIGHT_API_URL ||
+      'http://forgesight-api:8100'
+    ).replace(/\/$/, '');
     this.apiKey = config.apiKey || process.env.FORGESIGHT_API_KEY;
     this.timeout = config.timeout || 30000;
   }

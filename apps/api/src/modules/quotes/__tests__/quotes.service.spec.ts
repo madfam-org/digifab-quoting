@@ -158,26 +158,28 @@ describe('QuotesService', () => {
 
       mockFilesService.getFileMetadata.mockResolvedValue(fileMetadata);
       mockPricingService.calculateItemPrice.mockResolvedValue({
-        unitPrice: 25.50,
-        totalPrice: 127.50,
+        unitPrice: 25.5,
+        totalPrice: 127.5,
         leadTime: 3,
         breakdown: {
           material: 50,
           machine: 60,
-          labor: 17.50,
+          labor: 17.5,
         },
       });
 
       mockPrismaService.quote.create.mockResolvedValue({
         ...mockQuote,
         ...createDto,
-        items: [{
-          id: 'item-123',
-          ...createDto.items[0],
-          unitPrice: 25.50,
-          totalPrice: 127.50,
-        }],
-        subtotal: 127.50,
+        items: [
+          {
+            id: 'item-123',
+            ...createDto.items[0],
+            unitPrice: 25.5,
+            totalPrice: 127.5,
+          },
+        ],
+        subtotal: 127.5,
         tax: 22.95,
         totalPrice: 150.45,
       });
@@ -195,29 +197,29 @@ describe('QuotesService', () => {
           data: expect.objectContaining({
             quoteId: expect.any(String),
           }),
-        })
+        }),
       );
     });
 
     it('should validate file ownership', async () => {
       mockFilesService.getFileMetadata.mockRejectedValue(
-        new NotFoundException('File not found or access denied')
+        new NotFoundException('File not found or access denied'),
       );
 
-      await expect(
-        service.create(createDto, 'user-123', 'tenant-123')
-      ).rejects.toThrow('File not found or access denied');
+      await expect(service.create(createDto, 'user-123', 'tenant-123')).rejects.toThrow(
+        'File not found or access denied',
+      );
     });
 
     it('should handle pricing calculation errors', async () => {
       mockFilesService.getFileMetadata.mockResolvedValue({ id: 'file-456' });
       mockPricingService.calculateItemPrice.mockRejectedValue(
-        new Error('Unable to calculate price')
+        new Error('Unable to calculate price'),
       );
 
-      await expect(
-        service.create(createDto, 'user-123', 'tenant-123')
-      ).rejects.toThrow('Unable to calculate price');
+      await expect(service.create(createDto, 'user-123', 'tenant-123')).rejects.toThrow(
+        'Unable to calculate price',
+      );
 
       expect(mockMetricsService.recordError).toHaveBeenCalled();
     });
@@ -237,8 +239,8 @@ describe('QuotesService', () => {
 
       mockFilesService.getFileMetadata.mockResolvedValue({ id: 'file-456' });
       mockPricingService.calculateItemPrice.mockResolvedValue({
-        unitPrice: 20.00, // Discounted price
-        totalPrice: 2000.00,
+        unitPrice: 20.0, // Discounted price
+        totalPrice: 2000.0,
         discount: 10, // 10% discount
       });
 
@@ -258,15 +260,11 @@ describe('QuotesService', () => {
   describe('findAll', () => {
     it('should return paginated quotes for customer', async () => {
       const quotes = [mockQuote, { ...mockQuote, id: 'quote-456' }];
-      
+
       mockPrismaService.quote.findMany.mockResolvedValue(quotes);
       mockPrismaService.quote.count.mockResolvedValue(2);
 
-      const result = await service.findAll(
-        { page: 1, limit: 20 },
-        'user-123',
-        'customer'
-      );
+      const result = await service.findAll({ page: 1, limit: 20 }, 'user-123', 'customer');
 
       expect(result).toEqual({
         data: quotes,
@@ -283,7 +281,7 @@ describe('QuotesService', () => {
           where: { customerId: 'user-123' },
           skip: 0,
           take: 20,
-        })
+        }),
       );
     });
 
@@ -296,7 +294,7 @@ describe('QuotesService', () => {
       expect(mockPrismaService.quote.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {}, // No customer filter for admin
-        })
+        }),
       );
     });
 
@@ -304,11 +302,7 @@ describe('QuotesService', () => {
       mockPrismaService.quote.findMany.mockResolvedValue([]);
       mockPrismaService.quote.count.mockResolvedValue(0);
 
-      await service.findAll(
-        { status: QuoteStatus.APPROVED },
-        'user-123',
-        'customer'
-      );
+      await service.findAll({ status: QuoteStatus.APPROVED }, 'user-123', 'customer');
 
       expect(mockPrismaService.quote.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -316,7 +310,7 @@ describe('QuotesService', () => {
             customerId: 'user-123',
             status: QuoteStatus.APPROVED,
           },
-        })
+        }),
       );
     });
 
@@ -326,11 +320,7 @@ describe('QuotesService', () => {
 
       mockCacheService.get.mockResolvedValue(JSON.stringify(cachedData));
 
-      const result = await service.findAll(
-        { page: 1, limit: 20 },
-        'user-123',
-        'customer'
-      );
+      const result = await service.findAll({ page: 1, limit: 20 }, 'user-123', 'customer');
 
       expect(result).toEqual(cachedData);
       expect(mockPrismaService.quote.findMany).not.toHaveBeenCalled();
@@ -347,8 +337,8 @@ describe('QuotesService', () => {
             technology: Technology.FFF,
             material: Material.PLA,
             quantity: 10,
-            unitPrice: 25.50,
-            totalPrice: 255.00,
+            unitPrice: 25.5,
+            totalPrice: 255.0,
           },
         ],
         customer: {
@@ -383,9 +373,7 @@ describe('QuotesService', () => {
     it('should throw NotFoundException if quote not found', async () => {
       mockPrismaService.quote.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('invalid-id')).rejects.toThrow(
-        NotFoundException
-      );
+      await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
     });
 
     it('should use cache for frequently accessed quotes', async () => {
@@ -406,14 +394,14 @@ describe('QuotesService', () => {
         items: [
           {
             id: 'item-1',
-            unitPrice: 25.50,
-            totalPrice: 255.00,
+            unitPrice: 25.5,
+            totalPrice: 255.0,
             quantity: 10,
           },
           {
             id: 'item-2',
-            unitPrice: 35.00,
-            totalPrice: 175.00,
+            unitPrice: 35.0,
+            totalPrice: 175.0,
             quantity: 5,
           },
         ],
@@ -421,18 +409,18 @@ describe('QuotesService', () => {
 
       mockPrismaService.quote.findUnique.mockResolvedValue(quoteWithItems);
       mockPricingService.calculateQuoteTotal.mockResolvedValue({
-        subtotal: 430.00,
-        tax: 77.40,
-        shipping: 25.00,
-        totalPrice: 532.40,
+        subtotal: 430.0,
+        tax: 77.4,
+        shipping: 25.0,
+        totalPrice: 532.4,
       });
 
       const updatedQuote = {
         ...quoteWithItems,
-        subtotal: 430.00,
-        tax: 77.40,
-        shipping: 25.00,
-        totalPrice: 532.40,
+        subtotal: 430.0,
+        tax: 77.4,
+        shipping: 25.0,
+        totalPrice: 532.4,
         status: QuoteStatus.READY,
       };
 
@@ -440,7 +428,7 @@ describe('QuotesService', () => {
 
       const result = await service.calculate('quote-123');
 
-      expect(result.totalPrice).toBe(532.40);
+      expect(result.totalPrice).toBe(532.4);
       expect(result.status).toBe(QuoteStatus.READY);
       expect(mockCacheService.del).toHaveBeenCalledWith('quote:quote-123');
     });
@@ -449,7 +437,7 @@ describe('QuotesService', () => {
       mockPrismaService.quote.findUnique.mockResolvedValue(mockQuote);
 
       await expect(service.calculate('quote-123')).rejects.toThrow(
-        'Cannot calculate quote without items'
+        'Cannot calculate quote without items',
       );
     });
 
@@ -458,12 +446,12 @@ describe('QuotesService', () => {
         ...mockQuote,
         currency: 'EUR',
         exchangeRate: 0.92,
-        items: [{ unitPrice: 25.50, totalPrice: 255.00, quantity: 10 }],
+        items: [{ unitPrice: 25.5, totalPrice: 255.0, quantity: 10 }],
       };
 
       mockPrismaService.quote.findUnique.mockResolvedValue(quoteInEUR);
       mockPricingService.calculateQuoteTotal.mockResolvedValue({
-        subtotal: 234.60, // Converted to EUR
+        subtotal: 234.6, // Converted to EUR
         tax: 42.23,
         totalPrice: 276.83,
       });
@@ -485,7 +473,7 @@ describe('QuotesService', () => {
       const readyQuote = {
         ...mockQuote,
         status: QuoteStatus.READY,
-        totalPrice: 500.00,
+        totalPrice: 500.0,
       };
 
       mockPrismaService.quote.findUnique.mockResolvedValue(readyQuote);
@@ -503,7 +491,7 @@ describe('QuotesService', () => {
       expect(mockJobsService.createJob).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'ORDER_CREATION',
-        })
+        }),
       );
     });
 
@@ -511,7 +499,7 @@ describe('QuotesService', () => {
       mockPrismaService.quote.findUnique.mockResolvedValue(mockQuote);
 
       await expect(service.approve('quote-123', 'user-123')).rejects.toThrow(
-        'Quote must be calculated before approval'
+        'Quote must be calculated before approval',
       );
     });
 
@@ -524,9 +512,7 @@ describe('QuotesService', () => {
 
       mockPrismaService.quote.findUnique.mockResolvedValue(expiredQuote);
 
-      await expect(service.approve('quote-123', 'user-123')).rejects.toThrow(
-        'Quote has expired'
-      );
+      await expect(service.approve('quote-123', 'user-123')).rejects.toThrow('Quote has expired');
     });
   });
 
@@ -554,9 +540,9 @@ describe('QuotesService', () => {
 
       mockPrismaService.quote.findUnique.mockResolvedValue(completedQuote);
 
-      await expect(
-        service.cancel('quote-123', 'Try to cancel')
-      ).rejects.toThrow('Cannot cancel a completed quote');
+      await expect(service.cancel('quote-123', 'Try to cancel')).rejects.toThrow(
+        'Cannot cancel a completed quote',
+      );
     });
   });
 
@@ -570,11 +556,11 @@ describe('QuotesService', () => {
             technology: Technology.FFF,
             material: Material.PLA,
             quantity: 10,
-            unitPrice: 25.50,
-            totalPrice: 255.00,
+            unitPrice: 25.5,
+            totalPrice: 255.0,
           },
         ],
-        totalPrice: 300.00,
+        totalPrice: 300.0,
       };
 
       mockPrismaService.quote.findUnique.mockResolvedValue(detailedQuote);
@@ -588,7 +574,7 @@ describe('QuotesService', () => {
       expect(mockCacheService.set).toHaveBeenCalledWith(
         'quote-pdf:quote-123',
         pdfUrl,
-        86400 // 24 hours
+        86400, // 24 hours
       );
     });
 
@@ -623,11 +609,7 @@ describe('QuotesService', () => {
     it('should return true for admin/manager roles', async () => {
       mockPrismaService.quote.findUnique.mockResolvedValue(mockQuote);
 
-      const result = await service.checkOwnership(
-        'quote-123',
-        'admin-user',
-        'admin'
-      );
+      const result = await service.checkOwnership('quote-123', 'admin-user', 'admin');
 
       expect(result).toBe(true);
     });

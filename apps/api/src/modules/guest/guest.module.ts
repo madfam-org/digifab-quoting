@@ -10,26 +10,15 @@ import { QuotesModule } from '../quotes/quotes.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    RedisModule,
-    FilesModule,
-    PricingModule,
-    QuotesModule,
-    AuthModule,
-  ],
+  imports: [RedisModule, FilesModule, PricingModule, QuotesModule, AuthModule],
   controllers: [GuestQuoteController],
-  providers: [
-    GuestQuoteService,
-    ConversionService,
-  ],
+  providers: [GuestQuoteService, ConversionService],
   exports: [GuestQuoteService, ConversionService],
 })
 export class GuestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(GuestSessionMiddleware)
-      .forRoutes(
-        { path: 'api/v1/guest/*', method: RequestMethod.ALL }
-      );
+      .forRoutes({ path: 'api/v1/guest/*', method: RequestMethod.ALL });
   }
 }

@@ -11,12 +11,7 @@ import { BillingModule } from '@/modules/billing/billing.module';
 import { TenantModule } from '@/modules/tenant/tenant.module';
 
 @Module({
-  imports: [
-    PrismaModule,
-    RedisModule,
-    BillingModule,
-    TenantModule,
-  ],
+  imports: [PrismaModule, RedisModule, BillingModule, TenantModule],
   controllers: [ConversionController],
   providers: [
     ConversionService,

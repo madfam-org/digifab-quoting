@@ -10,9 +10,7 @@ import { DhanamRelayService } from '../services/dhanam-relay.service';
 const WEBHOOK_URL = 'https://api.dhan.am/v1/webhooks/cotiza';
 const WEBHOOK_SECRET = 'test-shared-secret-256bit-key!!';
 
-function mockConfigService(
-  overrides: Record<string, unknown> = {},
-): Partial<ConfigService> {
+function mockConfigService(overrides: Record<string, unknown> = {}): Partial<ConfigService> {
   const defaults: Record<string, unknown> = {
     DHANAM_WEBHOOK_URL: WEBHOOK_URL,
     DHANAM_WEBHOOK_SECRET: WEBHOOK_SECRET,
@@ -55,10 +53,7 @@ describe('DhanamRelayService', () => {
     configService = mockConfigService();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        DhanamRelayService,
-        { provide: ConfigService, useValue: configService },
-      ],
+      providers: [DhanamRelayService, { provide: ConfigService, useValue: configService }],
     }).compile();
 
     service = module.get<DhanamRelayService>(DhanamRelayService);
@@ -90,10 +85,7 @@ describe('DhanamRelayService', () => {
     it('should report disabled when DHANAM_WEBHOOK_URL is missing', async () => {
       const disabledConfig = mockConfigService({ DHANAM_WEBHOOK_URL: '' });
       const mod = await Test.createTestingModule({
-        providers: [
-          DhanamRelayService,
-          { provide: ConfigService, useValue: disabledConfig },
-        ],
+        providers: [DhanamRelayService, { provide: ConfigService, useValue: disabledConfig }],
       }).compile();
 
       const disabledService = mod.get<DhanamRelayService>(DhanamRelayService);
@@ -103,10 +95,7 @@ describe('DhanamRelayService', () => {
     it('should report disabled when DHANAM_WEBHOOK_SECRET is missing', async () => {
       const disabledConfig = mockConfigService({ DHANAM_WEBHOOK_SECRET: '' });
       const mod = await Test.createTestingModule({
-        providers: [
-          DhanamRelayService,
-          { provide: ConfigService, useValue: disabledConfig },
-        ],
+        providers: [DhanamRelayService, { provide: ConfigService, useValue: disabledConfig }],
       }).compile();
 
       const disabledService = mod.get<DhanamRelayService>(DhanamRelayService);
@@ -186,10 +175,7 @@ describe('DhanamRelayService', () => {
     it('should not call fetch when service is disabled', async () => {
       const disabledConfig = mockConfigService({ DHANAM_WEBHOOK_URL: '' });
       const mod = await Test.createTestingModule({
-        providers: [
-          DhanamRelayService,
-          { provide: ConfigService, useValue: disabledConfig },
-        ],
+        providers: [DhanamRelayService, { provide: ConfigService, useValue: disabledConfig }],
       }).compile();
 
       const disabledService = mod.get<DhanamRelayService>(DhanamRelayService);
@@ -207,9 +193,7 @@ describe('DhanamRelayService', () => {
       fetchSpy.mockRejectedValueOnce(new Error('Network failure'));
 
       // relay() itself must not throw -- errors are caught internally
-      await expect(
-        service.relay('payment.succeeded', sampleEventData()),
-      ).resolves.toBeUndefined();
+      await expect(service.relay('payment.succeeded', sampleEventData())).resolves.toBeUndefined();
     });
 
     it('should not throw when fetch returns non-OK status', async () => {
@@ -219,9 +203,7 @@ describe('DhanamRelayService', () => {
         text: jest.fn().mockResolvedValue('Bad Gateway'),
       } as unknown as Response);
 
-      await expect(
-        service.relay('payment.failed', sampleEventData()),
-      ).resolves.toBeUndefined();
+      await expect(service.relay('payment.failed', sampleEventData())).resolves.toBeUndefined();
     });
   });
 

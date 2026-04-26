@@ -1,10 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import {
-  PravaraDispatchContext,
-  PravaraDispatchService,
-} from '../pravara-dispatch.service';
+import { PravaraDispatchContext, PravaraDispatchService } from '../pravara-dispatch.service';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -13,9 +10,7 @@ import {
 const API_URL = 'https://pravara.madfam.io';
 const SECRET = 'test-pravara-dispatch-secret-256';
 
-function mockConfigService(
-  overrides: Record<string, unknown> = {},
-): Partial<ConfigService> {
+function mockConfigService(overrides: Record<string, unknown> = {}): Partial<ConfigService> {
   const defaults: Record<string, unknown> = {
     PRAVARA_API_URL: API_URL,
     PRAVARA_DISPATCH_SECRET: SECRET,
@@ -29,9 +24,7 @@ function mockConfigService(
   };
 }
 
-function sampleContext(
-  overrides: Partial<PravaraDispatchContext> = {},
-): PravaraDispatchContext {
+function sampleContext(overrides: Partial<PravaraDispatchContext> = {}): PravaraDispatchContext {
   return {
     tenantId: 'tenant-madfam',
     quoteId: 'quote-abc',
@@ -174,16 +167,12 @@ describe('PravaraDispatchService', () => {
         status: 500,
         text: jest.fn().mockResolvedValue('boom'),
       } as unknown as Response);
-      await expect(
-        service.dispatchJob(sampleContext()),
-      ).resolves.toBeUndefined();
+      await expect(service.dispatchJob(sampleContext())).resolves.toBeUndefined();
     });
 
     it('does not throw on fetch rejection (fire-and-forget)', async () => {
       fetchSpy.mockRejectedValueOnce(new Error('ECONNREFUSED'));
-      await expect(
-        service.dispatchJob(sampleContext()),
-      ).resolves.toBeUndefined();
+      await expect(service.dispatchJob(sampleContext())).resolves.toBeUndefined();
     });
 
     it('defaults selections to {} and files to [] when not provided on an item', async () => {

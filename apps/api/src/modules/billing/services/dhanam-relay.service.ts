@@ -69,10 +69,7 @@ export class DhanamRelayService {
    * Dhanam verifies this signature before processing.
    */
   private sign(payload: string): string {
-    return crypto
-      .createHmac('sha256', this.webhookSecret)
-      .update(payload)
-      .digest('hex');
+    return crypto.createHmac('sha256', this.webhookSecret).update(payload).digest('hex');
   }
 
   /**
@@ -129,10 +126,7 @@ export class DhanamRelayService {
 
     // Fire-and-forget: do not await in the calling context
     this.sendWebhook(payload, signature).catch((err) => {
-      this.logger.error(
-        `Dhanam relay failed for ${eventType}: ${err.message}`,
-        err.stack,
-      );
+      this.logger.error(`Dhanam relay failed for ${eventType}: ${err.message}`, err.stack);
     });
   }
 
@@ -160,9 +154,7 @@ export class DhanamRelayService {
 
       if (!response.ok) {
         const body = await response.text().catch(() => '<unreadable>');
-        this.logger.warn(
-          `Dhanam webhook returned HTTP ${response.status}: ${body}`,
-        );
+        this.logger.warn(`Dhanam webhook returned HTTP ${response.status}: ${body}`);
       } else {
         this.logger.debug(`Dhanam relay delivered: ${JSON.parse(payload).type}`);
       }

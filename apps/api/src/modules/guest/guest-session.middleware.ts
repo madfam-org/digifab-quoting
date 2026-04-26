@@ -39,7 +39,7 @@ export class GuestSessionMiddleware implements NestMiddleware {
       // Create new session
       sessionToken = uuidv4();
       session = await this.createSession(sessionToken, req);
-      
+
       // Set session cookie
       this.setSessionCookie(res, sessionToken);
     }
@@ -62,12 +62,12 @@ export class GuestSessionMiddleware implements NestMiddleware {
   private async loadSession(token: string) {
     const key = `guest:session:${token}`;
     const data = await this.redis.get(key);
-    
+
     if (!data) return null;
 
     try {
       const session = JSON.parse(data as string);
-      
+
       // Check if expired
       if (new Date(session.expiresAt) < new Date()) {
         await this.redis.del(key);
@@ -100,11 +100,7 @@ export class GuestSessionMiddleware implements NestMiddleware {
     };
 
     const key = `guest:session:${token}`;
-    await this.redis.setex(
-      key,
-      this.sessionTTL,
-      JSON.stringify(session)
-    );
+    await this.redis.setex(key, this.sessionTTL, JSON.stringify(session));
 
     return session;
   }
@@ -122,14 +118,10 @@ export class GuestSessionMiddleware implements NestMiddleware {
   async incrementQuoteCount(sessionToken: string): Promise<void> {
     const key = `guest:session:${sessionToken}`;
     const session = await this.loadSession(sessionToken);
-    
+
     if (session) {
       session.quoteCount += 1;
-      await this.redis.setex(
-        key,
-        this.sessionTTL,
-        JSON.stringify(session)
-      );
+      await this.redis.setex(key, this.sessionTTL, JSON.stringify(session));
     }
   }
 

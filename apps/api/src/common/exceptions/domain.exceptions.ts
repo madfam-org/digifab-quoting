@@ -20,11 +20,11 @@ export class QuoteValidationException extends DomainException {
 
 export class InsufficientInventoryException extends DomainException {
   constructor(materialId: string, requested: number, available: number) {
-    super(
-      `Insufficient inventory for material ${materialId}`,
-      'INSUFFICIENT_INVENTORY',
-      { materialId, requested, available }
-    );
+    super(`Insufficient inventory for material ${materialId}`, 'INSUFFICIENT_INVENTORY', {
+      materialId,
+      requested,
+      available,
+    });
   }
 }
 
@@ -36,11 +36,10 @@ export class InvalidPricingConfigurationException extends DomainException {
 
 export class QuoteExpiredException extends DomainException {
   constructor(quoteId: string, expiryDate: Date) {
-    super(
-      `Quote ${quoteId} expired on ${expiryDate.toISOString()}`,
-      'QUOTE_EXPIRED',
-      { quoteId, expiryDate }
-    );
+    super(`Quote ${quoteId} expired on ${expiryDate.toISOString()}`, 'QUOTE_EXPIRED', {
+      quoteId,
+      expiryDate,
+    });
   }
 }
 
@@ -52,32 +51,27 @@ export class FileProcessingException extends DomainException {
 
 export class ExternalServiceException extends DomainException {
   constructor(service: string, operation: string, originalError?: Error) {
-    super(
-      `External service ${service} failed during ${operation}`,
-      'EXTERNAL_SERVICE_FAILED',
-      { service, operation, originalError: originalError?.message }
-    );
+    super(`External service ${service} failed during ${operation}`, 'EXTERNAL_SERVICE_FAILED', {
+      service,
+      operation,
+      originalError: originalError?.message,
+    });
   }
 }
 
 // Resource Exceptions
 export class ResourceNotFoundException extends DomainException {
   constructor(resourceType: string, identifier: string) {
-    super(
-      `${resourceType} with identifier ${identifier} not found`,
-      'RESOURCE_NOT_FOUND',
-      { resourceType, identifier }
-    );
+    super(`${resourceType} with identifier ${identifier} not found`, 'RESOURCE_NOT_FOUND', {
+      resourceType,
+      identifier,
+    });
   }
 }
 
 export class ResourceConflictException extends DomainException {
   constructor(resourceType: string, conflict: string) {
-    super(
-      `${resourceType} conflict: ${conflict}`,
-      'RESOURCE_CONFLICT',
-      { resourceType, conflict }
-    );
+    super(`${resourceType} conflict: ${conflict}`, 'RESOURCE_CONFLICT', { resourceType, conflict });
   }
 }
 
@@ -86,7 +80,7 @@ export class TenantMismatchException extends DomainException {
     super(
       `${resourceType} ${resourceId} does not belong to tenant ${expectedTenant}`,
       'TENANT_MISMATCH',
-      { resourceType, resourceId, expectedTenant }
+      { resourceType, resourceId, expectedTenant },
     );
   }
 }
@@ -97,65 +91,53 @@ export function mapDomainExceptionToHttp(exception: DomainException): HttpExcept
 
   switch (code) {
     case 'RESOURCE_NOT_FOUND':
-      return new HttpException(
-        { message, code, context },
-        HttpStatus.NOT_FOUND
-      );
+      return new HttpException({ message, code, context }, HttpStatus.NOT_FOUND);
 
     case 'QUOTE_VALIDATION_FAILED':
     case 'INVALID_PRICING_CONFIG':
-      return new HttpException(
-        { message, code, context },
-        HttpStatus.BAD_REQUEST
-      );
+      return new HttpException({ message, code, context }, HttpStatus.BAD_REQUEST);
 
     case 'RESOURCE_CONFLICT':
     case 'QUOTE_EXPIRED':
-      return new HttpException(
-        { message, code, context },
-        HttpStatus.CONFLICT
-      );
+      return new HttpException({ message, code, context }, HttpStatus.CONFLICT);
 
     case 'TENANT_MISMATCH':
-      return new HttpException(
-        { message, code, context },
-        HttpStatus.FORBIDDEN
-      );
+      return new HttpException({ message, code, context }, HttpStatus.FORBIDDEN);
 
     case 'INSUFFICIENT_INVENTORY':
-      return new HttpException(
-        { message, code, context },
-        HttpStatus.UNPROCESSABLE_ENTITY
-      );
+      return new HttpException({ message, code, context }, HttpStatus.UNPROCESSABLE_ENTITY);
 
     case 'EXTERNAL_SERVICE_FAILED':
     case 'FILE_PROCESSING_FAILED':
-      return new HttpException(
-        { message, code, context },
-        HttpStatus.SERVICE_UNAVAILABLE
-      );
+      return new HttpException({ message, code, context }, HttpStatus.SERVICE_UNAVAILABLE);
 
     default:
-      return new HttpException(
-        { message, code, context },
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      return new HttpException({ message, code, context }, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
 
 // Error helper functions
-export function createValidationError(field: string, value: unknown, constraint: string): QuoteValidationException {
-  return new QuoteValidationException(
-    `Validation failed for field '${field}': ${constraint}`,
-    { field, value, constraint }
-  );
+export function createValidationError(
+  field: string,
+  value: unknown,
+  constraint: string,
+): QuoteValidationException {
+  return new QuoteValidationException(`Validation failed for field '${field}': ${constraint}`, {
+    field,
+    value,
+    constraint,
+  });
 }
 
 export function createResourceNotFoundError(type: string, id: string): ResourceNotFoundException {
   return new ResourceNotFoundException(type, id);
 }
 
-export function createTenantMismatchError(type: string, id: string, tenant: string): TenantMismatchException {
+export function createTenantMismatchError(
+  type: string,
+  id: string,
+  tenant: string,
+): TenantMismatchException {
   return new TenantMismatchException(type, id, tenant);
 }
 

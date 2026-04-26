@@ -76,8 +76,9 @@ export class LocaleManager {
     if (typeof window === 'undefined') return null;
 
     try {
-      const browserLang = navigator.language || (navigator as unknown as { userLanguage?: string }).userLanguage;
-      
+      const browserLang =
+        navigator.language || (navigator as unknown as { userLanguage?: string }).userLanguage;
+
       if (browserLang) {
         // Direct matches
         if (browserLang.startsWith('es')) return 'es';
@@ -104,12 +105,12 @@ export class LocaleManager {
    */
   private static mapBrowserLangToLocale(browserLang: string): Locale | null {
     const lang = browserLang.toLowerCase();
-    
+
     if (lang.startsWith('es')) return 'es';
     if (lang.startsWith('en')) return 'en';
     if (lang === 'pt-br' || lang.startsWith('pt-br')) return 'pt-BR';
     if (lang.startsWith('pt')) return 'pt-BR';
-    
+
     return null;
   }
 
@@ -119,7 +120,7 @@ export class LocaleManager {
   static buildLocalizedPath(path: string, locale: Locale): string {
     // Remove existing locale from path
     const cleanPath = path.replace(/^\/(es|en|pt-BR)/, '');
-    
+
     // Add new locale
     return `/${locale}${cleanPath || '/'}`;
   }
@@ -132,7 +133,7 @@ export class LocaleManager {
 
     const currentPath = window.location.pathname;
     const newPath = this.buildLocalizedPath(currentPath, locale);
-    
+
     if (newPath !== currentPath) {
       window.location.href = newPath;
     }
@@ -143,15 +144,15 @@ export class LocaleManager {
    */
   static initialize(): Locale {
     const locale = this.getPreferredLocale();
-    
+
     // Save to localStorage for consistency
     this.saveLocale(locale);
-    
+
     // Set HTML lang attribute
     if (typeof document !== 'undefined') {
       document.documentElement.lang = locale;
     }
-    
+
     return locale;
   }
 
@@ -160,9 +161,9 @@ export class LocaleManager {
    */
   static getLocaleName(locale: Locale): string {
     const names: Record<Locale, string> = {
-      'es': 'Español',
-      'en': 'English',
-      'pt-BR': 'Português (Brasil)'
+      es: 'Español',
+      en: 'English',
+      'pt-BR': 'Português (Brasil)',
     };
     return names[locale] || locale;
   }
@@ -172,9 +173,9 @@ export class LocaleManager {
    */
   static getLocaleFlag(locale: Locale): string {
     const flags: Record<Locale, string> = {
-      'es': '🇪🇸',
-      'en': '🇺🇸',
-      'pt-BR': '🇧🇷'
+      es: '🇪🇸',
+      en: '🇺🇸',
+      'pt-BR': '🇧🇷',
     };
     return flags[locale] || '🌍';
   }

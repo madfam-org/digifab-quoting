@@ -58,8 +58,8 @@ describe('QuotesController', () => {
     technology: Technology.FFF,
     material: Material.PLA,
     quantity: 10,
-    unitPrice: 25.50,
-    totalPrice: 255.00,
+    unitPrice: 25.5,
+    totalPrice: 255.0,
     leadTime: 3,
     status: 'priced',
     manufacturingDetails: {
@@ -140,7 +140,7 @@ describe('QuotesController', () => {
       expect(mockQuotesService.create).toHaveBeenCalledWith(
         createQuoteDto,
         mockUser.id,
-        mockUser.tenantId
+        mockUser.tenantId,
       );
     });
 
@@ -150,23 +150,19 @@ describe('QuotesController', () => {
         items: [], // Invalid: no items
       };
 
-      mockQuotesService.create.mockRejectedValue(
-        new BadRequestException('Validation failed')
-      );
+      mockQuotesService.create.mockRejectedValue(new BadRequestException('Validation failed'));
 
-      await expect(
-        controller.create(invalidDto, { user: mockUser })
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.create(invalidDto, { user: mockUser })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should handle file not found error', async () => {
-      mockQuotesService.create.mockRejectedValue(
-        new NotFoundException('File not found')
-      );
+      mockQuotesService.create.mockRejectedValue(new NotFoundException('File not found'));
 
-      await expect(
-        controller.create(createQuoteDto, { user: mockUser })
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.create(createQuoteDto, { user: mockUser })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should enforce item limits', async () => {
@@ -181,12 +177,12 @@ describe('QuotesController', () => {
       };
 
       mockQuotesService.create.mockRejectedValue(
-        new BadRequestException('Too many items (max 100)')
+        new BadRequestException('Too many items (max 100)'),
       );
 
-      await expect(
-        controller.create(tooManyItems, { user: mockUser })
-      ).rejects.toThrow('Too many items');
+      await expect(controller.create(tooManyItems, { user: mockUser })).rejects.toThrow(
+        'Too many items',
+      );
     });
   });
 
@@ -205,16 +201,13 @@ describe('QuotesController', () => {
 
       mockQuotesService.findAll.mockResolvedValue(paginatedResult);
 
-      const result = await controller.findAll(
-        { page: 1, limit: 20 },
-        { user: mockUser }
-      );
+      const result = await controller.findAll({ page: 1, limit: 20 }, { user: mockUser });
 
       expect(result).toEqual(paginatedResult);
       expect(mockQuotesService.findAll).toHaveBeenCalledWith(
         { page: 1, limit: 20 },
         mockUser.id,
-        mockUser.role
+        mockUser.role,
       );
     });
 
@@ -224,15 +217,12 @@ describe('QuotesController', () => {
         meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
       });
 
-      await controller.findAll(
-        { status: QuoteStatus.DRAFT },
-        { user: mockUser }
-      );
+      await controller.findAll({ status: QuoteStatus.DRAFT }, { user: mockUser });
 
       expect(mockQuotesService.findAll).toHaveBeenCalledWith(
         { status: QuoteStatus.DRAFT },
         mockUser.id,
-        mockUser.role
+        mockUser.role,
       );
     });
 
@@ -252,13 +242,13 @@ describe('QuotesController', () => {
       expect(mockQuotesService.findAll).toHaveBeenCalledWith(
         dateFilter,
         mockUser.id,
-        mockUser.role
+        mockUser.role,
       );
     });
 
     it('should return all quotes for admin users', async () => {
       const adminUser = { ...mockUser, role: 'admin' };
-      
+
       mockQuotesService.findAll.mockResolvedValue({
         data: [mockQuote],
         meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
@@ -266,11 +256,7 @@ describe('QuotesController', () => {
 
       await controller.findAll({}, { user: adminUser });
 
-      expect(mockQuotesService.findAll).toHaveBeenCalledWith(
-        {},
-        adminUser.id,
-        'admin'
-      );
+      expect(mockQuotesService.findAll).toHaveBeenCalledWith({}, adminUser.id, 'admin');
     });
   });
 
@@ -296,27 +282,25 @@ describe('QuotesController', () => {
     });
 
     it('should throw 404 if quote not found', async () => {
-      mockQuotesService.findOne.mockRejectedValue(
-        new NotFoundException('Quote not found')
-      );
+      mockQuotesService.findOne.mockRejectedValue(new NotFoundException('Quote not found'));
 
-      await expect(
-        controller.findOne('invalid-id', { user: mockUser })
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('invalid-id', { user: mockUser })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should check ownership for non-admin users', async () => {
       mockQuotesService.findOne.mockResolvedValue(mockQuote);
       mockQuotesService.checkOwnership.mockResolvedValue(false);
 
-      await expect(
-        controller.findOne('quote-123', { user: mockUser })
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.findOne('quote-123', { user: mockUser })).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should allow admin to view any quote', async () => {
       const adminUser = { ...mockUser, role: 'admin' };
-      
+
       mockQuotesService.findOne.mockResolvedValue(mockQuote);
 
       const result = await controller.findOne('quote-123', { user: adminUser });
@@ -334,40 +318,33 @@ describe('QuotesController', () => {
 
     it('should update quote details', async () => {
       const updatedQuote = { ...mockQuote, ...updateDto };
-      
+
       mockQuotesService.update.mockResolvedValue(updatedQuote);
       mockQuotesService.checkOwnership.mockResolvedValue(true);
 
-      const result = await controller.update(
-        'quote-123',
-        updateDto,
-        { user: mockUser }
-      );
+      const result = await controller.update('quote-123', updateDto, { user: mockUser });
 
       expect(result).toEqual(updatedQuote);
-      expect(mockQuotesService.update).toHaveBeenCalledWith(
-        'quote-123',
-        updateDto
-      );
+      expect(mockQuotesService.update).toHaveBeenCalledWith('quote-123', updateDto);
     });
 
     it('should prevent updates to approved quotes', async () => {
       const approvedQuote = { ...mockQuote, status: QuoteStatus.APPROVED };
-      
+
       mockQuotesService.findOne.mockResolvedValue(approvedQuote);
       mockQuotesService.checkOwnership.mockResolvedValue(true);
 
-      await expect(
-        controller.update('quote-123', updateDto, { user: mockUser })
-      ).rejects.toThrow('Cannot update approved quote');
+      await expect(controller.update('quote-123', updateDto, { user: mockUser })).rejects.toThrow(
+        'Cannot update approved quote',
+      );
     });
 
     it('should prevent non-owners from updating', async () => {
       mockQuotesService.checkOwnership.mockResolvedValue(false);
 
-      await expect(
-        controller.update('quote-123', updateDto, { user: mockUser })
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.update('quote-123', updateDto, { user: mockUser })).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -390,17 +367,10 @@ describe('QuotesController', () => {
       mockQuotesService.addItem.mockResolvedValue(updatedQuote);
       mockQuotesService.checkOwnership.mockResolvedValue(true);
 
-      const result = await controller.addItem(
-        'quote-123',
-        addItemDto,
-        { user: mockUser }
-      );
+      const result = await controller.addItem('quote-123', addItemDto, { user: mockUser });
 
       expect(result).toEqual(updatedQuote);
-      expect(mockQuotesService.addItem).toHaveBeenCalledWith(
-        'quote-123',
-        addItemDto
-      );
+      expect(mockQuotesService.addItem).toHaveBeenCalledWith('quote-123', addItemDto);
     });
 
     it('should validate technology and material compatibility', async () => {
@@ -412,11 +382,11 @@ describe('QuotesController', () => {
       };
 
       mockQuotesService.addItem.mockRejectedValue(
-        new BadRequestException('Invalid technology-material combination')
+        new BadRequestException('Invalid technology-material combination'),
       );
 
       await expect(
-        controller.addItem('quote-123', invalidCombination, { user: mockUser })
+        controller.addItem('quote-123', invalidCombination, { user: mockUser }),
       ).rejects.toThrow('Invalid technology-material combination');
     });
   });
@@ -425,14 +395,16 @@ describe('QuotesController', () => {
     it('should calculate quote pricing', async () => {
       const calculatedQuote = {
         ...mockQuote,
-        subtotal: 255.00,
-        tax: 45.90,
-        totalPrice: 300.90,
-        items: [{
-          ...mockQuoteItem,
-          unitPrice: 25.50,
-          totalPrice: 255.00,
-        }],
+        subtotal: 255.0,
+        tax: 45.9,
+        totalPrice: 300.9,
+        items: [
+          {
+            ...mockQuoteItem,
+            unitPrice: 25.5,
+            totalPrice: 255.0,
+          },
+        ],
       };
 
       mockQuotesService.calculate.mockResolvedValue(calculatedQuote);
@@ -446,12 +418,12 @@ describe('QuotesController', () => {
 
     it('should handle calculation errors', async () => {
       mockQuotesService.calculate.mockRejectedValue(
-        new BadRequestException('Missing required data for calculation')
+        new BadRequestException('Missing required data for calculation'),
       );
 
-      await expect(
-        controller.calculate('quote-123', { user: mockUser })
-      ).rejects.toThrow('Missing required data for calculation');
+      await expect(controller.calculate('quote-123', { user: mockUser })).rejects.toThrow(
+        'Missing required data for calculation',
+      );
     });
   });
 
@@ -469,10 +441,7 @@ describe('QuotesController', () => {
       const result = await controller.approve('quote-123', { user: mockUser });
 
       expect(result).toEqual(approvedQuote);
-      expect(mockQuotesService.approve).toHaveBeenCalledWith(
-        'quote-123',
-        mockUser.id
-      );
+      expect(mockQuotesService.approve).toHaveBeenCalledWith('quote-123', mockUser.id);
     });
 
     it('should prevent approving expired quotes', async () => {
@@ -484,9 +453,9 @@ describe('QuotesController', () => {
       mockQuotesService.findOne.mockResolvedValue(expiredQuote);
       mockQuotesService.checkOwnership.mockResolvedValue(true);
 
-      await expect(
-        controller.approve('quote-123', { user: mockUser })
-      ).rejects.toThrow('Quote has expired');
+      await expect(controller.approve('quote-123', { user: mockUser })).rejects.toThrow(
+        'Quote has expired',
+      );
     });
   });
 
@@ -504,14 +473,11 @@ describe('QuotesController', () => {
       const result = await controller.cancel(
         'quote-123',
         { reason: 'Changed requirements' },
-        { user: mockUser }
+        { user: mockUser },
       );
 
       expect(result).toEqual(cancelledQuote);
-      expect(mockQuotesService.cancel).toHaveBeenCalledWith(
-        'quote-123',
-        'Changed requirements'
-      );
+      expect(mockQuotesService.cancel).toHaveBeenCalledWith('quote-123', 'Changed requirements');
     });
 
     it('should prevent cancelling completed quotes', async () => {
@@ -523,9 +489,9 @@ describe('QuotesController', () => {
       mockQuotesService.findOne.mockResolvedValue(completedQuote);
       mockQuotesService.checkOwnership.mockResolvedValue(true);
 
-      await expect(
-        controller.cancel('quote-123', {}, { user: mockUser })
-      ).rejects.toThrow('Cannot cancel completed quote');
+      await expect(controller.cancel('quote-123', {}, { user: mockUser })).rejects.toThrow(
+        'Cannot cancel completed quote',
+      );
     });
   });
 
@@ -544,13 +510,13 @@ describe('QuotesController', () => {
 
     it('should cache generated PDFs', async () => {
       const pdfUrl = 'https://s3.amazonaws.com/quotes/quote-123.pdf';
-      
+
       mockQuotesService.generatePdf.mockResolvedValue({ url: pdfUrl });
       mockQuotesService.checkOwnership.mockResolvedValue(true);
 
       // First call
       await controller.generatePdf('quote-123', { user: mockUser });
-      
+
       // Second call should use cache
       await controller.generatePdf('quote-123', { user: mockUser });
 
@@ -564,32 +530,28 @@ describe('QuotesController', () => {
       mockQuotesService.checkOwnership.mockResolvedValue(true);
 
       const result = await controller.findOne('quote-123', { user: mockUser });
-      
+
       expect(result).toEqual(mockQuote);
     });
 
     it('should allow operators to view all quotes', async () => {
       const operatorUser = { ...mockUser, role: 'operator' };
-      
+
       mockQuotesService.findOne.mockResolvedValue(mockQuote);
 
       const result = await controller.findOne('quote-123', { user: operatorUser });
-      
+
       expect(result).toEqual(mockQuote);
     });
 
     it('should allow managers to update any quote', async () => {
       const managerUser = { ...mockUser, role: 'manager' };
       const updateDto = { projectName: 'Manager Update' };
-      
+
       mockQuotesService.update.mockResolvedValue({ ...mockQuote, ...updateDto });
 
-      const result = await controller.update(
-        'quote-123',
-        updateDto,
-        { user: managerUser }
-      );
-      
+      const result = await controller.update('quote-123', updateDto, { user: managerUser });
+
       expect(result.projectName).toBe('Manager Update');
     });
   });

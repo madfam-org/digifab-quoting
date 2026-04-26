@@ -4,7 +4,13 @@ import { PricingService } from '../pricing/pricing.service';
 import { QuoteCacheService } from '../redis/quote-cache.service';
 import { Cacheable, CacheInvalidate } from '../redis/decorators/cache.decorator';
 import { Quote as PrismaQuote, QuoteItem as PrismaQuoteItem, Prisma } from '@prisma/client';
-import { QuoteStatus, Currency, ProcessType, QuoteType, ServicesBillableType } from '@cotiza/shared';
+import {
+  QuoteStatus,
+  Currency,
+  ProcessType,
+  QuoteType,
+  ServicesBillableType,
+} from '@cotiza/shared';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { AddQuoteItemDto } from './dto/add-quote-item.dto';
 import { CalculateQuoteDto } from './dto/calculate-quote.dto';
@@ -54,9 +60,7 @@ export class QuotesService {
     if (quoteType === QuoteType.SERVICES) {
       const features = await this.tenantCacheService.getTenantFeatures(tenantId);
       if (!features.servicesQuotes) {
-        throw new BadRequestException(
-          'Services-mode quoting is not enabled for this tenant',
-        );
+        throw new BadRequestException('Services-mode quoting is not enabled for this tenant');
       }
     }
 
@@ -66,10 +70,7 @@ export class QuotesService {
     // `lastSyncedAt: NULL` until PhyneCRM pushes back a webhook.
     let engagementProjectionId: string | null = null;
     if (dto.engagementId) {
-      engagementProjectionId = await this.engagements.ensureProjection(
-        tenantId,
-        dto.engagementId,
-      );
+      engagementProjectionId = await this.engagements.ensureProjection(tenantId, dto.engagementId);
     }
 
     // Get quote validity days from tenant configuration
@@ -142,7 +143,12 @@ export class QuotesService {
   }
 
   @Cacheable({ prefix: 'quote:detail', ttl: 300 }) // Cache for 5 minutes
-  async findOne(tenantId: string, id: string): Promise<PrismaQuote & { items: Array<PrismaQuoteItem & { files: unknown[]; dfmReport: unknown }> }> {
+  async findOne(
+    tenantId: string,
+    id: string,
+  ): Promise<
+    PrismaQuote & { items: Array<PrismaQuoteItem & { files: unknown[]; dfmReport: unknown }> }
+  > {
     const quote = await this.prisma.quote.findFirst({
       where: {
         id,
@@ -215,7 +221,7 @@ export class QuotesService {
         name: dto.name || file.originalName,
         process: dto.process,
         processCode: dto.process,
-        material: (dto.options as Record<string, unknown>)?.material as string || 'PLA', // Extract material from options
+        material: ((dto.options as Record<string, unknown>)?.material as string) || 'PLA', // Extract material from options
         quantity: dto.quantity,
         selections: dto.options as Prisma.InputJsonValue,
       },
@@ -236,7 +242,16 @@ export class QuotesService {
     }) as Promise<PrismaQuoteItem>;
   }
 
-  async calculate(tenantId: string, quoteId: string, dto: CalculateQuoteDto): Promise<{ quote: PrismaQuote & { items: Array<PrismaQuoteItem & { files: unknown[]; dfmReport: unknown }> }; errors?: Array<{ itemId?: string; error: string }> }> {
+  async calculate(
+    tenantId: string,
+    quoteId: string,
+    dto: CalculateQuoteDto,
+  ): Promise<{
+    quote: PrismaQuote & {
+      items: Array<PrismaQuoteItem & { files: unknown[]; dfmReport: unknown }>;
+    };
+    errors?: Array<{ itemId?: string; error: string }>;
+  }> {
     const quote = await this.findOne(tenantId, quoteId);
 
     // Services mode: no pricing engine, no DFM, no cache lookup. Items
@@ -281,7 +296,8 @@ export class QuotesService {
         const cacheKey = {
           fileHash: (quoteItem as { files?: Array<{ hash?: string }> }).files?.[0]?.hash || '',
           service: quoteItem.processCode,
-          material: (quoteItem.selections as Record<string, unknown>)?.material as string || 'default',
+          material:
+            ((quoteItem.selections as Record<string, unknown>)?.material as string) || 'default',
           quantity: quoteItem.quantity,
           options: quoteItem.selections as Record<string, unknown> | undefined,
         };
@@ -343,7 +359,11 @@ export class QuotesService {
     }
 
     // Calculate totals
-    const totals = await this.calculateTotals(tenantId, calculatedItems, quote.currency as Currency);
+    const totals = await this.calculateTotals(
+      tenantId,
+      calculatedItems,
+      quote.currency as Currency,
+    );
 
     // Update quote status and totals
     const updatedQuote = await this.prisma.quote.update({
@@ -351,7 +371,9 @@ export class QuotesService {
       data: {
         status: errors.length > 0 ? QuoteStatus.NEEDS_REVIEW : QuoteStatus.AUTO_QUOTED,
         totals,
-        sustainability: this.calculateSustainabilitySummary(calculatedItems) as Prisma.InputJsonValue,
+        sustainability: this.calculateSustainabilitySummary(
+          calculatedItems,
+        ) as Prisma.InputJsonValue,
       },
       include: {
         items: {
@@ -391,10 +413,7 @@ export class QuotesService {
         );
       }
       const total = new Decimal(item.unitPrice).mul(item.quantity);
-      if (
-        item.totalPrice == null ||
-        !new Decimal(item.totalPrice).equals(total)
-      ) {
+      if (item.totalPrice == null || !new Decimal(item.totalPrice).equals(total)) {
         await this.prisma.quoteItem.update({
           where: { id: item.id },
           data: { totalPrice: total },
@@ -546,11 +565,7 @@ export class QuotesService {
         include: { items: true },
       });
       if (!loaded) {
-        this.logger.warn(
-          'handleOrdered: quote not found (tenant=%s quote=%s)',
-          tenantId,
-          quoteId,
-        );
+        this.logger.warn('handleOrdered: quote not found (tenant=%s quote=%s)', tenantId, quoteId);
         return;
       }
       quote = loaded;
@@ -579,10 +594,7 @@ export class QuotesService {
     }
 
     // --- Karafiel: CFDI stamping ------------------------------------
-    const receptorRfc = this.karafielCompliance.resolveReceptorRfc(
-      metadata,
-      tenantSettings,
-    );
+    const receptorRfc = this.karafielCompliance.resolveReceptorRfc(metadata, tenantSettings);
     const emisorRfc =
       (typeof tenantBranding.emisorRfc === 'string' && tenantBranding.emisorRfc) ||
       (typeof tenantSettings.emisorRfc === 'string' && tenantSettings.emisorRfc) ||
@@ -634,11 +646,7 @@ export class QuotesService {
       items: fabItems,
     });
 
-    const results = await Promise.allSettled([
-      karafielPromise,
-      dhanamPromise,
-      pravaraPromise,
-    ]);
+    const results = await Promise.allSettled([karafielPromise, dhanamPromise, pravaraPromise]);
     results.forEach((r, i) => {
       if (r.status === 'rejected') {
         const names = ['karafiel', 'dhanam', 'pravara'];
@@ -658,15 +666,14 @@ export class QuotesService {
   ): DhanamMilestoneItem[] {
     const out: DhanamMilestoneItem[] = [];
     for (const item of items) {
-      const details = item.servicesDetails as
-        | { billableType?: string; milestones?: Array<Record<string, unknown>> }
-        | null;
+      const details = item.servicesDetails as {
+        billableType?: string;
+        milestones?: Array<Record<string, unknown>>;
+      } | null;
       if (!details || details.billableType !== ServicesBillableType.MILESTONE) {
         continue;
       }
-      const milestones = Array.isArray(details.milestones)
-        ? details.milestones
-        : [];
+      const milestones = Array.isArray(details.milestones) ? details.milestones : [];
       for (const ms of milestones) {
         if (typeof ms.id !== 'string' || typeof ms.name !== 'string') continue;
         const amount = typeof ms.amount === 'number' ? ms.amount : 0;
@@ -692,8 +699,7 @@ export class QuotesService {
     // every item that has no servicesDetails block (= fab item).
     return items
       .filter((it) => {
-        const hasServicesDetails =
-          it.servicesDetails !== null && it.servicesDetails !== undefined;
+        const hasServicesDetails = it.servicesDetails !== null && it.servicesDetails !== undefined;
         if (quoteType === QuoteType.SERVICES) {
           // defensively allow fab items inside services-mode quotes
           return !hasServicesDetails;
@@ -752,15 +758,19 @@ export class QuotesService {
 
     // Get tenant pricing settings for tax and shipping calculation
     const pricingSettings = await this.tenantCacheService.getPricingSettings(tenantId);
-    
+
     // Calculate tax based on tenant configuration
     const taxRate = new Decimal((pricingSettings.taxRate as number) || 0.16); // Default 16% IVA
     const tax = subtotal.mul(taxRate);
 
     // Calculate shipping based on tenant configuration
-    const freeShippingThreshold = new Decimal((pricingSettings.freeShippingThreshold as number) || 1000);
-    const standardShippingRate = new Decimal((pricingSettings.standardShippingRate as number) || 150);
-    
+    const freeShippingThreshold = new Decimal(
+      (pricingSettings.freeShippingThreshold as number) || 1000,
+    );
+    const standardShippingRate = new Decimal(
+      (pricingSettings.standardShippingRate as number) || 150,
+    );
+
     // Apply free shipping if order meets threshold, otherwise apply standard rate
     const shipping = subtotal.gte(freeShippingThreshold) ? new Decimal(0) : standardShippingRate;
 
@@ -775,7 +785,11 @@ export class QuotesService {
     };
   }
 
-  private calculateSustainabilitySummary(items: Array<{ sustainability?: { co2eKg?: number; score?: number; energyKwh?: number } | null }>): {
+  private calculateSustainabilitySummary(
+    items: Array<{
+      sustainability?: { co2eKg?: number; score?: number; energyKwh?: number } | null;
+    }>,
+  ): {
     score: number;
     co2eKg: number;
     energyKwh: number;
@@ -827,7 +841,10 @@ export class QuotesService {
     return `Q-${year}-${month}-${sequence}`;
   }
 
-  async generatePdf(tenantId: string, quoteId: string): Promise<{ url: string; expiresAt: string }> {
+  async generatePdf(
+    tenantId: string,
+    quoteId: string,
+  ): Promise<{ url: string; expiresAt: string }> {
     // Get quote with all related data
     const quote = await this.prisma.quote.findFirst({
       where: { id: quoteId, tenantId },
@@ -904,9 +921,11 @@ export class QuotesService {
           manufacturingProcess: {
             name: item.process?.name || item.process,
           },
-          files: [{
-            originalName: item.part?.filename || 'file',
-          }],
+          files: [
+            {
+              originalName: item.part?.filename || 'file',
+            },
+          ],
         })),
         subtotal: quote.subtotal,
         tax: quote.tax,

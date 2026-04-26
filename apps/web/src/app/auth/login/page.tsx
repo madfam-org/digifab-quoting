@@ -14,7 +14,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const errorMessages: Record<string, string> = {
-    Configuration: 'Authentication is not yet fully configured for this environment. Contact support.',
+    Configuration:
+      'Authentication is not yet fully configured for this environment. Contact support.',
     AccessDenied: 'Access denied. Your account may not have permission to use this application.',
     Verification: 'The sign-in link is invalid or has expired. Please try again.',
     OAuthSignin: 'Could not start the sign-in flow. Please try again.',
@@ -29,9 +30,7 @@ export default function LoginPage() {
     Default: 'An unexpected error occurred. Please try again.',
   };
 
-  const displayError = errorParam
-    ? errorMessages[errorParam] || errorMessages.Default
-    : null;
+  const displayError = errorParam ? errorMessages[errorParam] || errorMessages.Default : null;
 
   const handleSignIn = async () => {
     setIsLoading(true);
@@ -46,9 +45,7 @@ export default function LoginPage() {
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
             <ShieldCheck className="h-6 w-6 text-blue-600" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Sign in to Cotiza Studio
-          </h2>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Sign in to Cotiza Studio</h2>
           <p className="mt-2 text-sm text-gray-600">
             Authenticate securely via your MADFAM account
           </p>
@@ -75,8 +72,8 @@ export default function LoginPage() {
           </Button>
 
           <p className="text-xs text-center text-gray-500">
-            Janua is MADFAM&apos;s secure identity platform.
-            Your credentials are never shared with this application.
+            Janua is MADFAM&apos;s secure identity platform. Your credentials are never shared with
+            this application.
           </p>
         </div>
       </div>

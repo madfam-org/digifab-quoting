@@ -1,6 +1,11 @@
 import { describe, it, expect } from '@jest/globals';
 import { Decimal } from 'decimal.js';
-import { MarginValidator, ConfigValidator, CostValidator, PricingValidationError } from '../validation';
+import {
+  MarginValidator,
+  ConfigValidator,
+  CostValidator,
+  PricingValidationError,
+} from '../validation';
 import { TenantPricingConfig, VolumeDiscount } from '../../types';
 
 describe('MarginValidator', () => {
@@ -13,17 +18,17 @@ describe('MarginValidator', () => {
 
     it('should reject negative margin percentages', () => {
       expect(() => MarginValidator.validateMarginPercent(new Decimal(-10))).toThrow(
-        PricingValidationError
+        PricingValidationError,
       );
       expect(() => MarginValidator.validateMarginPercent(new Decimal(-0.1))).toThrow(
-        'Margin percentage cannot be negative'
+        'Margin percentage cannot be negative',
       );
     });
 
     it('should include context in error message', () => {
-      expect(() => 
-        MarginValidator.validateMarginPercent(new Decimal(-10), 'Test context')
-      ).toThrow('Test context: Margin percentage cannot be negative');
+      expect(() => MarginValidator.validateMarginPercent(new Decimal(-10), 'Test context')).toThrow(
+        'Test context: Margin percentage cannot be negative',
+      );
     });
   });
 
@@ -33,8 +38,8 @@ describe('MarginValidator', () => {
       const finalPrice = new Decimal(90);
       const minimumMarginPercent = new Decimal(50);
 
-      expect(() => 
-        MarginValidator.validateFinalMargin(totalCost, finalPrice, minimumMarginPercent)
+      expect(() =>
+        MarginValidator.validateFinalMargin(totalCost, finalPrice, minimumMarginPercent),
       ).toThrow('Final price (90.00) cannot be below total cost (100.00)');
     });
 
@@ -43,8 +48,8 @@ describe('MarginValidator', () => {
       const finalPrice = new Decimal(105); // 5% margin
       const minimumMarginPercent = new Decimal(50);
 
-      expect(() => 
-        MarginValidator.validateFinalMargin(totalCost, finalPrice, minimumMarginPercent)
+      expect(() =>
+        MarginValidator.validateFinalMargin(totalCost, finalPrice, minimumMarginPercent),
       ).toThrow('Margin (5.00%) is below absolute minimum (10%)');
     });
 
@@ -53,10 +58,16 @@ describe('MarginValidator', () => {
       const finalPrice = new Decimal(130); // 30% margin
       const minimumMarginPercent = new Decimal(50);
 
-      const result = MarginValidator.validateFinalMargin(totalCost, finalPrice, minimumMarginPercent);
-      
+      const result = MarginValidator.validateFinalMargin(
+        totalCost,
+        finalPrice,
+        minimumMarginPercent,
+      );
+
       expect(result.isValid).toBe(false);
-      expect(result.warnings).toContain('Effective margin (30.00%) is below configured minimum (50.00%)');
+      expect(result.warnings).toContain(
+        'Effective margin (30.00%) is below configured minimum (50.00%)',
+      );
       expect(result.effectiveMarginPercent.toNumber()).toBeCloseTo(30, 2);
     });
 
@@ -65,8 +76,12 @@ describe('MarginValidator', () => {
       const finalPrice = new Decimal(115); // 15% margin
       const minimumMarginPercent = new Decimal(10);
 
-      const result = MarginValidator.validateFinalMargin(totalCost, finalPrice, minimumMarginPercent);
-      
+      const result = MarginValidator.validateFinalMargin(
+        totalCost,
+        finalPrice,
+        minimumMarginPercent,
+      );
+
       expect(result.warnings).toContain('Low margin warning: 15.00% is below recommended 20%');
     });
 
@@ -75,62 +90,64 @@ describe('MarginValidator', () => {
       const finalPrice = new Decimal(150); // 50% margin
       const minimumMarginPercent = new Decimal(50);
 
-      const result = MarginValidator.validateFinalMargin(totalCost, finalPrice, minimumMarginPercent);
-      
+      const result = MarginValidator.validateFinalMargin(
+        totalCost,
+        finalPrice,
+        minimumMarginPercent,
+      );
+
       expect(result.isValid).toBe(true);
       expect(result.warnings).toHaveLength(0);
       expect(result.effectiveMarginPercent.toNumber()).toBeCloseTo(50, 2);
     });
 
     it('should throw error for zero cost', () => {
-      expect(() => 
-        MarginValidator.validateFinalMargin(new Decimal(0), new Decimal(100), new Decimal(50))
+      expect(() =>
+        MarginValidator.validateFinalMargin(new Decimal(0), new Decimal(100), new Decimal(50)),
       ).toThrow('Total cost cannot be zero');
     });
   });
 
   describe('validateVolumeDiscounts', () => {
     it('should reject negative discounts', () => {
-      const discounts: VolumeDiscount[] = [
-        { minQuantity: 10, discountPercent: new Decimal(-5) }
-      ];
+      const discounts: VolumeDiscount[] = [{ minQuantity: 10, discountPercent: new Decimal(-5) }];
 
-      expect(() => 
-        MarginValidator.validateVolumeDiscounts(discounts, new Decimal(50))
-      ).toThrow('Volume discount cannot be negative for quantity 10');
+      expect(() => MarginValidator.validateVolumeDiscounts(discounts, new Decimal(50))).toThrow(
+        'Volume discount cannot be negative for quantity 10',
+      );
     });
 
     it('should reject discounts that violate margin requirements', () => {
       const discounts: VolumeDiscount[] = [
-        { minQuantity: 10, discountPercent: new Decimal(45) } // Would leave only 5% margin with 50% floor
+        { minQuantity: 10, discountPercent: new Decimal(45) }, // Would leave only 5% margin with 50% floor
       ];
 
-      expect(() => 
-        MarginValidator.validateVolumeDiscounts(discounts, new Decimal(50))
-      ).toThrow(/Volume discount 45.00% .* would violate minimum margin requirements/);
+      expect(() => MarginValidator.validateVolumeDiscounts(discounts, new Decimal(50))).toThrow(
+        /Volume discount 45.00% .* would violate minimum margin requirements/,
+      );
     });
 
     it('should ensure discounts increase with quantity', () => {
       const discounts: VolumeDiscount[] = [
         { minQuantity: 10, discountPercent: new Decimal(10) },
         { minQuantity: 50, discountPercent: new Decimal(5) }, // Less discount for more quantity
-        { minQuantity: 100, discountPercent: new Decimal(15) }
+        { minQuantity: 100, discountPercent: new Decimal(15) },
       ];
 
-      expect(() => 
-        MarginValidator.validateVolumeDiscounts(discounts, new Decimal(50))
-      ).toThrow('Volume discounts must increase with quantity');
+      expect(() => MarginValidator.validateVolumeDiscounts(discounts, new Decimal(50))).toThrow(
+        'Volume discounts must increase with quantity',
+      );
     });
 
     it('should accept valid discount structure', () => {
       const discounts: VolumeDiscount[] = [
         { minQuantity: 10, discountPercent: new Decimal(5) },
         { minQuantity: 50, discountPercent: new Decimal(10) },
-        { minQuantity: 100, discountPercent: new Decimal(15) }
+        { minQuantity: 100, discountPercent: new Decimal(15) },
       ];
 
-      expect(() => 
-        MarginValidator.validateVolumeDiscounts(discounts, new Decimal(50))
+      expect(() =>
+        MarginValidator.validateVolumeDiscounts(discounts, new Decimal(50)),
       ).not.toThrow();
     });
   });
@@ -161,7 +178,10 @@ describe('MarginValidator', () => {
       const minimumMarginPercent = new Decimal(50);
 
       const result = MarginValidator.adjustDiscountForMargin(
-        basePrice, totalCost, requestedDiscount, minimumMarginPercent
+        basePrice,
+        totalCost,
+        requestedDiscount,
+        minimumMarginPercent,
       );
 
       expect(result.adjustedDiscount.toNumber()).toBe(20);
@@ -175,7 +195,10 @@ describe('MarginValidator', () => {
       const minimumMarginPercent = new Decimal(50);
 
       const result = MarginValidator.adjustDiscountForMargin(
-        basePrice, totalCost, requestedDiscount, minimumMarginPercent
+        basePrice,
+        totalCost,
+        requestedDiscount,
+        minimumMarginPercent,
       );
 
       expect(result.adjustedDiscount.toNumber()).toBe(50); // Max discount to maintain $150 price
@@ -189,7 +212,10 @@ describe('MarginValidator', () => {
       const minimumMarginPercent = new Decimal(50);
 
       const result = MarginValidator.adjustDiscountForMargin(
-        basePrice, totalCost, requestedDiscount, minimumMarginPercent
+        basePrice,
+        totalCost,
+        requestedDiscount,
+        minimumMarginPercent,
       );
 
       expect(result.adjustedDiscount.toNumber()).toBe(0);
@@ -208,7 +234,7 @@ describe('ConfigValidator', () => {
       rushUpchargePercent: new Decimal(30),
       volumeDiscounts: [],
       gridCo2eFactor: new Decimal(0.5),
-      logisticsCo2eFactor: new Decimal(0.1)
+      logisticsCo2eFactor: new Decimal(0.1),
     };
 
     it('should accept valid configuration', () => {
@@ -218,21 +244,21 @@ describe('ConfigValidator', () => {
     it('should reject negative margin floor', () => {
       const config = { ...validConfig, marginFloorPercent: new Decimal(-10) };
       expect(() => ConfigValidator.validateTenantConfig(config)).toThrow(
-        'Margin floor percentage must be positive'
+        'Margin floor percentage must be positive',
       );
     });
 
     it('should reject zero margin floor', () => {
       const config = { ...validConfig, marginFloorPercent: new Decimal(0) };
       expect(() => ConfigValidator.validateTenantConfig(config)).toThrow(
-        'Margin floor percentage cannot be zero'
+        'Margin floor percentage cannot be zero',
       );
     });
 
     it('should reject negative overhead', () => {
       const config = { ...validConfig, overheadPercent: new Decimal(-5) };
       expect(() => ConfigValidator.validateTenantConfig(config)).toThrow(
-        'Overhead percentage must be non-negative'
+        'Overhead percentage must be non-negative',
       );
     });
 
@@ -240,8 +266,8 @@ describe('ConfigValidator', () => {
       const config = {
         ...validConfig,
         volumeDiscounts: [
-          { minQuantity: 10, discountPercent: new Decimal(45) } // Too high for 50% margin floor
-        ]
+          { minQuantity: 10, discountPercent: new Decimal(45) }, // Too high for 50% margin floor
+        ],
       };
       expect(() => ConfigValidator.validateTenantConfig(config)).toThrow(/Volume discount/);
     });
@@ -249,12 +275,12 @@ describe('ConfigValidator', () => {
     it('should reject negative sustainability factors', () => {
       let config = { ...validConfig, gridCo2eFactor: new Decimal(-0.5) };
       expect(() => ConfigValidator.validateTenantConfig(config)).toThrow(
-        'Grid CO2e factor must be non-negative'
+        'Grid CO2e factor must be non-negative',
       );
 
       config = { ...validConfig, logisticsCo2eFactor: new Decimal(-0.1) };
       expect(() => ConfigValidator.validateTenantConfig(config)).toThrow(
-        'Logistics CO2e factor must be non-negative'
+        'Logistics CO2e factor must be non-negative',
       );
     });
   });
@@ -265,51 +291,59 @@ describe('CostValidator', () => {
     it('should accept valid cost values', () => {
       expect(() => CostValidator.validateCostComponent(new Decimal(100), 'Material')).not.toThrow();
       expect(() => CostValidator.validateCostComponent(new Decimal(0), 'Material')).not.toThrow();
-      expect(() => CostValidator.validateCostComponent(new Decimal(0.01), 'Material')).not.toThrow();
+      expect(() =>
+        CostValidator.validateCostComponent(new Decimal(0.01), 'Material'),
+      ).not.toThrow();
     });
 
     it('should reject negative costs', () => {
       expect(() => CostValidator.validateCostComponent(new Decimal(-10), 'Material')).toThrow(
-        'Material cost cannot be negative'
+        'Material cost cannot be negative',
       );
     });
 
     it('should reject infinite costs', () => {
       expect(() => CostValidator.validateCostComponent(new Decimal(Infinity), 'Material')).toThrow(
-        'Material cost must be finite'
+        'Material cost must be finite',
       );
     });
   });
 
   describe('validateTotalCosts', () => {
     it('should accept valid cost breakdown', () => {
-      expect(() => CostValidator.validateTotalCosts(
-        new Decimal(50),  // material
-        new Decimal(30),  // machine
-        new Decimal(5),   // energy
-        new Decimal(20),  // labor
-        new Decimal(15)   // overhead
-      )).not.toThrow();
+      expect(() =>
+        CostValidator.validateTotalCosts(
+          new Decimal(50), // material
+          new Decimal(30), // machine
+          new Decimal(5), // energy
+          new Decimal(20), // labor
+          new Decimal(15), // overhead
+        ),
+      ).not.toThrow();
     });
 
     it('should reject negative component costs', () => {
-      expect(() => CostValidator.validateTotalCosts(
-        new Decimal(-50), // negative material
-        new Decimal(30),
-        new Decimal(5),
-        new Decimal(20),
-        new Decimal(15)
-      )).toThrow('Material cost cannot be negative');
+      expect(() =>
+        CostValidator.validateTotalCosts(
+          new Decimal(-50), // negative material
+          new Decimal(30),
+          new Decimal(5),
+          new Decimal(20),
+          new Decimal(15),
+        ),
+      ).toThrow('Material cost cannot be negative');
     });
 
     it('should reject zero total cost', () => {
-      expect(() => CostValidator.validateTotalCosts(
-        new Decimal(0),
-        new Decimal(0),
-        new Decimal(0),
-        new Decimal(0),
-        new Decimal(0)
-      )).toThrow('Total cost cannot be zero');
+      expect(() =>
+        CostValidator.validateTotalCosts(
+          new Decimal(0),
+          new Decimal(0),
+          new Decimal(0),
+          new Decimal(0),
+          new Decimal(0),
+        ),
+      ).toThrow('Total cost cannot be zero');
     });
 
     it('should validate all components', () => {
@@ -319,33 +353,51 @@ describe('CostValidator', () => {
         new Decimal(30),
         new Decimal(5),
         new Decimal(20),
-        new Decimal(15)
+        new Decimal(15),
       ];
 
       // Material
-      expect(() => CostValidator.validateTotalCosts(
-        new Decimal(-1), ...validCosts.slice(1) as [Decimal, Decimal, Decimal, Decimal]
-      )).toThrow('Material cost cannot be negative');
+      expect(() =>
+        CostValidator.validateTotalCosts(
+          new Decimal(-1),
+          ...(validCosts.slice(1) as [Decimal, Decimal, Decimal, Decimal]),
+        ),
+      ).toThrow('Material cost cannot be negative');
 
       // Machine
-      expect(() => CostValidator.validateTotalCosts(
-        validCosts[0], new Decimal(-1), ...validCosts.slice(2) as [Decimal, Decimal, Decimal]
-      )).toThrow('Machine cost cannot be negative');
+      expect(() =>
+        CostValidator.validateTotalCosts(
+          validCosts[0],
+          new Decimal(-1),
+          ...(validCosts.slice(2) as [Decimal, Decimal, Decimal]),
+        ),
+      ).toThrow('Machine cost cannot be negative');
 
       // Energy
-      expect(() => CostValidator.validateTotalCosts(
-        ...validCosts.slice(0, 2) as [Decimal, Decimal], new Decimal(-1), ...validCosts.slice(3) as [Decimal, Decimal]
-      )).toThrow('Energy cost cannot be negative');
+      expect(() =>
+        CostValidator.validateTotalCosts(
+          ...(validCosts.slice(0, 2) as [Decimal, Decimal]),
+          new Decimal(-1),
+          ...(validCosts.slice(3) as [Decimal, Decimal]),
+        ),
+      ).toThrow('Energy cost cannot be negative');
 
       // Labor
-      expect(() => CostValidator.validateTotalCosts(
-        ...validCosts.slice(0, 3) as [Decimal, Decimal, Decimal], new Decimal(-1), validCosts[4]
-      )).toThrow('Labor cost cannot be negative');
+      expect(() =>
+        CostValidator.validateTotalCosts(
+          ...(validCosts.slice(0, 3) as [Decimal, Decimal, Decimal]),
+          new Decimal(-1),
+          validCosts[4],
+        ),
+      ).toThrow('Labor cost cannot be negative');
 
       // Overhead
-      expect(() => CostValidator.validateTotalCosts(
-        ...validCosts.slice(0, 4) as [Decimal, Decimal, Decimal, Decimal], new Decimal(-1)
-      )).toThrow('Overhead cost cannot be negative');
+      expect(() =>
+        CostValidator.validateTotalCosts(
+          ...(validCosts.slice(0, 4) as [Decimal, Decimal, Decimal, Decimal]),
+          new Decimal(-1),
+        ),
+      ).toThrow('Overhead cost cannot be negative');
     });
   });
 });

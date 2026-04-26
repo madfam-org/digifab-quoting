@@ -50,23 +50,23 @@ export class PerformanceService {
     this.thresholds.set('memory.usage', {
       metric: 'memory.usage',
       warning: 0.75, // 75%
-      critical: 0.90, // 90%
+      critical: 0.9, // 90%
       unit: 'ratio',
     });
 
     // CPU Usage Thresholds
     this.thresholds.set('cpu.usage', {
       metric: 'cpu.usage',
-      warning: 0.70, // 70%
-      critical: 0.90, // 90%
+      warning: 0.7, // 70%
+      critical: 0.9, // 90%
       unit: 'ratio',
     });
 
     // Cache Hit Rate Thresholds (lower is worse)
     this.thresholds.set('cache.hit_rate', {
       metric: 'cache.hit_rate',
-      warning: 0.80, // 80% - warning if below this
-      critical: 0.60, // 60% - critical if below this
+      warning: 0.8, // 80% - warning if below this
+      critical: 0.6, // 60% - critical if below this
       unit: 'ratio',
     });
   }
@@ -116,7 +116,7 @@ export class PerformanceService {
   private checkThreshold(metricName: string, value: number, unit: string): void {
     // Find matching threshold (exact match or pattern match)
     let threshold = this.thresholds.get(metricName);
-    
+
     if (!threshold) {
       // Try pattern matching for common metrics
       if (metricName.includes('.duration')) {
@@ -140,7 +140,10 @@ export class PerformanceService {
     }
   }
 
-  private getThresholdLevel(threshold: PerformanceThreshold, value: number): 'ok' | 'warning' | 'critical' {
+  private getThresholdLevel(
+    threshold: PerformanceThreshold,
+    value: number,
+  ): 'ok' | 'warning' | 'critical' {
     // For cache hit rate, lower values are worse
     if (threshold.metric === 'cache.hit_rate') {
       if (value < threshold.critical) return 'critical';
@@ -158,7 +161,7 @@ export class PerformanceService {
   async measureAsync<T>(
     name: string,
     fn: () => Promise<T>,
-    tags?: Record<string, string>
+    tags?: Record<string, string>,
   ): Promise<T> {
     const transactionId = `${name}_${Date.now()}_${Math.random()}`;
     this.startTransaction(transactionId, name);
@@ -267,7 +270,7 @@ export class PerformanceService {
   }> {
     const metrics = this.metricsService.getAllMetrics();
     const activeTransactionCount = this.activeTransactions.size;
-    
+
     // Calculate average response times
     const responseTimeStats = this.metricsService.getHistogramStats('api.response_time');
     const dbQueryStats = this.metricsService.getHistogramStats('database.query_time');
@@ -296,7 +299,7 @@ export class PerformanceService {
     const hits = this.metricsService.getCounter('cache.hits');
     const misses = this.metricsService.getCounter('cache.misses');
     const total = hits + misses;
-    
+
     return total > 0 ? hits / total : 0;
   }
 
@@ -326,7 +329,7 @@ export class PerformanceService {
 
     // Check active transactions that might be stuck
     const stuckTransactions = Array.from(this.activeTransactions.entries()).filter(
-      ([, transaction]) => Date.now() - transaction.startTime > 30000 // 30 seconds
+      ([, transaction]) => Date.now() - transaction.startTime > 30000, // 30 seconds
     );
 
     if (stuckTransactions.length > 0) {
@@ -337,7 +340,7 @@ export class PerformanceService {
     // Check memory usage
     const memUsage = process.memoryUsage();
     const heapUsagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
-    
+
     if (heapUsagePercent > 90) {
       issues.push(`High memory usage: ${heapUsagePercent.toFixed(1)}%`);
       status = 'unhealthy';

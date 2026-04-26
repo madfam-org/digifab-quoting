@@ -88,8 +88,8 @@ describe('Margin Validation Integration', () => {
     expect(effectiveMarginPercent.toNumber()).toBeGreaterThanOrEqual(10);
 
     // Should have warning about discount adjustment
-    const hasWarning = result.warnings.some(w => 
-      w.includes('Discount reduced') || w.includes('margin')
+    const hasWarning = result.warnings.some(
+      (w) => w.includes('Discount reduced') || w.includes('margin'),
     );
     expect(hasWarning).toBe(true);
   });
@@ -99,7 +99,9 @@ describe('Margin Validation Integration', () => {
     input.tenantConfig.marginFloorPercent = new Decimal(-10);
 
     // Should throw during calculator construction
-    expect(() => new FFFPricingCalculator(input)).toThrow('Margin floor percentage must be positive');
+    expect(() => new FFFPricingCalculator(input)).toThrow(
+      'Margin floor percentage must be positive',
+    );
   });
 
   it('should warn about low margins', () => {
@@ -110,9 +112,7 @@ describe('Margin Validation Integration', () => {
     const result = calculator.calculate();
 
     // Should have low margin warning
-    const hasLowMarginWarning = result.warnings.some(w => 
-      w.includes('Low margin warning')
-    );
+    const hasLowMarginWarning = result.warnings.some((w) => w.includes('Low margin warning'));
     expect(hasLowMarginWarning).toBe(true);
   });
 
@@ -124,7 +124,7 @@ describe('Margin Validation Integration', () => {
     input.tenantConfig.energyTariffPerKwh = new Decimal(0); // Free energy
 
     const calculator = new FFFPricingCalculator(input);
-    
+
     // Should throw due to zero total cost
     expect(() => calculator.calculate()).toThrow('Total cost cannot be zero');
   });

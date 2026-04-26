@@ -20,8 +20,14 @@ export class TimeoutInterceptor implements NestInterceptor {
   constructor(private readonly configService: ConfigService) {
     this.defaultTimeout = this.configService.get<number>('DEFAULT_TIMEOUT_MS', 30000);
     this.fileUploadTimeout = this.configService.get<number>('FILE_UPLOAD_TIMEOUT_MS', 300000);
-    this.geometryAnalysisTimeout = this.configService.get<number>('GEOMETRY_ANALYSIS_TIMEOUT_MS', 120000);
-    this.adminOperationTimeout = this.configService.get<number>('ADMIN_OPERATION_TIMEOUT_MS', 60000);
+    this.geometryAnalysisTimeout = this.configService.get<number>(
+      'GEOMETRY_ANALYSIS_TIMEOUT_MS',
+      120000,
+    );
+    this.adminOperationTimeout = this.configService.get<number>(
+      'ADMIN_OPERATION_TIMEOUT_MS',
+      60000,
+    );
   }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {

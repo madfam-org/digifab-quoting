@@ -2,41 +2,41 @@ import { IsOptional, IsString, IsBoolean, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserPreferencesDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Preferred language/locale',
     example: 'es',
     enum: ['es', 'en', 'pt-BR'],
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
   @IsIn(['es', 'en', 'pt-BR'])
   preferredLocale?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Email notifications enabled',
     example: true,
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsBoolean()
   emailNotifications?: boolean;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Preferred currency',
     example: 'MXN',
     enum: ['MXN', 'USD', 'BRL'],
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
   @IsIn(['MXN', 'USD', 'BRL'])
   currency?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'User timezone',
     example: 'America/Mexico_City',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()

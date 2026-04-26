@@ -1,18 +1,15 @@
-import { 
-  GuestQuote, 
-  CreateGuestQuote, 
+import {
+  GuestQuote,
+  CreateGuestQuote,
   UpdateGuestQuoteItem,
   RegisterWithQuote,
-  ConvertGuestQuote 
+  ConvertGuestQuote,
 } from '@cotiza/shared';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 class GuestApiClient {
-  private async request<T>(
-    path: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
       headers: {
@@ -32,7 +29,7 @@ class GuestApiClient {
 
   async uploadFiles(files: File[]) {
     const formData = new FormData();
-    files.forEach(file => formData.append('files', file));
+    files.forEach((file) => formData.append('files', file));
 
     const response = await fetch(`${API_BASE_URL}/api/v1/guest/quotes/upload`, {
       method: 'POST',
@@ -65,7 +62,7 @@ class GuestApiClient {
   async updateQuoteItem(
     quoteId: string,
     itemIndex: number,
-    data: UpdateGuestQuoteItem
+    data: UpdateGuestQuoteItem,
   ): Promise<GuestQuote> {
     return this.request(`/api/v1/guest/quotes/${quoteId}/items/${itemIndex}`, {
       method: 'PATCH',

@@ -13,13 +13,13 @@ function getInitialLocale(): string {
   if (typeof window === 'undefined') {
     return 'es'; // Default for SSR
   }
-  
+
   const storedLocale = localStorage.getItem('locale');
   if (storedLocale) return storedLocale;
-  
+
   const browserLocale = navigator.language.split('-')[0];
   const supportedLocales = ['es', 'en', 'pt-BR'];
-  
+
   return supportedLocales.includes(browserLocale) ? browserLocale : 'es';
 }
 
@@ -43,7 +43,7 @@ export function useTranslation(namespace = 'common') {
     if (!mounted) return; // Skip on SSR
     const loadTranslations = async () => {
       const cacheKey = `${locale}/${namespace}`;
-      
+
       // Check cache first
       const cached = translationCache.get(cacheKey);
       if (cached) {
@@ -107,9 +107,9 @@ export function useTranslation(namespace = 'common') {
     // Interpolate parameters if provided
     if (params) {
       return Object.entries(params).reduce(
-        (str, [paramKey, paramValue]) => 
+        (str, [paramKey, paramValue]) =>
           str.replace(new RegExp(`{{${paramKey}}}`, 'g'), String(paramValue)),
-        value
+        value,
       );
     }
 
@@ -146,16 +146,16 @@ export function useTranslation(namespace = 'common') {
    */
   const formatCurrency = (amount: number, currency = 'MXN'): string => {
     const currencyMap: Record<string, string> = {
-      'es': 'MXN',
-      'en': 'USD',
-      'pt-BR': 'BRL'
+      es: 'MXN',
+      en: 'USD',
+      'pt-BR': 'BRL',
     };
-    
+
     const localeCurrency = currency || currencyMap[locale] || 'MXN';
-    
+
     return new Intl.NumberFormat(locale === 'pt-BR' ? 'pt-BR' : locale, {
       style: 'currency',
-      currency: localeCurrency
+      currency: localeCurrency,
     }).format(amount);
   };
 

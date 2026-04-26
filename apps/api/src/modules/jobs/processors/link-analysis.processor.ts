@@ -21,18 +21,28 @@ export class LinkAnalysisProcessor {
   @Process()
   async handleLinkAnalysis(job: Job) {
     const { analysisId, tenantId, url, persona, preferences } = job.data;
-    
+
     this.logger.log(`Processing link analysis job ${job.id} for analysis ${analysisId}`);
 
     try {
       // Update status: Fetching
-      await this.updateAnalysisStatus(analysisId, AnalysisStatus.FETCHING, 10, 'Fetching content from URL...');
+      await this.updateAnalysisStatus(
+        analysisId,
+        AnalysisStatus.FETCHING,
+        10,
+        'Fetching content from URL...',
+      );
 
       // Step 1: Fetch content
       const rawContent = await this.contentFetcher.fetchContent(url);
-      
+
       // Update analysis with source type
-      await this.updateAnalysisStatus(analysisId, AnalysisStatus.PARSING, 25, 'Parsing content and extracting project information...');
+      await this.updateAnalysisStatus(
+        analysisId,
+        AnalysisStatus.PARSING,
+        25,
+        'Parsing content and extracting project information...',
+      );
 
       // Step 2: Parse content into structured format
       const projectContent: ProjectContentDto = {
@@ -47,20 +57,30 @@ export class LinkAnalysisProcessor {
       };
 
       // Update status: Analyzing
-      await this.updateAnalysisStatus(analysisId, AnalysisStatus.ANALYZING, 50, 'Analyzing BOM and components...');
+      await this.updateAnalysisStatus(
+        analysisId,
+        AnalysisStatus.ANALYZING,
+        50,
+        'Analyzing BOM and components...',
+      );
 
       // Step 3: Parse BOM
       const parsedBOM = await this.bomParser.parseBOM(rawContent);
 
       // Update status: Pricing
-      await this.updateAnalysisStatus(analysisId, AnalysisStatus.PRICING, 75, 'Generating personalized quotes...');
+      await this.updateAnalysisStatus(
+        analysisId,
+        AnalysisStatus.PRICING,
+        75,
+        'Generating personalized quotes...',
+      );
 
       // Step 4: Generate persona-based quotes
       const personaQuotes = await this.personaQuoteGenerator.generatePersonaQuotes(
         tenantId,
         parsedBOM,
         persona,
-        preferences
+        preferences,
       );
 
       // Final update: Completed
@@ -82,16 +102,18 @@ export class LinkAnalysisProcessor {
       return { success: true, analysisId };
     } catch (error) {
       this.logger.error(`Link analysis job ${job.id} failed:`, error);
-      
+
       await this.updateAnalysis(analysisId, {
         status: AnalysisStatus.FAILED,
         progress: 0,
         message: `Analysis failed: ${error.message}`,
-        errors: [{
-          code: 'PROCESSING_ERROR',
-          message: error.message,
-          details: error.stack,
-        }],
+        errors: [
+          {
+            code: 'PROCESSING_ERROR',
+            message: error.message,
+            details: error.stack,
+          },
+        ],
       });
 
       throw error;
@@ -102,7 +124,7 @@ export class LinkAnalysisProcessor {
     analysisId: string,
     status: AnalysisStatus,
     progress: number,
-    message: string
+    message: string,
   ): Promise<void> {
     await this.updateAnalysis(analysisId, {
       status,
@@ -111,10 +133,7 @@ export class LinkAnalysisProcessor {
     });
   }
 
-  private async updateAnalysis(
-    analysisId: string, 
-    updates: any
-  ): Promise<any> {
+  private async updateAnalysis(analysisId: string, updates: any): Promise<any> {
     const key = this.getAnalysisKey(analysisId);
     const existing = await this.redis.get(key);
     if (!existing || typeof existing !== 'string') {
@@ -136,9 +155,11 @@ export class LinkAnalysisProcessor {
     return `link-analysis:${analysisId}`;
   }
 
-  private extractProjectFiles(rawContent: any): Array<{ name: string; url: string; type: string; size?: number }> {
+  private extractProjectFiles(
+    rawContent: any,
+  ): Array<{ name: string; url: string; type: string; size?: number }> {
     const files = [];
-    
+
     if (rawContent.metadata.files) {
       rawContent.metadata.files.forEach((file: any) => {
         files.push({
@@ -164,9 +185,11 @@ export class LinkAnalysisProcessor {
     return files;
   }
 
-  private extractInstructions(rawContent: any): Array<{ step: number; title: string; description: string; images?: string[] }> {
+  private extractInstructions(
+    rawContent: any,
+  ): Array<{ step: number; title: string; description: string; images?: string[] }> {
     const instructions = [];
-    
+
     if (rawContent.metadata.steps) {
       rawContent.metadata.steps.forEach((step: any, index: number) => {
         instructions.push({
@@ -183,7 +206,7 @@ export class LinkAnalysisProcessor {
 
   private extractTags(rawContent: any): string[] {
     const tags = [];
-    
+
     if (rawContent.metadata.tags) {
       tags.push(...rawContent.metadata.tags);
     }
@@ -201,7 +224,7 @@ export class LinkAnalysisProcessor {
 
   private extractDifficulty(rawContent: any): 'beginner' | 'intermediate' | 'advanced' | 'expert' {
     const difficulty = rawContent.metadata.difficulty?.toLowerCase();
-    
+
     if (['easy', 'beginner', 'simple'].includes(difficulty)) {
       return 'beginner';
     }
@@ -211,7 +234,7 @@ export class LinkAnalysisProcessor {
     if (['expert', 'professional'].includes(difficulty)) {
       return 'expert';
     }
-    
+
     return 'intermediate';
   }
 
@@ -221,42 +244,42 @@ export class LinkAnalysisProcessor {
     }
 
     const text = rawContent.description.toLowerCase();
-    
+
     const hourMatch = text.match(/(\d+)\s*hours?/);
     if (hourMatch) {
       return parseInt(hourMatch[1]);
     }
-    
+
     const minMatch = text.match(/(\d+)\s*minutes?/);
     if (minMatch) {
       return parseInt(minMatch[1]) / 60;
     }
-    
+
     return 2;
   }
 
   private getFileType(filename: string): string {
     const extension = filename.split('.').pop()?.toLowerCase();
-    
+
     const typeMap = {
-      'stl': '3d_model',
-      'obj': '3d_model',
-      'ply': '3d_model',
+      stl: '3d_model',
+      obj: '3d_model',
+      ply: '3d_model',
       '3mf': '3d_model',
-      'step': 'cad_model',
-      'stp': 'cad_model',
-      'iges': 'cad_model',
-      'dwg': '2d_drawing',
-      'dxf': '2d_drawing',
-      'pdf': 'document',
-      'zip': 'archive',
-      'ino': 'arduino_code',
-      'py': 'python_code',
-      'cpp': 'cpp_code',
-      'c': 'c_code',
-      'h': 'header_file',
+      step: 'cad_model',
+      stp: 'cad_model',
+      iges: 'cad_model',
+      dwg: '2d_drawing',
+      dxf: '2d_drawing',
+      pdf: 'document',
+      zip: 'archive',
+      ino: 'arduino_code',
+      py: 'python_code',
+      cpp: 'cpp_code',
+      c: 'c_code',
+      h: 'header_file',
     };
-    
+
     return typeMap[extension] || 'unknown';
   }
 }

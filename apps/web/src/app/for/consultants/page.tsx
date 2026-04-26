@@ -34,11 +34,31 @@ const PAINS = [
 ];
 
 const CAPABILITIES = [
-  { icon: Briefcase, title: 'Services-mode billing', body: 'hourly, fixed-fee, milestone — first-class billable types. Same UX as a parts quote.' },
-  { icon: Workflow, title: 'Engagement projection', body: 'PhyneCRM-synced engagement table groups fab + services quotes for the same client. Two-quotes-per-engagement is the canonical flow.' },
-  { icon: Clock, title: 'Per-milestone invoicing', body: 'Mark a milestone complete → Dhanam issues an invoice with stable Idempotency-Key. No manual double-entry.' },
-  { icon: Wrench, title: 'DFM on every upload', body: 'Python geometry worker runs cost-reducing analysis. Material substitution, process recommendation, redesign hints.' },
-  { icon: Activity, title: 'Live market pricing', body: 'Forgesight feed inside your DFM. Quote design-time decisions with real-time material cost data.' },
+  {
+    icon: Briefcase,
+    title: 'Services-mode billing',
+    body: 'hourly, fixed-fee, milestone — first-class billable types. Same UX as a parts quote.',
+  },
+  {
+    icon: Workflow,
+    title: 'Engagement projection',
+    body: 'PhyneCRM-synced engagement table groups fab + services quotes for the same client. Two-quotes-per-engagement is the canonical flow.',
+  },
+  {
+    icon: Clock,
+    title: 'Per-milestone invoicing',
+    body: 'Mark a milestone complete → Dhanam issues an invoice with stable Idempotency-Key. No manual double-entry.',
+  },
+  {
+    icon: Wrench,
+    title: 'DFM on every upload',
+    body: 'Python geometry worker runs cost-reducing analysis. Material substitution, process recommendation, redesign hints.',
+  },
+  {
+    icon: Activity,
+    title: 'Live market pricing',
+    body: 'Forgesight feed inside your DFM. Quote design-time decisions with real-time material cost data.',
+  },
 ];
 
 export default function ConsultantsPage() {
@@ -54,9 +74,9 @@ export default function ConsultantsPage() {
           <span className="block text-primary mt-2">We quote both.</span>
         </h1>
         <p className="text-lg lg:text-xl text-muted-foreground max-w-2xl mb-8">
-          For the design firm, engineering boutique, or fab consultancy that
-          invoices in hours, fixed fees, and milestones — and still needs to
-          quote actual parts. Same platform. Same engagement. One place.
+          For the design firm, engineering boutique, or fab consultancy that invoices in hours,
+          fixed fees, and milestones — and still needs to quote actual parts. Same platform. Same
+          engagement. One place.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
@@ -77,13 +97,19 @@ export default function ConsultantsPage() {
 
       <section className="py-16 bg-muted/30 border-y border-border/40">
         <div className="container mx-auto px-6 max-w-5xl">
-          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">The pains we kill for consultancies</h2>
+          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">
+            The pains we kill for consultancies
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {PAINS.map((p, i) => (
               <article key={i} className="rounded-lg border border-border/60 bg-card p-6">
-                <p className="text-sm font-mono uppercase tracking-wider text-destructive/80 mb-2">Pain</p>
+                <p className="text-sm font-mono uppercase tracking-wider text-destructive/80 mb-2">
+                  Pain
+                </p>
                 <p className="font-medium mb-4">{p.pain}</p>
-                <p className="text-sm font-mono uppercase tracking-wider text-primary/80 mb-2">Fix</p>
+                <p className="text-sm font-mono uppercase tracking-wider text-primary/80 mb-2">
+                  Fix
+                </p>
                 <p className="text-sm text-muted-foreground">{p.fix}</p>
               </article>
             ))}
@@ -93,7 +119,9 @@ export default function ConsultantsPage() {
 
       <section className="py-16">
         <div className="container mx-auto px-6 max-w-5xl">
-          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">What ships on the Pro tier</h2>
+          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">
+            What ships on the Pro tier
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {CAPABILITIES.map(({ icon: Icon, title, body }) => (
               <article key={title} className="rounded-lg border border-border/60 bg-card p-6">
@@ -114,9 +142,8 @@ export default function ConsultantsPage() {
         <div className="container mx-auto px-6 text-center max-w-3xl">
           <h2 className="text-3xl font-bold mb-4">Try one engagement on us.</h2>
           <p className="text-lg text-muted-foreground mb-6">
-            Run a real client through services-mode for 14 days. If it doesn't
-            save you 4 billable hours of admin a week, the free tier is yours
-            for life.
+            Run a real client through services-mode for 14 days. If it doesn't save you 4 billable
+            hours of admin a week, the free tier is yours for life.
           </p>
           <Link
             href="/pricing"

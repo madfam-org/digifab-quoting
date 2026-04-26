@@ -3,12 +3,12 @@ import { RedisService } from '../redis/redis.service';
 import { QuotesService } from '../quotes/quotes.service';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  CreateGuestQuote, 
-  GuestQuote, 
+import {
+  CreateGuestQuote,
+  GuestQuote,
   UpdateGuestQuoteItem,
   ProcessType,
-  Currency 
+  Currency,
 } from '@cotiza/shared';
 
 @Injectable()
@@ -27,18 +27,13 @@ export class GuestQuoteService {
     this.maxFilesPerQuote = this.config.get('MAX_FILES_PER_GUEST_QUOTE', 5);
   }
 
-  async createQuote(
-    sessionId: string,
-    createDto: CreateGuestQuote
-  ): Promise<GuestQuote> {
+  async createQuote(sessionId: string, createDto: CreateGuestQuote): Promise<GuestQuote> {
     // Check rate limits
     await this.checkQuoteLimits(sessionId);
 
     // Validate files
     if (createDto.files.length > this.maxFilesPerQuote) {
-      throw new BadRequestException(
-        `Maximum ${this.maxFilesPerQuote} files allowed per quote`
-      );
+      throw new BadRequestException(`Maximum ${this.maxFilesPerQuote} files allowed per quote`);
     }
 
     // Process files and calculate pricing
@@ -53,7 +48,7 @@ export class GuestQuoteService {
           boundingBox: { x: 100, y: 100, z: 50 },
           surfaceArea: 5000,
         };
-        
+
         // Calculate pricing - simplified for guest quotes
         const pricing = {
           unitPrice: 100, // Mock pricing for guest quotes
@@ -65,7 +60,10 @@ export class GuestQuoteService {
           filename: file.filename,
           quantity: 1,
           material: analysis.recommendedMaterial,
-          process: analysis.recommendedProcess as unknown as '3D_PRINTING' | 'CNC_MACHINING' | 'LASER_CUTTING',
+          process: analysis.recommendedProcess as unknown as
+            | '3D_PRINTING'
+            | 'CNC_MACHINING'
+            | 'LASER_CUTTING',
           unitPrice: Number(pricing.unitPrice),
           totalPrice: Number(pricing.totalPrice),
           leadTime: Number(pricing.leadTime),
@@ -75,7 +73,7 @@ export class GuestQuoteService {
             surfaceArea: analysis.surfaceArea,
           },
         };
-      })
+      }),
     );
 
     // Calculate totals
@@ -117,11 +115,11 @@ export class GuestQuoteService {
     }
 
     const quote = JSON.parse(data as string);
-    
+
     // Update access time
     quote.accessedAt = new Date();
     quote.accessCount = (quote.accessCount || 0) + 1;
-    
+
     await this.redis.setex(key, this.quoteTTL, JSON.stringify(quote));
 
     return this.parseQuote(quote);
@@ -131,7 +129,7 @@ export class GuestQuoteService {
     sessionId: string,
     quoteId: string,
     itemIndex: number,
-    updateDto: UpdateGuestQuoteItem
+    updateDto: UpdateGuestQuoteItem,
   ): Promise<GuestQuote> {
     const quote = await this.getQuote(sessionId, quoteId);
 
@@ -180,11 +178,11 @@ export class GuestQuoteService {
     const quoteIds = await this.redis.smembers(quotesKey);
 
     const quotes = await Promise.all(
-      quoteIds.map(id => this.getQuote(sessionId, id).catch(() => null))
+      quoteIds.map((id) => this.getQuote(sessionId, id).catch(() => null)),
     );
 
     return quotes
-      .filter(quote => quote !== null)
+      .filter((quote) => quote !== null)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
@@ -194,14 +192,14 @@ export class GuestQuoteService {
 
     if (quoteCount >= this.maxQuotesPerSession) {
       throw new BadRequestException(
-        `Maximum ${this.maxQuotesPerSession} quotes allowed per session`
+        `Maximum ${this.maxQuotesPerSession} quotes allowed per session`,
       );
     }
 
     // Check rate limit (5 quotes per hour)
     const rateLimitKey = `guest:ratelimit:${sessionId}`;
     const recentQuotes = await this.redis.incr(rateLimitKey);
-    
+
     if (recentQuotes === 1) {
       await this.redis.expire(rateLimitKey, 3600); // 1 hour
     }
@@ -213,11 +211,7 @@ export class GuestQuoteService {
 
   private async storeQuote(sessionId: string, quote: GuestQuote): Promise<void> {
     const key = `guest:quote:${sessionId}:${quote.id}`;
-    await this.redis.setex(
-      key,
-      this.quoteTTL,
-      JSON.stringify(quote)
-    );
+    await this.redis.setex(key, this.quoteTTL, JSON.stringify(quote));
   }
 
   private async trackQuoteInSession(sessionId: string, quoteId: string): Promise<void> {
@@ -240,7 +234,7 @@ export class GuestQuoteService {
     sessionId: string,
     quoteId: string,
     userId: string,
-    tenantId: string
+    tenantId: string,
   ): Promise<string> {
     const guestQuote = await this.getQuote(sessionId, quoteId);
 
@@ -260,7 +254,7 @@ export class GuestQuoteService {
         options: {
           material: item.material,
           finish: item.finish || '',
-          ...item.specifications || {},
+          ...(item.specifications || {}),
         },
       });
     }

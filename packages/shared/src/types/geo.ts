@@ -89,7 +89,7 @@ export const COUNTRY_CURRENCY_MAP: Record<string, Currency> = {
   CL: Currency.CLP,
   CO: Currency.COP,
   PE: Currency.PEN,
-  
+
   // Europe
   ES: Currency.EUR,
   FR: Currency.EUR,
@@ -108,7 +108,7 @@ export const COUNTRY_CURRENCY_MAP: Record<string, Currency> = {
   NO: Currency.NOK,
   DK: Currency.DKK,
   PL: Currency.PLN,
-  
+
   // Asia Pacific
   CN: Currency.CNY,
   JP: Currency.JPY,
@@ -120,7 +120,7 @@ export const COUNTRY_CURRENCY_MAP: Record<string, Currency> = {
   NZ: Currency.NZD,
   TW: Currency.TWD,
   TH: Currency.THB,
-  
+
   // Middle East & Africa
   AE: Currency.AED,
   SA: Currency.SAR,
@@ -198,215 +198,218 @@ export const GEO_MAPPINGS: Record<string, GeoMapping> = {
   // Add more as needed
 };
 
-export const CURRENCY_CONFIG: Record<Currency, {
-  symbol: string;
-  position: 'before' | 'after';
-  decimals: number;
-  separator: ',' | '.';
-  name: string;
-}> = {
+export const CURRENCY_CONFIG: Record<
+  Currency,
+  {
+    symbol: string;
+    position: 'before' | 'after';
+    decimals: number;
+    separator: ',' | '.';
+    name: string;
+  }
+> = {
   [Currency.MXN]: {
     symbol: '$',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Mexican Peso'
+    name: 'Mexican Peso',
   },
   [Currency.USD]: {
     symbol: '$',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'US Dollar'
+    name: 'US Dollar',
   },
   [Currency.EUR]: {
     symbol: '€',
     position: 'after',
     decimals: 2,
     separator: '.',
-    name: 'Euro'
+    name: 'Euro',
   },
   [Currency.BRL]: {
     symbol: 'R$',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Brazilian Real'
+    name: 'Brazilian Real',
   },
   [Currency.GBP]: {
     symbol: '£',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'British Pound'
+    name: 'British Pound',
   },
   [Currency.CAD]: {
     symbol: 'C$',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Canadian Dollar'
+    name: 'Canadian Dollar',
   },
   [Currency.CNY]: {
     symbol: '¥',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Chinese Yuan'
+    name: 'Chinese Yuan',
   },
   [Currency.JPY]: {
     symbol: '¥',
     position: 'before',
     decimals: 0,
     separator: ',',
-    name: 'Japanese Yen'
+    name: 'Japanese Yen',
   },
   [Currency.ARS]: {
     symbol: '$',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Argentine Peso'
+    name: 'Argentine Peso',
   },
   [Currency.CLP]: {
     symbol: '$',
     position: 'before',
     decimals: 0,
     separator: '.',
-    name: 'Chilean Peso'
+    name: 'Chilean Peso',
   },
   [Currency.COP]: {
     symbol: '$',
     position: 'before',
     decimals: 0,
     separator: ',',
-    name: 'Colombian Peso'
+    name: 'Colombian Peso',
   },
   [Currency.PEN]: {
     symbol: 'S/',
     position: 'before',
     decimals: 2,
     separator: '.',
-    name: 'Peruvian Sol'
+    name: 'Peruvian Sol',
   },
   [Currency.CHF]: {
     symbol: 'CHF',
     position: 'before',
     decimals: 2,
     separator: '.',
-    name: 'Swiss Franc'
+    name: 'Swiss Franc',
   },
   [Currency.SEK]: {
     symbol: 'kr',
     position: 'after',
     decimals: 2,
     separator: ',',
-    name: 'Swedish Krona'
+    name: 'Swedish Krona',
   },
   [Currency.NOK]: {
     symbol: 'kr',
     position: 'after',
     decimals: 2,
     separator: ',',
-    name: 'Norwegian Krone'
+    name: 'Norwegian Krone',
   },
   [Currency.DKK]: {
     symbol: 'kr',
     position: 'after',
     decimals: 2,
     separator: ',',
-    name: 'Danish Krone'
+    name: 'Danish Krone',
   },
   [Currency.PLN]: {
     symbol: 'zł',
     position: 'after',
     decimals: 2,
     separator: ',',
-    name: 'Polish Zloty'
+    name: 'Polish Zloty',
   },
   [Currency.KRW]: {
     symbol: '₩',
     position: 'before',
     decimals: 0,
     separator: ',',
-    name: 'South Korean Won'
+    name: 'South Korean Won',
   },
   [Currency.INR]: {
     symbol: '₹',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Indian Rupee'
+    name: 'Indian Rupee',
   },
   [Currency.SGD]: {
     symbol: 'S$',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Singapore Dollar'
+    name: 'Singapore Dollar',
   },
   [Currency.HKD]: {
     symbol: 'HK$',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Hong Kong Dollar'
+    name: 'Hong Kong Dollar',
   },
   [Currency.AUD]: {
     symbol: 'A$',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Australian Dollar'
+    name: 'Australian Dollar',
   },
   [Currency.NZD]: {
     symbol: 'NZ$',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'New Zealand Dollar'
+    name: 'New Zealand Dollar',
   },
   [Currency.TWD]: {
     symbol: 'NT$',
     position: 'before',
     decimals: 0,
     separator: ',',
-    name: 'Taiwan Dollar'
+    name: 'Taiwan Dollar',
   },
   [Currency.THB]: {
     symbol: '฿',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Thai Baht'
+    name: 'Thai Baht',
   },
   [Currency.AED]: {
     symbol: 'د.إ',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'UAE Dirham'
+    name: 'UAE Dirham',
   },
   [Currency.SAR]: {
     symbol: '﷼',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Saudi Riyal'
+    name: 'Saudi Riyal',
   },
   [Currency.ZAR]: {
     symbol: 'R',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'South African Rand'
+    name: 'South African Rand',
   },
   [Currency.EGP]: {
     symbol: '£',
     position: 'before',
     decimals: 2,
     separator: ',',
-    name: 'Egyptian Pound'
+    name: 'Egyptian Pound',
   },
 };
 
@@ -423,11 +426,7 @@ export const getGeoMapping = (countryCode: string): GeoMapping | null => {
   return GEO_MAPPINGS[countryCode.toUpperCase()] || null;
 };
 
-export const formatCurrency = (
-  amount: number,
-  currency: Currency,
-  locale?: string
-): string => {
+export const formatCurrency = (amount: number, currency: Currency, locale?: string): string => {
   const config = CURRENCY_CONFIG[currency];
   if (!config) return `${amount} ${currency}`;
 
@@ -440,11 +439,10 @@ export const formatCurrency = (
     }).format(amount);
   } catch (error) {
     // Fallback formatting
-    const formatted = config.decimals === 0 
-      ? Math.round(amount).toLocaleString()
-      : amount.toFixed(config.decimals);
-    
-    return config.position === 'before' 
+    const formatted =
+      config.decimals === 0 ? Math.round(amount).toLocaleString() : amount.toFixed(config.decimals);
+
+    return config.position === 'before'
       ? `${config.symbol}${formatted}`
       : `${formatted} ${config.symbol}`;
   }

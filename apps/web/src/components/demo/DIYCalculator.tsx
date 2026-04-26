@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Wrench, 
-  Building, 
-  Clock, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  Wrench,
+  Building,
+  Clock,
+  DollarSign,
+  TrendingUp,
   AlertTriangle,
   CheckCircle,
   Star,
-  Calculator
+  Calculator,
 } from 'lucide-react';
 
 interface ProjectConfig {
@@ -49,18 +49,18 @@ interface ProfessionalOption {
 }
 
 const MATERIAL_COSTS = {
-  'PLA': { costPerGram: 0.025, difficulty: 1 },
-  'PETG': { costPerGram: 0.035, difficulty: 1.2 },
-  'ABS': { costPerGram: 0.030, difficulty: 1.5 },
-  'Aluminum': { costPerGram: 0.08, difficulty: 3 },
-  'Steel': { costPerGram: 0.12, difficulty: 3.5 },
-  'Carbon Fiber': { costPerGram: 0.15, difficulty: 2.5 }
+  PLA: { costPerGram: 0.025, difficulty: 1 },
+  PETG: { costPerGram: 0.035, difficulty: 1.2 },
+  ABS: { costPerGram: 0.03, difficulty: 1.5 },
+  Aluminum: { costPerGram: 0.08, difficulty: 3 },
+  Steel: { costPerGram: 0.12, difficulty: 3.5 },
+  'Carbon Fiber': { costPerGram: 0.15, difficulty: 2.5 },
 };
 
 const TOOLS_REQUIRED = {
   simple: { '3D Printer': 300, 'Basic Tools': 50 },
-  medium: { '3D Printer': 300, 'Post-processing Tools': 150, 'Calipers': 30 },
-  complex: { '3D Printer': 800, 'Advanced Tools': 400, 'Safety Equipment': 100 }
+  medium: { '3D Printer': 300, 'Post-processing Tools': 150, Calipers: 30 },
+  complex: { '3D Printer': 800, 'Advanced Tools': 400, 'Safety Equipment': 100 },
 };
 
 export function DIYCalculator() {
@@ -69,13 +69,13 @@ export function DIYCalculator() {
     material: 'PLA',
     size: 'small',
     quantity: 1,
-    urgency: 'standard'
+    urgency: 'standard',
   });
 
   const [userProfile, setUserProfile] = useState({
     hasTools: false,
     experience: 'beginner', // beginner, intermediate, expert
-    valueTime: 25 // dollars per hour
+    valueTime: 25, // dollars per hour
   });
 
   const [results, setResults] = useState<{
@@ -94,58 +94,78 @@ export function DIYCalculator() {
     const materialCost = MATERIAL_COSTS[config.material as keyof typeof MATERIAL_COSTS];
     const sizeMultiplier = { small: 50, medium: 150, large: 400 }[config.size];
     const complexityMultiplier = { simple: 1, medium: 1.5, complex: 2.5 }[config.complexity];
-    
+
     const materials = materialCost.costPerGram * sizeMultiplier * config.quantity;
-    const tools = userProfile.hasTools ? 0 : Object.values(TOOLS_REQUIRED[config.complexity]).reduce((a, b) => a + b, 0);
-    
+    const tools = userProfile.hasTools
+      ? 0
+      : Object.values(TOOLS_REQUIRED[config.complexity]).reduce((a, b) => a + b, 0);
+
     // Time calculation (hours)
     const baseTime = { simple: 4, medium: 12, complex: 24 }[config.complexity];
-    const experienceMultiplier = { beginner: 2, intermediate: 1.3, expert: 1 }[userProfile.experience as keyof { beginner: number; intermediate: number; expert: number }];
+    const experienceMultiplier = { beginner: 2, intermediate: 1.3, expert: 1 }[
+      userProfile.experience as keyof { beginner: number; intermediate: number; expert: number }
+    ];
     const timeHours = baseTime * experienceMultiplier * materialCost.difficulty;
-    
+
     const timeValue = timeHours * userProfile.valueTime;
-    
+
     // Learning curve (first-time cost)
-    const learning = userProfile.experience === 'beginner' ? timeHours * 0.5 * userProfile.valueTime : 0;
-    
+    const learning =
+      userProfile.experience === 'beginner' ? timeHours * 0.5 * userProfile.valueTime : 0;
+
     // Failure risk
-    const successRate = Math.max(0.3, 1 - (materialCost.difficulty * 0.15) - (complexityMultiplier * 0.1) + (userProfile.experience === 'expert' ? 0.2 : userProfile.experience === 'intermediate' ? 0.1 : 0));
+    const successRate = Math.max(
+      0.3,
+      1 -
+        materialCost.difficulty * 0.15 -
+        complexityMultiplier * 0.1 +
+        (userProfile.experience === 'expert'
+          ? 0.2
+          : userProfile.experience === 'intermediate'
+            ? 0.1
+            : 0),
+    );
     const failureCost = materials * (1 - successRate) * 1.5; // 1.5x material cost for failures
-    
+
     const diyCost: CostBreakdown = {
       materials: Math.round(materials),
       tools,
       time: Math.round(timeValue),
       learning: Math.round(learning),
       failure: Math.round(failureCost),
-      total: Math.round(materials + tools + timeValue + learning + failureCost)
+      total: Math.round(materials + tools + timeValue + learning + failureCost),
     };
 
     // Professional Calculation
     const professionalBaseCost = materials * 3; // 3x markup for professional service
     const rushMultiplier = config.urgency === 'rush' ? 1.5 : 1;
-    const professionalCost = Math.round(professionalBaseCost * complexityMultiplier * rushMultiplier);
-    const professionalTime = config.urgency === 'rush' ? Math.max(24, baseTime * 0.3) : baseTime * 0.5;
+    const professionalCost = Math.round(
+      professionalBaseCost * complexityMultiplier * rushMultiplier,
+    );
+    const professionalTime =
+      config.urgency === 'rush' ? Math.max(24, baseTime * 0.3) : baseTime * 0.5;
 
     const diyOption: DIYOption = {
       cost: diyCost,
       timeHours: Math.round(timeHours),
-      skillRequired: ['Beginner', 'Intermediate', 'Expert'][Math.floor(materialCost.difficulty - 1)] || 'Beginner',
+      skillRequired:
+        ['Beginner', 'Intermediate', 'Expert'][Math.floor(materialCost.difficulty - 1)] ||
+        'Beginner',
       successRate: Math.round(successRate * 100),
       pros: [
         'Learn new skills',
         'Full creative control',
         'Satisfaction of making',
         userProfile.hasTools ? 'No new tools needed' : 'Build your toolkit',
-        'Can iterate easily'
+        'Can iterate easily',
       ].slice(0, 4),
       cons: [
         `${Math.round(timeHours)} hours of work`,
         `${Math.round((1 - successRate) * 100)}% chance of failure`,
         tools > 0 ? `Need $${tools} in tools` : null,
         'Learning curve involved',
-        'Quality may vary'
-      ].filter(Boolean) as string[]
+        'Quality may vary',
+      ].filter(Boolean) as string[],
     };
 
     const professionalOption: ProfessionalOption = {
@@ -157,31 +177,32 @@ export function DIYCalculator() {
         'No time investment',
         'Guaranteed results',
         'No tool investment',
-        'Expert advice included'
+        'Expert advice included',
       ],
       cons: [
         'Higher cost',
         'Less control over process',
         'No learning opportunity',
         config.urgency === 'rush' ? 'Rush fees apply' : 'Standard lead times',
-        'Revision costs extra'
-      ]
+        'Revision costs extra',
+      ],
     };
 
     // Recommendation logic
     const costSavings = professionalCost - diyCost.total;
-    
+
     let recommendation: 'diy' | 'professional' = 'diy';
-    
+
     if (costSavings < 0) recommendation = 'professional'; // Professional is cheaper
-    if (userProfile.experience === 'beginner' && config.complexity === 'complex') recommendation = 'professional';
+    if (userProfile.experience === 'beginner' && config.complexity === 'complex')
+      recommendation = 'professional';
     if (config.urgency === 'rush' && timeHours > 48) recommendation = 'professional';
     if (userProfile.valueTime > 50 && timeHours > 20) recommendation = 'professional';
 
     setResults({
       diy: diyOption,
       professional: professionalOption,
-      recommendation
+      recommendation,
     });
   };
 
@@ -198,12 +219,12 @@ export function DIYCalculator() {
           <Calculator className="mr-3" />
           DIY vs Professional Calculator
         </h2>
-        
+
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Project Settings */}
           <div>
             <h3 className="text-xl font-semibold mb-6">Project Details</h3>
-            
+
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-3">Complexity Level</label>
@@ -211,7 +232,7 @@ export function DIYCalculator() {
                   {(['simple', 'medium', 'complex'] as const).map((level) => (
                     <button
                       key={level}
-                      onClick={() => setConfig(prev => ({ ...prev, complexity: level }))}
+                      onClick={() => setConfig((prev) => ({ ...prev, complexity: level }))}
                       className={`p-3 rounded-lg border-2 font-semibold capitalize transition-all ${
                         config.complexity === level
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -228,11 +249,13 @@ export function DIYCalculator() {
                 <label className="block text-sm font-medium mb-3">Material</label>
                 <select
                   value={config.material}
-                  onChange={(e) => setConfig(prev => ({ ...prev, material: e.target.value }))}
+                  onChange={(e) => setConfig((prev) => ({ ...prev, material: e.target.value }))}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {Object.keys(MATERIAL_COSTS).map((material) => (
-                    <option key={material} value={material}>{material}</option>
+                    <option key={material} value={material}>
+                      {material}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -242,7 +265,12 @@ export function DIYCalculator() {
                   <label className="block text-sm font-medium mb-3">Size</label>
                   <select
                     value={config.size}
-                    onChange={(e) => setConfig(prev => ({ ...prev, size: e.target.value as 'small' | 'medium' | 'large' }))}
+                    onChange={(e) =>
+                      setConfig((prev) => ({
+                        ...prev,
+                        size: e.target.value as 'small' | 'medium' | 'large',
+                      }))
+                    }
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="small">Small</option>
@@ -258,7 +286,9 @@ export function DIYCalculator() {
                     min="1"
                     max="100"
                     value={config.quantity}
-                    onChange={(e) => setConfig(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                    onChange={(e) =>
+                      setConfig((prev) => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))
+                    }
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -269,7 +299,7 @@ export function DIYCalculator() {
           {/* User Profile */}
           <div>
             <h3 className="text-xl font-semibold mb-6">Your Profile</h3>
-            
+
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-3">Experience Level</label>
@@ -277,7 +307,7 @@ export function DIYCalculator() {
                   {(['beginner', 'intermediate', 'expert'] as const).map((level) => (
                     <button
                       key={level}
-                      onClick={() => setUserProfile(prev => ({ ...prev, experience: level }))}
+                      onClick={() => setUserProfile((prev) => ({ ...prev, experience: level }))}
                       className={`p-3 rounded-lg border-2 font-semibold capitalize transition-all ${
                         userProfile.experience === level
                           ? 'border-green-500 bg-green-50 text-green-700'
@@ -295,7 +325,9 @@ export function DIYCalculator() {
                   <input
                     type="checkbox"
                     checked={userProfile.hasTools}
-                    onChange={(e) => setUserProfile(prev => ({ ...prev, hasTools: e.target.checked }))}
+                    onChange={(e) =>
+                      setUserProfile((prev) => ({ ...prev, hasTools: e.target.checked }))
+                    }
                     className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm font-medium">I already have the required tools</span>
@@ -312,7 +344,9 @@ export function DIYCalculator() {
                   max="100"
                   step="5"
                   value={userProfile.valueTime}
-                  onChange={(e) => setUserProfile(prev => ({ ...prev, valueTime: parseInt(e.target.value) }))}
+                  onChange={(e) =>
+                    setUserProfile((prev) => ({ ...prev, valueTime: parseInt(e.target.value) }))
+                  }
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                 />
                 <div className="flex justify-between text-sm text-gray-500 mt-1">
@@ -357,14 +391,17 @@ export function DIYCalculator() {
           <div className="mb-6">
             <h4 className="font-semibold mb-4">Cost Breakdown</h4>
             <div className="space-y-3">
-              {Object.entries(results.diy.cost).filter(([key]) => key !== 'total').map(([key, value]) => (
-                value > 0 && (
-                  <div key={key} className="flex justify-between">
-                    <span className="text-gray-600 capitalize">{key}:</span>
-                    <span className="font-medium">${value}</span>
-                  </div>
-                )
-              ))}
+              {Object.entries(results.diy.cost)
+                .filter(([key]) => key !== 'total')
+                .map(
+                  ([key, value]) =>
+                    value > 0 && (
+                      <div key={key} className="flex justify-between">
+                        <span className="text-gray-600 capitalize">{key}:</span>
+                        <span className="font-medium">${value}</span>
+                      </div>
+                    ),
+                )}
               <div className="border-t pt-3 flex justify-between text-lg font-bold">
                 <span>Total Cost:</span>
                 <span className="text-blue-600">${results.diy.cost.total}</span>
@@ -418,7 +455,9 @@ export function DIYCalculator() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className={`bg-white rounded-2xl p-8 border-2 ${
-            results.recommendation === 'professional' ? 'border-green-500 shadow-xl' : 'border-gray-200'
+            results.recommendation === 'professional'
+              ? 'border-green-500 shadow-xl'
+              : 'border-gray-200'
           }`}
         >
           <div className="flex items-center justify-between mb-6">
@@ -443,9 +482,7 @@ export function DIYCalculator() {
           <div className="mb-6">
             <div className="text-center p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
               <DollarSign className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-              <div className="text-3xl font-bold text-purple-600">
-                ${results.professional.cost}
-              </div>
+              <div className="text-3xl font-bold text-purple-600">${results.professional.cost}</div>
               <div className="text-sm text-gray-600">Total cost</div>
             </div>
           </div>
@@ -493,16 +530,19 @@ export function DIYCalculator() {
       </div>
 
       {/* Summary & Recommendation */}
-      <div className={`bg-gradient-to-r ${
-        results.recommendation === 'diy' 
-          ? 'from-blue-500 to-cyan-500' 
-          : 'from-purple-500 to-pink-500'
-      } text-white rounded-2xl p-8`}>
+      <div
+        className={`bg-gradient-to-r ${
+          results.recommendation === 'diy'
+            ? 'from-blue-500 to-cyan-500'
+            : 'from-purple-500 to-pink-500'
+        } text-white rounded-2xl p-8`}
+      >
         <div className="text-center">
           <h3 className="text-3xl font-bold mb-4">
-            Our Recommendation: {results.recommendation === 'diy' ? 'DIY Route' : 'Professional Service'}
+            Our Recommendation:{' '}
+            {results.recommendation === 'diy' ? 'DIY Route' : 'Professional Service'}
           </h3>
-          
+
           <div className="grid md:grid-cols-3 gap-6 mt-8">
             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6">
               <h4 className="font-bold mb-2">Cost Difference</h4>
@@ -510,7 +550,9 @@ export function DIYCalculator() {
                 {savings > 0 ? `Save $${savings}` : `Pay $${Math.abs(savings)} more`}
               </div>
               <p className="text-sm opacity-90">
-                {results.recommendation === 'diy' ? 'by doing it yourself' : 'but save time & stress'}
+                {results.recommendation === 'diy'
+                  ? 'by doing it yourself'
+                  : 'but save time & stress'}
               </p>
             </div>
 
@@ -537,10 +579,9 @@ export function DIYCalculator() {
 
           <div className="mt-8">
             <button className="bg-white text-gray-800 px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-colors">
-              {results.recommendation === 'diy' 
-                ? 'Get DIY Guide & Shopping List' 
-                : 'Get Professional Quotes'
-              }
+              {results.recommendation === 'diy'
+                ? 'Get DIY Guide & Shopping List'
+                : 'Get Professional Quotes'}
             </button>
           </div>
         </div>

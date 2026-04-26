@@ -29,13 +29,7 @@ import { RolesGuard } from './guards/roles.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    JanuaJwtStrategy,
-    JwtAuthGuard,
-    JanuaAuthGuard,
-    RolesGuard,
-  ],
+  providers: [AuthService, JanuaJwtStrategy, JwtAuthGuard, JanuaAuthGuard, RolesGuard],
   exports: [AuthService, JwtAuthGuard, JanuaAuthGuard, RolesGuard],
 })
 export class AuthModule {}

@@ -90,10 +90,7 @@ export class PravaraDispatchService {
     }
 
     if (!ctx.items || ctx.items.length === 0) {
-      this.logger.debug(
-        'Pravara dispatch skipped: no fab items for quote=%s',
-        ctx.quoteId,
-      );
+      this.logger.debug('Pravara dispatch skipped: no fab items for quote=%s', ctx.quoteId);
       return;
     }
 
@@ -160,18 +157,11 @@ export class PravaraDispatchService {
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'Pravara dispatch failed (quote=%s): %s',
-        ctx.quoteId,
-        msg,
-      );
+      this.logger.error('Pravara dispatch failed (quote=%s): %s', ctx.quoteId, msg);
     }
   }
 
   private sign(body: string): string {
-    return crypto
-      .createHmac('sha256', this.secret)
-      .update(body, 'utf-8')
-      .digest('hex');
+    return crypto.createHmac('sha256', this.secret).update(body, 'utf-8').digest('hex');
   }
 }

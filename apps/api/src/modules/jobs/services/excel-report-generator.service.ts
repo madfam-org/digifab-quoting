@@ -113,7 +113,9 @@ export class ExcelReportGeneratorService {
 
     if (reportType === 'quote') {
       sheet.getCell(`A${row}`).value = 'Valid Until:';
-      sheet.getCell(`B${row}`).value = new Date((data as QuoteOrderData & { validUntil?: Date }).validUntil || data.createdAt).toLocaleDateString();
+      sheet.getCell(`B${row}`).value = new Date(
+        (data as QuoteOrderData & { validUntil?: Date }).validUntil || data.createdAt,
+      ).toLocaleDateString();
       row++;
     }
 
@@ -121,7 +123,10 @@ export class ExcelReportGeneratorService {
 
     // Items table
     if (options?.includeItemDetails) {
-      const items = reportType === 'order' ? (data as QuoteOrderData & { quote?: { items?: ReportItem[] } }).quote?.items : data.items;
+      const items =
+        reportType === 'order'
+          ? (data as QuoteOrderData & { quote?: { items?: ReportItem[] } }).quote?.items
+          : data.items;
       if (items && items.length > 0) {
         this.addItemsTable(sheet, items, row);
       }
@@ -133,7 +138,11 @@ export class ExcelReportGeneratorService {
     });
   }
 
-  private addInvoiceSheet(workbook: ExcelJS.Workbook, invoice: InvoiceData, _options: ReportGenerationJobData['options']): void {
+  private addInvoiceSheet(
+    workbook: ExcelJS.Workbook,
+    invoice: InvoiceData,
+    _options: ReportGenerationJobData['options'],
+  ): void {
     const sheet = workbook.addWorksheet('Invoice');
 
     // Invoice header
@@ -173,10 +182,14 @@ export class ExcelReportGeneratorService {
 
     // Invoice details
     sheet.getCell(`A${row}`).value = 'Invoice Date:';
-    sheet.getCell(`B${row}`).value = new Date((invoice as InvoiceData & { issuedAt?: Date }).issuedAt || invoice.dueDate).toLocaleDateString();
+    sheet.getCell(`B${row}`).value = new Date(
+      (invoice as InvoiceData & { issuedAt?: Date }).issuedAt || invoice.dueDate,
+    ).toLocaleDateString();
     row++;
     sheet.getCell(`A${row}`).value = 'Due Date:';
-    sheet.getCell(`B${row}`).value = new Date((invoice as InvoiceData & { dueAt?: Date }).dueAt || invoice.dueDate).toLocaleDateString();
+    sheet.getCell(`B${row}`).value = new Date(
+      (invoice as InvoiceData & { dueAt?: Date }).dueAt || invoice.dueDate,
+    ).toLocaleDateString();
     row++;
     sheet.getCell(`A${row}`).value = 'Status:';
     sheet.getCell(`B${row}`).value = String(invoice.status);
@@ -184,20 +197,34 @@ export class ExcelReportGeneratorService {
 
     // Line items
     if (invoice.order?.quote?.items) {
-      this.addInvoiceItemsTable(sheet, invoice.order.quote.items, row, (invoice as InvoiceData & { currency?: string }).currency || 'MXN');
+      this.addInvoiceItemsTable(
+        sheet,
+        invoice.order.quote.items,
+        row,
+        (invoice as InvoiceData & { currency?: string }).currency || 'MXN',
+      );
       row += invoice.order.quote.items.length + 4;
     }
 
     // Totals
     sheet.getCell(`E${row}`).value = 'Subtotal:';
-    sheet.getCell(`F${row}`).value = this.formatCurrency(invoice.subtotal, (invoice as InvoiceData & { currency?: string }).currency || 'MXN');
+    sheet.getCell(`F${row}`).value = this.formatCurrency(
+      invoice.subtotal,
+      (invoice as InvoiceData & { currency?: string }).currency || 'MXN',
+    );
     row++;
     sheet.getCell(`E${row}`).value = 'Tax:';
-    sheet.getCell(`F${row}`).value = this.formatCurrency(invoice.tax, (invoice as InvoiceData & { currency?: string }).currency || 'MXN');
+    sheet.getCell(`F${row}`).value = this.formatCurrency(
+      invoice.tax,
+      (invoice as InvoiceData & { currency?: string }).currency || 'MXN',
+    );
     row++;
     sheet.getCell(`E${row}`).value = 'Total:';
     sheet.getCell(`E${row}`).font = { bold: true };
-    sheet.getCell(`F${row}`).value = this.formatCurrency(invoice.total, (invoice as InvoiceData & { currency?: string }).currency || 'MXN');
+    sheet.getCell(`F${row}`).value = this.formatCurrency(
+      invoice.total,
+      (invoice as InvoiceData & { currency?: string }).currency || 'MXN',
+    );
     sheet.getCell(`F${row}`).font = { bold: true };
 
     // Auto-fit columns
@@ -206,7 +233,11 @@ export class ExcelReportGeneratorService {
     });
   }
 
-  private addAnalyticsSheets(workbook: ExcelJS.Workbook, data: AnalyticsData, _options: ReportGenerationJobData['options']): void {
+  private addAnalyticsSheets(
+    workbook: ExcelJS.Workbook,
+    data: AnalyticsData,
+    _options: ReportGenerationJobData['options'],
+  ): void {
     // Summary sheet
     const summarySheet = workbook.addWorksheet('Summary');
     this.addAnalyticsSummary(summarySheet, data);
@@ -252,9 +283,18 @@ export class ExcelReportGeneratorService {
     items.forEach((item, index) => {
       const row = sheet.getRow(startRow + index + 1);
       row.getCell(1).value = index + 1;
-      row.getCell(2).value = (item as ReportItem & { files?: Array<{ originalName?: string }> }).files?.[0]?.originalName || item.name || 'Unknown';
-      row.getCell(3).value = (item as ReportItem & { material?: { name?: string } }).material?.name || 'N/A';
-      row.getCell(4).value = (item as ReportItem & { manufacturingProcess?: { name?: string }; processCode?: string }).manufacturingProcess?.name || (item as ReportItem & { processCode?: string }).processCode || 'N/A';
+      row.getCell(2).value =
+        (item as ReportItem & { files?: Array<{ originalName?: string }> }).files?.[0]
+          ?.originalName ||
+        item.name ||
+        'Unknown';
+      row.getCell(3).value =
+        (item as ReportItem & { material?: { name?: string } }).material?.name || 'N/A';
+      row.getCell(4).value =
+        (item as ReportItem & { manufacturingProcess?: { name?: string }; processCode?: string })
+          .manufacturingProcess?.name ||
+        (item as ReportItem & { processCode?: string }).processCode ||
+        'N/A';
       row.getCell(5).value = item.quantity;
       row.getCell(6).value = item.unitPrice;
       row.getCell(7).value = item.unitPrice * item.quantity;
@@ -312,8 +352,10 @@ export class ExcelReportGeneratorService {
     row += 2;
 
     // Add summary metrics
-    const totalQuotes = data.quotes?.reduce((sum: number, q: QuoteStatistic) => sum + q._count, 0) || 0;
-    const totalOrders = data.orders?.reduce((sum: number, o: OrderStatistic) => sum + o._count, 0) || 0;
+    const totalQuotes =
+      data.quotes?.reduce((sum: number, q: QuoteStatistic) => sum + q._count, 0) || 0;
+    const totalOrders =
+      data.orders?.reduce((sum: number, o: OrderStatistic) => sum + o._count, 0) || 0;
     const totalRevenue =
       data.revenue?.reduce((sum: number, r: RevenueByPeriod) => sum + (r.revenue || 0), 0) || 0;
 

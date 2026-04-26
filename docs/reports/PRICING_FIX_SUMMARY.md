@@ -1,11 +1,13 @@
 # Pricing Fix Summary
 
 ## Critical Issue Fixed
+
 The hardcoded $100 pricing in the quote calculation service has been replaced with proper integration of the pricing engine.
 
 ## Changes Made
 
 ### 1. Updated `QuoteCalculationService` (`apps/api/src/modules/quotes/services/quote-calculation.service.ts`)
+
 - Added imports for `PricingEngine`, `TenantPricingConfig`, and related types from `@madfam/pricing-engine`
 - Injected `CacheService` dependency
 - Created `PricingEngine` instance in constructor
@@ -15,6 +17,7 @@ The hardcoded $100 pricing in the quote calculation service has been replaced wi
 - Updated type signatures to handle proper pricing result structure
 
 ### 2. Updated `PricingService` (`apps/api/src/modules/pricing/pricing.service.ts`)
+
 - Added imports for `PricingEngine` and related types from `@madfam/pricing-engine`
 - Created `PricingEngine` instance in constructor
 - Replaced hardcoded pricing logic in `calculateQuoteItem` method with calls to the pricing engine
@@ -24,6 +27,7 @@ The hardcoded $100 pricing in the quote calculation service has been replaced wi
 ## Key Implementation Details
 
 ### Pricing Engine Integration
+
 ```typescript
 // Instead of hardcoded:
 const pricingResult = {
@@ -46,7 +50,9 @@ const pricingResult = this.pricingEngine.calculate({
 ```
 
 ### Tenant Configuration
+
 The pricing engine now uses tenant-specific configuration including:
+
 - Margin floor and target percentages
 - Overhead rates
 - Energy tariffs
@@ -56,12 +62,15 @@ The pricing engine now uses tenant-specific configuration including:
 - Sustainability factors
 
 ### Error Handling
+
 - Proper validation of inputs before pricing calculation
 - Warnings are collected and returned with the pricing result
 - Failed calculations return appropriate error messages
 
 ## Testing
+
 While formal tests couldn't be run due to configuration issues, the implementation:
+
 1. Removes all hardcoded $100 pricing
 2. Properly integrates the existing pricing engine package
 3. Uses tenant-specific configuration
@@ -69,6 +78,7 @@ While formal tests couldn't be run due to configuration issues, the implementati
 5. Includes proper cost breakdown and sustainability metrics
 
 ## Next Steps
+
 1. Ensure all required fields are properly populated in the database (materials, machines, tenant settings)
 2. Add proper unit tests once the test configuration is fixed
 3. Verify pricing calculations with real-world test data

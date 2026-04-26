@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { PricingService } from '../../pricing/pricing.service';
 import { TenantCacheService } from '../../tenants/services/tenant-cache.service';
@@ -221,13 +216,10 @@ export class Yantra4dImportService {
     const standardShippingRate = new Decimal(
       (pricingSettings.standardShippingRate as number) || 150,
     );
-    const shipping = subtotal.gte(freeShippingThreshold)
-      ? new Decimal(0)
-      : standardShippingRate;
+    const shipping = subtotal.gte(freeShippingThreshold) ? new Decimal(0) : standardShippingRate;
     const grandTotal = subtotal.plus(tax).plus(shipping);
 
-    const finalStatus =
-      warnings.length > 0 ? QuoteStatus.NEEDS_REVIEW : QuoteStatus.AUTO_QUOTED;
+    const finalStatus = warnings.length > 0 ? QuoteStatus.NEEDS_REVIEW : QuoteStatus.AUTO_QUOTED;
 
     await this.prisma.quote.update({
       where: { id: quote.id },
@@ -276,17 +268,13 @@ export class Yantra4dImportService {
    * Fallback price estimation when material/machine records are missing.
    * Uses a simple cost-per-cm3 heuristic based on process type.
    */
-  private estimateFallbackPrice(
-    volumeCm3: number,
-    process: string,
-    material: string,
-  ): number {
+  private estimateFallbackPrice(volumeCm3: number, process: string, material: string): number {
     // Base rates per cm3 by process (MXN)
     const rateMap: Record<string, number> = {
       '3d_fff': 3.5,
       '3d_sla': 8.0,
-      'cnc_3axis': 15.0,
-      'laser_2d': 5.0,
+      cnc_3axis: 15.0,
+      laser_2d: 5.0,
     };
 
     // Material multipliers for common materials

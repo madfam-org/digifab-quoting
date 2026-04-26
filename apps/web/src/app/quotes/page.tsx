@@ -24,13 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Plus,
-  Search,
-  FileText,
-  Eye,
-  Loader2,
-} from 'lucide-react';
+import { Plus, Search, FileText, Eye, Loader2 } from 'lucide-react';
 import { apiClient, ApiError } from '@/lib/api-client';
 import { useToast } from '@/components/ui/use-toast';
 import { QuoteStatus, Currency } from '@cotiza/shared';
@@ -59,7 +53,10 @@ interface QuotesListResponse {
 
 type StatusFilter = 'all' | 'pending' | 'accepted' | 'expired';
 
-const STATUS_VARIANT_MAP: Record<QuoteStatus, 'default' | 'secondary' | 'destructive' | 'outline' | 'success'> = {
+const STATUS_VARIANT_MAP: Record<
+  QuoteStatus,
+  'default' | 'secondary' | 'destructive' | 'outline' | 'success'
+> = {
   draft: 'secondary',
   submitted: 'default',
   auto_quoted: 'default',
@@ -78,8 +75,21 @@ const STATUS_VARIANT_MAP: Record<QuoteStatus, 'default' | 'secondary' | 'destruc
 
 const STATUS_FILTER_MAP: Record<StatusFilter, QuoteStatus[]> = {
   all: [],
-  pending: [QuoteStatus.DRAFT, QuoteStatus.SUBMITTED, QuoteStatus.AUTO_QUOTED, QuoteStatus.NEEDS_REVIEW, QuoteStatus.QUOTED],
-  accepted: [QuoteStatus.APPROVED, QuoteStatus.ORDERED, QuoteStatus.IN_PRODUCTION, QuoteStatus.QC, QuoteStatus.SHIPPED, QuoteStatus.CLOSED],
+  pending: [
+    QuoteStatus.DRAFT,
+    QuoteStatus.SUBMITTED,
+    QuoteStatus.AUTO_QUOTED,
+    QuoteStatus.NEEDS_REVIEW,
+    QuoteStatus.QUOTED,
+  ],
+  accepted: [
+    QuoteStatus.APPROVED,
+    QuoteStatus.ORDERED,
+    QuoteStatus.IN_PRODUCTION,
+    QuoteStatus.QC,
+    QuoteStatus.SHIPPED,
+    QuoteStatus.CLOSED,
+  ],
   expired: [QuoteStatus.EXPIRED, QuoteStatus.CANCELLED, QuoteStatus.REJECTED],
 };
 
@@ -134,7 +144,7 @@ export default function QuotesHistoryPage() {
 
       return params.toString();
     },
-    [searchQuery, statusFilter]
+    [searchQuery, statusFilter],
   );
 
   const loadQuotes = useCallback(
@@ -183,7 +193,7 @@ export default function QuotesHistoryPage() {
         setLoadingMore(false);
       }
     },
-    [buildQueryParams, toast, t]
+    [buildQueryParams, toast, t],
   );
 
   useEffect(() => {
@@ -309,9 +319,7 @@ export default function QuotesHistoryPage() {
                   aria-hidden="true"
                 />
                 <h3 className="font-semibold text-lg mb-1">
-                  {quotes.length === 0
-                    ? t('history.noQuotes')
-                    : t('history.noMatchingQuotes')}
+                  {quotes.length === 0 ? t('history.noQuotes') : t('history.noMatchingQuotes')}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   {quotes.length === 0
@@ -334,15 +342,9 @@ export default function QuotesHistoryPage() {
                         <TableHead>{t('history.columns.quoteNumber')}</TableHead>
                         <TableHead>{t('history.columns.date')}</TableHead>
                         <TableHead>{t('history.columns.status')}</TableHead>
-                        <TableHead className="text-center">
-                          {t('history.columns.items')}
-                        </TableHead>
-                        <TableHead className="text-right">
-                          {t('history.columns.total')}
-                        </TableHead>
-                        <TableHead className="text-right">
-                          {t('history.columns.actions')}
-                        </TableHead>
+                        <TableHead className="text-center">{t('history.columns.items')}</TableHead>
+                        <TableHead className="text-right">{t('history.columns.total')}</TableHead>
+                        <TableHead className="text-right">{t('history.columns.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -420,17 +422,10 @@ export default function QuotesHistoryPage() {
                 {/* Load More */}
                 {page < totalPages && (
                   <div className="flex justify-center pt-6">
-                    <Button
-                      variant="outline"
-                      onClick={handleLoadMore}
-                      disabled={loadingMore}
-                    >
+                    <Button variant="outline" onClick={handleLoadMore} disabled={loadingMore}>
                       {loadingMore ? (
                         <>
-                          <Loader2
-                            className="w-4 h-4 mr-2 animate-spin"
-                            aria-hidden="true"
-                          />
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
                           {t('history.loading')}
                         </>
                       ) : (

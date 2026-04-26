@@ -13,12 +13,7 @@ import { TenantModule } from '@/modules/tenant/tenant.module';
 import { AuthModule } from '@/modules/auth/auth.module';
 
 @Module({
-  imports: [
-    PrismaModule,
-    RedisModule,
-    TenantModule,
-    AuthModule,
-  ],
+  imports: [PrismaModule, RedisModule, TenantModule, AuthModule],
   controllers: [EnterpriseController],
   providers: [
     EnterpriseService,
@@ -29,11 +24,6 @@ import { AuthModule } from '@/modules/auth/auth.module';
     DedicatedSupportService,
     EnterpriseAnalyticsService,
   ],
-  exports: [
-    EnterpriseService,
-    SSOService,
-    WhiteLabelService,
-    ComplianceService,
-  ],
+  exports: [EnterpriseService, SSOService, WhiteLabelService, ComplianceService],
 })
 export class EnterpriseModule {}

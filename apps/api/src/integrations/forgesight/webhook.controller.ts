@@ -117,12 +117,9 @@ export class ForgesightWebhookController {
     }
 
     // Normalize event type from multiple possible field names
-    const eventType =
-      payload.event || payload.type || payload.event_type || 'unknown';
+    const eventType = payload.event || payload.type || payload.event_type || 'unknown';
 
-    this.logger.log(
-      `Received Forgesight webhook: ${eventType} (id=${payload.id || 'none'})`,
-    );
+    this.logger.log(`Received Forgesight webhook: ${eventType} (id=${payload.id || 'none'})`);
 
     // ---------------------------------------------------------------
     // 2. Process event
@@ -136,10 +133,7 @@ export class ForgesightWebhookController {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      this.logger.error(
-        `Error processing Forgesight webhook ${eventType}: ${message}`,
-        stack,
-      );
+      this.logger.error(`Error processing Forgesight webhook ${eventType}: ${message}`, stack);
       return { received: false, error: message };
     }
 
@@ -153,18 +147,12 @@ export class ForgesightWebhookController {
   /**
    * Verify HMAC-SHA256 signature using timing-safe comparison.
    */
-  private verifySignature(
-    rawBody: string,
-    signature: string | undefined,
-  ): boolean {
+  private verifySignature(rawBody: string, signature: string | undefined): boolean {
     if (!this.webhookSecret || !signature) {
       return false;
     }
 
-    const expected = crypto
-      .createHmac('sha256', this.webhookSecret)
-      .update(rawBody)
-      .digest('hex');
+    const expected = crypto.createHmac('sha256', this.webhookSecret).update(rawBody).digest('hex');
 
     // Guard against length mismatch before timingSafeEqual
     if (signature.length !== expected.length) {
@@ -194,9 +182,7 @@ export class ForgesightWebhookController {
    *
    * We invalidate all of them to ensure fresh data on next request.
    */
-  private async handlePriceUpdated(
-    payload: ForgesightWebhookPayload,
-  ): Promise<void> {
+  private async handlePriceUpdated(payload: ForgesightWebhookPayload): Promise<void> {
     const materialId = payload.data?.material_id || payload.data?.material;
 
     const patternsToInvalidate = [

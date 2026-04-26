@@ -32,14 +32,18 @@ export interface DatabaseError extends ErrorLike {
 /**
  * Type guard to check if a value is an Error object
  */
-export function isError(error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string): error is Error {
+export function isError(
+  error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string,
+): error is Error {
   return error instanceof Error;
 }
 
 /**
  * Type guard to check if error has a message property
  */
-export function hasMessage(error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null): error is ErrorLike {
+export function hasMessage(
+  error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null,
+): error is ErrorLike {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -51,7 +55,9 @@ export function hasMessage(error: Error | ErrorLike | HttpError | DatabaseError 
 /**
  * Type guard to check if error has a stack property
  */
-export function hasStack(error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null): error is Error | (ErrorLike & { stack: string }) {
+export function hasStack(
+  error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null,
+): error is Error | (ErrorLike & { stack: string }) {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -63,7 +69,17 @@ export function hasStack(error: Error | ErrorLike | HttpError | DatabaseError | 
 /**
  * Safely extract error message from various error types
  */
-export function getErrorMessage(error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null | undefined): string {
+export function getErrorMessage(
+  error:
+    | Error
+    | ErrorLike
+    | HttpError
+    | DatabaseError
+    | ValidationError
+    | string
+    | null
+    | undefined,
+): string {
   if (!error) {
     return 'An unknown error occurred';
   }
@@ -82,7 +98,17 @@ export function getErrorMessage(error: Error | ErrorLike | HttpError | DatabaseE
 /**
  * Safely extract error stack from various error types
  */
-export function getErrorStack(error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null | undefined): string | undefined {
+export function getErrorStack(
+  error:
+    | Error
+    | ErrorLike
+    | HttpError
+    | DatabaseError
+    | ValidationError
+    | string
+    | null
+    | undefined,
+): string | undefined {
   if (!error || typeof error === 'string') {
     return undefined;
   }
@@ -97,7 +123,17 @@ export function getErrorStack(error: Error | ErrorLike | HttpError | DatabaseErr
 /**
  * Convert various error types to Error object
  */
-export function toError(error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null | undefined): Error {
+export function toError(
+  error:
+    | Error
+    | ErrorLike
+    | HttpError
+    | DatabaseError
+    | ValidationError
+    | string
+    | null
+    | undefined,
+): Error {
   if (!error) {
     return new Error('An unknown error occurred');
   }
@@ -155,7 +191,15 @@ export interface ErrorWithMetadata extends Error {
  * Enhance error with metadata
  */
 export function enhanceError(
-  error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null | undefined,
+  error:
+    | Error
+    | ErrorLike
+    | HttpError
+    | DatabaseError
+    | ValidationError
+    | string
+    | null
+    | undefined,
   metadata?: ErrorMetadata,
 ): ErrorWithMetadata {
   const err = toError(error) as ErrorWithMetadata;
@@ -183,15 +227,26 @@ export interface FormattedError {
   type: 'Error' | 'HttpError' | 'ValidationError' | 'DatabaseError' | 'Unknown';
 }
 
-export function formatErrorForLogging(error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null | undefined): FormattedError {
+export function formatErrorForLogging(
+  error:
+    | Error
+    | ErrorLike
+    | HttpError
+    | DatabaseError
+    | ValidationError
+    | string
+    | null
+    | undefined,
+): FormattedError {
   const err = toError(error) as ErrorWithMetadata;
-  
+
   // Determine error type
   let errorType: FormattedError['type'] = 'Unknown';
   if (error && typeof error === 'object') {
     if ('statusCode' in error) errorType = 'HttpError';
     else if ('field' in error && 'constraints' in error) errorType = 'ValidationError';
-    else if ('code' in error && ('table' in error || 'constraint' in error)) errorType = 'DatabaseError';
+    else if ('code' in error && ('table' in error || 'constraint' in error))
+      errorType = 'DatabaseError';
     else if (error instanceof Error) errorType = 'Error';
   }
 
@@ -209,7 +264,9 @@ export function formatErrorForLogging(error: Error | ErrorLike | HttpError | Dat
 /**
  * Type guard for HTTP errors
  */
-export function isHttpError(error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null): error is HttpError {
+export function isHttpError(
+  error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null,
+): error is HttpError {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -221,7 +278,9 @@ export function isHttpError(error: Error | ErrorLike | HttpError | DatabaseError
 /**
  * Type guard for validation errors
  */
-export function isValidationError(error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null): error is ValidationError {
+export function isValidationError(
+  error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null,
+): error is ValidationError {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -233,7 +292,9 @@ export function isValidationError(error: Error | ErrorLike | HttpError | Databas
 /**
  * Type guard for database errors
  */
-export function isDatabaseError(error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null): error is DatabaseError {
+export function isDatabaseError(
+  error: Error | ErrorLike | HttpError | DatabaseError | ValidationError | string | null,
+): error is DatabaseError {
   return (
     typeof error === 'object' &&
     error !== null &&

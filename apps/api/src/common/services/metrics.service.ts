@@ -10,12 +10,6 @@ interface LatencyMetric {
   samples: number[];
 }
 
-interface CacheMetric {
-  hits: number;
-  misses: number;
-  rate?: number;
-}
-
 @Injectable()
 export class MetricsService {
   private readonly logger = new Logger(MetricsService.name);
@@ -34,7 +28,7 @@ export class MetricsService {
     existing.total += duration;
     existing.min = Math.min(existing.min, duration);
     existing.max = Math.max(existing.max, duration);
-    
+
     // Store samples for percentile calculation
     existing.samples.push(duration);
     if (existing.samples.length > this.SAMPLE_SIZE) {
@@ -67,12 +61,12 @@ export class MetricsService {
       timestamp: new Date(),
       duration,
     });
-    
+
     // Keep only last 100 slow requests
     if (existing.length > 100) {
       existing.shift();
     }
-    
+
     this.metrics.set(key, existing);
     this.storeInRedis(`metrics:${key}`, existing);
   }
@@ -81,13 +75,13 @@ export class MetricsService {
   recordCacheMetrics(route: string, hit: boolean): void {
     const key = `cache.${route}`;
     const existing = this.metrics.get(key) || { hits: 0, misses: 0 };
-    
+
     if (hit) {
       existing.hits++;
     } else {
       existing.misses++;
     }
-    
+
     existing.rate = this.calculateHitRate(existing.hits, existing.misses);
     this.metrics.set(key, existing);
 
@@ -105,12 +99,12 @@ export class MetricsService {
       message: error.message,
       stack: error.stack,
     });
-    
+
     // Keep only last 50 errors per endpoint
     if (existing.length > 50) {
       existing.shift();
     }
-    
+
     this.metrics.set(key, existing);
     this.storeInRedis(`metrics:${key}`, existing);
   }
@@ -189,7 +183,7 @@ export class MetricsService {
         const [, , method, ...routeParts] = key.split('.');
         const route = routeParts.join('.');
         const percentiles = this.calculatePercentiles(value.samples);
-        
+
         summary.api.latency[`${method} ${route}`] = {
           count: value.count,
           avg: Math.round(value.total / value.count),
@@ -204,7 +198,7 @@ export class MetricsService {
           summary.api.calls[endpoint] = { success: 0, error: 0, errorRate: 0 };
         }
         summary.api.calls[endpoint][status] = value;
-        
+
         // Calculate error rate
         const calls = summary.api.calls[endpoint];
         const total = calls.success + calls.error;
@@ -227,7 +221,8 @@ export class MetricsService {
         summary.currency.rateUpdates = {
           ...value,
           avgDuration: Math.round(value.totalDuration / (value.successful + value.failed)) + 'ms',
-          successRate: ((value.successful / (value.successful + value.failed)) * 100).toFixed(2) + '%',
+          successRate:
+            ((value.successful / (value.successful + value.failed)) * 100).toFixed(2) + '%',
         };
       } else if (key.startsWith('errors.')) {
         summary.errors.count += value.length;
@@ -244,9 +239,10 @@ export class MetricsService {
         summary.api.slowRequests.push({
           endpoint: `${method} ${route}`,
           count: value.length,
-          avgDuration: Math.round(
-            value.reduce((sum: number, req: any) => sum + req.duration, 0) / value.length
-          ) + 'ms',
+          avgDuration:
+            Math.round(
+              value.reduce((sum: number, req: any) => sum + req.duration, 0) / value.length,
+            ) + 'ms',
           recent: value.slice(-3),
         });
       }
@@ -255,7 +251,7 @@ export class MetricsService {
     // Calculate overall cache hit rate
     summary.cache.overall.rate = this.calculateHitRate(
       summary.cache.overall.hits,
-      summary.cache.overall.misses
+      summary.cache.overall.misses,
     );
 
     return summary;
@@ -264,35 +260,35 @@ export class MetricsService {
   // Export metrics for Prometheus
   async exportPrometheusMetrics(): Promise<string> {
     let output = '';
-    
+
     // API latency histogram
     output += '# HELP api_request_duration_ms API request duration in milliseconds\n';
     output += '# TYPE api_request_duration_ms histogram\n';
-    
+
     // API calls counter
     output += '# HELP api_requests_total Total number of API requests\n';
     output += '# TYPE api_requests_total counter\n';
-    
+
     // Cache metrics
     output += '# HELP cache_hits_total Total number of cache hits\n';
     output += '# TYPE cache_hits_total counter\n';
     output += '# HELP cache_misses_total Total number of cache misses\n';
     output += '# TYPE cache_misses_total counter\n';
-    
+
     // Currency conversion metrics
     output += '# HELP currency_conversions_total Total number of currency conversions\n';
     output += '# TYPE currency_conversions_total counter\n';
-    
+
     // Process all metrics
     this.metrics.forEach((value, key) => {
       if (key.startsWith('api.latency.')) {
         const [, , method, ...routeParts] = key.split('.');
         const route = routeParts.join('.').replace(/\//g, '_');
         const labels = `method="${method}",route="${route}"`;
-        
+
         output += `api_request_duration_ms_sum{${labels}} ${value.total}\n`;
         output += `api_request_duration_ms_count{${labels}} ${value.count}\n`;
-        
+
         // Add percentiles
         const percentiles = this.calculatePercentiles(value.samples);
         output += `api_request_duration_ms{${labels},quantile="0.5"} ${percentiles.p50}\n`;
@@ -325,8 +321,8 @@ export class MetricsService {
 
     this.metrics.forEach((value, key) => {
       if (key.startsWith('api.slow.') || key.startsWith('errors.')) {
-        const filtered = value.filter((item: any) => 
-          new Date(item.timestamp).getTime() > oneHourAgo
+        const filtered = value.filter(
+          (item: any) => new Date(item.timestamp).getTime() > oneHourAgo,
         );
         if (filtered.length === 0) {
           this.metrics.delete(key);

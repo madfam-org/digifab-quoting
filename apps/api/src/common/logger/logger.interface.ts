@@ -8,7 +8,17 @@ export interface LogMetadata {
   userId?: string;
   requestId?: string;
   timestamp?: string;
-  [key: string]: string | number | boolean | null | undefined | LogMetadata | LogMetadata[] | Record<string, unknown> | Error | unknown;
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+    | LogMetadata
+    | LogMetadata[]
+    | Record<string, unknown>
+    | Error
+    | unknown;
 }
 
 export interface HttpLogMetadata extends LogMetadata {

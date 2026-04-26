@@ -6,7 +6,9 @@ export const CACHE_OPTIONS_METADATA = 'cache_options_metadata';
 export const CACHE_INVALIDATE_METADATA = 'cache_invalidate_metadata';
 
 // Type for async methods that can be cached
-export type AsyncMethod<TArgs extends unknown[] = unknown[], TReturn = unknown> = (...args: TArgs) => Promise<TReturn>;
+export type AsyncMethod<TArgs extends unknown[] = unknown[], TReturn = unknown> = (
+  ...args: TArgs
+) => Promise<TReturn>;
 
 // Type for the decorator target
 export interface DecoratorTarget {
@@ -40,8 +42,7 @@ export const Cacheable = (options?: CacheOptions): MethodDecorator => {
       }
 
       // Generate cache key
-      const keyPrefix =
-        options?.prefix || `${target.constructor.name}:${String(propertyKey)}`;
+      const keyPrefix = options?.prefix || `${target.constructor.name}:${String(propertyKey)}`;
       const keyGenerator = options?.keyGenerator || defaultKeyGenerator;
       const cacheKey = keyGenerator(keyPrefix, ...(args as CacheKeyArg[]));
 
@@ -114,8 +115,7 @@ export const CachePut = (options?: CacheOptions): MethodDecorator => {
 
       const cacheService = this.cacheService || this.cache;
       if (cacheService && result !== null && result !== undefined) {
-        const keyPrefix =
-          options?.prefix || `${target.constructor.name}:${String(propertyKey)}`;
+        const keyPrefix = options?.prefix || `${target.constructor.name}:${String(propertyKey)}`;
         const keyGenerator = options?.keyGenerator || defaultKeyGenerator;
         const cacheKey = keyGenerator(keyPrefix, ...(args as CacheKeyArg[]));
 
@@ -164,7 +164,13 @@ export const CacheEvict = (patterns: string | string[]): MethodDecorator => {
 /**
  * Type for cache key arguments
  */
-export type CacheKeyArg = string | number | boolean | Date | { [key: string]: CacheKeyArg } | CacheKeyArg[];
+export type CacheKeyArg =
+  | string
+  | number
+  | boolean
+  | Date
+  | { [key: string]: CacheKeyArg }
+  | CacheKeyArg[];
 
 /**
  * Default key generator function
@@ -179,10 +185,15 @@ function defaultKeyGenerator(prefix: string, ...args: CacheKeyArg[]): string {
         if (Array.isArray(arg)) {
           return JSON.stringify(arg);
         }
-        const sortedObj = Object.keys(arg as Record<string, CacheKeyArg>).sort().reduce((result, key) => {
-          result[key] = (arg as Record<string, CacheKeyArg>)[key];
-          return result;
-        }, {} as Record<string, CacheKeyArg>);
+        const sortedObj = Object.keys(arg as Record<string, CacheKeyArg>)
+          .sort()
+          .reduce(
+            (result, key) => {
+              result[key] = (arg as Record<string, CacheKeyArg>)[key];
+              return result;
+            },
+            {} as Record<string, CacheKeyArg>,
+          );
         return JSON.stringify(sortedObj);
       }
       return String(arg);

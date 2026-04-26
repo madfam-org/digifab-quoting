@@ -34,11 +34,31 @@ const PAINS = [
 ];
 
 const CAPABILITIES = [
-  { icon: Factory, title: '60-second quoting', body: 'Paste a STEP file, a Thingiverse link, or a service scope. CNC, 3D print, laser. Side-by-side cost + lead-time comparison.' },
-  { icon: ShieldCheck, title: 'CFDI 4.0 auto-stamping', body: 'Karafiel timbra cada orden. Complemento de pago, NOM-151 timestamping, Article 69-B blacklist screening included.' },
-  { icon: Workflow, title: 'Pravara MES dispatch', body: 'Every fab item on an accepted quote becomes a Pravara MES job with engagement linkage. Status webhooks back to your dashboard.' },
-  { icon: Activity, title: 'Live Forgesight market pricing', body: 'Aluminum 6061 spikes 12%? Your DFM analysis cites the new number before your customer asks why.' },
-  { icon: Building2, title: 'Per-tenant e.firma + multi-tenant', body: 'Bring your own SAT-issued cert. Per-tenant S3 prefixes, KMS keys, audit logs. White-label for your customers.' },
+  {
+    icon: Factory,
+    title: '60-second quoting',
+    body: 'Paste a STEP file, a Thingiverse link, or a service scope. CNC, 3D print, laser. Side-by-side cost + lead-time comparison.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'CFDI 4.0 auto-stamping',
+    body: 'Karafiel timbra cada orden. Complemento de pago, NOM-151 timestamping, Article 69-B blacklist screening included.',
+  },
+  {
+    icon: Workflow,
+    title: 'Pravara MES dispatch',
+    body: 'Every fab item on an accepted quote becomes a Pravara MES job with engagement linkage. Status webhooks back to your dashboard.',
+  },
+  {
+    icon: Activity,
+    title: 'Live Forgesight market pricing',
+    body: 'Aluminum 6061 spikes 12%? Your DFM analysis cites the new number before your customer asks why.',
+  },
+  {
+    icon: Building2,
+    title: 'Per-tenant e.firma + multi-tenant',
+    body: 'Bring your own SAT-issued cert. Per-tenant S3 prefixes, KMS keys, audit logs. White-label for your customers.',
+  },
 ];
 
 export default function FabricatorsPage() {
@@ -54,8 +74,8 @@ export default function FabricatorsPage() {
           <span className="block text-primary mt-2">CFDI in zero.</span>
         </h1>
         <p className="text-lg lg:text-xl text-muted-foreground max-w-2xl mb-8">
-          For the fab shop that runs 10–500 jobs a month and can't ship a
-          single one without a CFDI 4.0. Stop quoting like it's 2014.
+          For the fab shop that runs 10–500 jobs a month and can't ship a single one without a CFDI
+          4.0. Stop quoting like it's 2014.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
@@ -76,13 +96,19 @@ export default function FabricatorsPage() {
 
       <section className="py-16 bg-muted/30 border-y border-border/40">
         <div className="container mx-auto px-6 max-w-5xl">
-          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">The pains we kill for fab shops</h2>
+          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">
+            The pains we kill for fab shops
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {PAINS.map((p, i) => (
               <article key={i} className="rounded-lg border border-border/60 bg-card p-6">
-                <p className="text-sm font-mono uppercase tracking-wider text-destructive/80 mb-2">Pain</p>
+                <p className="text-sm font-mono uppercase tracking-wider text-destructive/80 mb-2">
+                  Pain
+                </p>
                 <p className="font-medium mb-4">{p.pain}</p>
-                <p className="text-sm font-mono uppercase tracking-wider text-primary/80 mb-2">Fix</p>
+                <p className="text-sm font-mono uppercase tracking-wider text-primary/80 mb-2">
+                  Fix
+                </p>
                 <p className="text-sm text-muted-foreground">{p.fix}</p>
               </article>
             ))}
@@ -92,7 +118,9 @@ export default function FabricatorsPage() {
 
       <section className="py-16">
         <div className="container mx-auto px-6 max-w-5xl">
-          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">Capabilities that ship today</h2>
+          <h2 className="text-2xl lg:text-3xl font-bold mb-10 text-center">
+            Capabilities that ship today
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {CAPABILITIES.map(({ icon: Icon, title, body }) => (
               <article key={title} className="rounded-lg border border-border/60 bg-card p-6">
@@ -113,10 +141,9 @@ export default function FabricatorsPage() {
         <div className="container mx-auto px-6 text-center max-w-3xl">
           <h2 className="text-3xl font-bold mb-4">Want a per-tenant CFDI flow + SLA?</h2>
           <p className="text-lg text-muted-foreground mb-6">
-            Most fab-shop customers come in via a 30-minute call to scope their
-            existing PAC contract, e.firma situation, and Pravara MES integration.
-            Self-serve checkout is also fine — start the Business trial and we'll
-            scope upgrades from there.
+            Most fab-shop customers come in via a 30-minute call to scope their existing PAC
+            contract, e.firma situation, and Pravara MES integration. Self-serve checkout is also
+            fine — start the Business trial and we'll scope upgrades from there.
           </p>
           <Link
             href="/pricing"

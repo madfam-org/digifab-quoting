@@ -78,9 +78,7 @@ export class Yantra4dImportController {
   ): Promise<Yantra4dImportResponseDto> {
     // Validate source marker
     if (dto.source !== 'yantra4d') {
-      throw new BadRequestException(
-        `Invalid source: expected "yantra4d", got "${dto.source}"`,
-      );
+      throw new BadRequestException(`Invalid source: expected "yantra4d", got "${dto.source}"`);
     }
 
     this.logger.log(
@@ -89,10 +87,6 @@ export class Yantra4dImportController {
         `qty=${dto.item.quantity}, volume=${dto.geometry.volume_cm3}cm3`,
     );
 
-    return this.yantra4dImportService.createQuoteFromYantra4d(
-      req.user.tenantId,
-      req.user.id,
-      dto,
-    );
+    return this.yantra4dImportService.createQuoteFromYantra4d(req.user.tenantId, req.user.id, dto);
   }
 }

@@ -18,7 +18,7 @@ export function GuestQuoteFlow() {
   const { t } = useTranslation();
   const router = useRouter();
   const { session, incrementQuoteCount } = useGuestSession();
-  
+
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [quote, setQuote] = useState<GuestQuote | null>(null);
@@ -39,7 +39,7 @@ export function GuestQuoteFlow() {
     try {
       // Upload files
       const uploadResult = await guestApi.uploadFiles(files);
-      
+
       // Create quote
       const newQuote = await guestApi.createQuote({
         uploadId: uploadResult.uploadId,
@@ -61,11 +61,7 @@ export function GuestQuoteFlow() {
     if (!quote) return;
 
     try {
-      const updatedQuote = await guestApi.updateQuoteItem(
-        quote.id,
-        itemIndex,
-        updates
-      );
+      const updatedQuote = await guestApi.updateQuoteItem(quote.id, itemIndex, updates);
       setQuote(updatedQuote);
       toast.success(t('quote.success.updated'));
     } catch (error) {
@@ -83,10 +79,10 @@ export function GuestQuoteFlow() {
     // Convert the guest quote to authenticated quote
     if (session && quote) {
       try {
-        const result = await guestApi.convertQuote({
+        const result = (await guestApi.convertQuote({
           sessionId: session.id,
           sessionQuoteId: quote.id,
-        }) as { quoteId: string; success: boolean };
+        })) as { quoteId: string; success: boolean };
 
         // Redirect to the converted quote
         router.push(`/quote/${result.quoteId}`);
@@ -102,12 +98,8 @@ export function GuestQuoteFlow() {
     return (
       <Card className="p-8">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold mb-6">
-            {t('guest.title')}
-          </h2>
-          <p className="text-muted-foreground mb-8">
-            {t('guest.description')}
-          </p>
+          <h2 className="text-2xl font-bold mb-6">{t('guest.title')}</h2>
+          <p className="text-muted-foreground mb-8">{t('guest.description')}</p>
 
           <FileUploadZone
             onFilesSelected={handleFilesSelected}
@@ -120,12 +112,8 @@ export function GuestQuoteFlow() {
               <div className="text-sm text-muted-foreground">
                 {t('quote.selected_files', { count: files.length })}
               </div>
-              
-              <Button
-                onClick={handleCreateQuote}
-                disabled={isUploading}
-                className="w-full"
-              >
+
+              <Button onClick={handleCreateQuote} disabled={isUploading} className="w-full">
                 {isUploading ? (
                   <>
                     <LoadingSpinner className="mr-2" />
@@ -146,27 +134,15 @@ export function GuestQuoteFlow() {
     <div className="space-y-6">
       <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">
-            {t('quote.your_quote')}
-          </h2>
+          <h2 className="text-2xl font-bold">{t('quote.your_quote')}</h2>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => handleAction('share')}
-            >
+            <Button variant="outline" onClick={() => handleAction('share')}>
               {t('quote.actions.share')}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleAction('export')}
-            >
+            <Button variant="outline" onClick={() => handleAction('export')}>
               {t('quote.actions.export')}
             </Button>
-            <Button
-              onClick={() => handleAction('save')}
-            >
-              {t('quote.actions.save')}
-            </Button>
+            <Button onClick={() => handleAction('save')}>{t('quote.actions.save')}</Button>
           </div>
         </div>
 
@@ -209,9 +185,7 @@ export function GuestQuoteFlow() {
       </Card>
 
       <Card className="p-6 bg-blue-50 border-blue-200">
-        <p className="text-sm text-blue-800">
-          {t('guest.save_reminder')}
-        </p>
+        <p className="text-sm text-blue-800">{t('guest.save_reminder')}</p>
       </Card>
 
       <AuthModal

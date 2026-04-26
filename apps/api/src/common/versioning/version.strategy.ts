@@ -34,13 +34,13 @@ export const CUSTOM_VERSION_CONFIG: ApiVersionConfig = {
 
 // Version compatibility matrix
 export const VERSION_COMPATIBILITY = {
-  'v1': ['1', '1.0', 'v1'],
-  'v2': ['2', '2.0', 'v2'],
+  v1: ['1', '1.0', 'v1'],
+  v2: ['2', '2.0', 'v2'],
 };
 
 // Deprecated versions with sunset dates
 export const DEPRECATED_VERSIONS = {
-  'v1': {
+  v1: {
     deprecated: true,
     sunset: new Date('2024-12-31'),
     message: 'API v1 is deprecated. Please upgrade to v2.',
@@ -53,10 +53,9 @@ import { Request } from 'express';
 export function createVersionExtractor() {
   return (request: Request) => {
     // Priority order: header > query param > accept header > default
-    
+
     // 1. Check custom header
-    const headerVersion = request.headers['x-api-version'] || 
-                         request.headers['api-version'];
+    const headerVersion = request.headers['x-api-version'] || request.headers['api-version'];
     if (headerVersion) {
       return normalizeVersion(Array.isArray(headerVersion) ? headerVersion[0] : headerVersion);
     }
@@ -64,7 +63,7 @@ export function createVersionExtractor() {
     // 2. Check query parameter
     if (request.query?.version) {
       const queryVersion = request.query.version;
-      const versionStr = Array.isArray(queryVersion) 
+      const versionStr = Array.isArray(queryVersion)
         ? String(queryVersion[0])
         : typeof queryVersion === 'string'
           ? queryVersion
@@ -76,7 +75,7 @@ export function createVersionExtractor() {
     const acceptHeader = request.headers.accept;
     if (acceptHeader) {
       const mediaTypeMatch = acceptHeader.match(
-        /application\/vnd\.madfam\.v(\d+)(?:\.(\d+))?\+json/
+        /application\/vnd\.madfam\.v(\d+)(?:\.(\d+))?\+json/,
       );
       if (mediaTypeMatch) {
         const major = mediaTypeMatch[1];
@@ -93,12 +92,12 @@ export function createVersionExtractor() {
 function normalizeVersion(version: string): string {
   // Remove 'v' prefix if present
   const cleanVersion = version.replace(/^v/i, '');
-  
+
   // Ensure it's a valid version format
   if (!/^\d+(\.\d+)*$/.test(cleanVersion)) {
     throw new Error(`Invalid version format: ${version}`);
   }
-  
+
   return cleanVersion;
 }
 
@@ -106,9 +105,10 @@ function normalizeVersion(version: string): string {
 export class VersionUtils {
   static isVersionSupported(version: string): boolean {
     const normalizedVersion = normalizeVersion(version);
-    return Object.keys(VERSION_COMPATIBILITY).some(supportedVersion =>
-      VERSION_COMPATIBILITY[supportedVersion as keyof typeof VERSION_COMPATIBILITY]
-        .includes(normalizedVersion)
+    return Object.keys(VERSION_COMPATIBILITY).some((supportedVersion) =>
+      VERSION_COMPATIBILITY[supportedVersion as keyof typeof VERSION_COMPATIBILITY].includes(
+        normalizedVersion,
+      ),
     );
   }
 
@@ -125,24 +125,23 @@ export class VersionUtils {
   static compareVersions(version1: string, version2: string): number {
     const v1Parts = normalizeVersion(version1).split('.').map(Number);
     const v2Parts = normalizeVersion(version2).split('.').map(Number);
-    
+
     const maxLength = Math.max(v1Parts.length, v2Parts.length);
-    
+
     for (let i = 0; i < maxLength; i++) {
       const v1Part = v1Parts[i] || 0;
       const v2Part = v2Parts[i] || 0;
-      
+
       if (v1Part < v2Part) return -1;
       if (v1Part > v2Part) return 1;
     }
-    
+
     return 0;
   }
 
   static getLatestVersion(): string {
-    const versions = Object.keys(VERSION_COMPATIBILITY)
-      .map(v => v.replace('v', ''));
-    
+    const versions = Object.keys(VERSION_COMPATIBILITY).map((v) => v.replace('v', ''));
+
     return versions.sort((a, b) => this.compareVersions(b, a))[0];
   }
 }

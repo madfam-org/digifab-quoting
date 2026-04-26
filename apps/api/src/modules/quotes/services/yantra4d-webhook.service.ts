@@ -116,9 +116,6 @@ export class Yantra4dWebhookService {
    * Compute HMAC-SHA256 hex digest of the payload.
    */
   private sign(body: string): string {
-    return crypto
-      .createHmac('sha256', this.secret)
-      .update(body, 'utf-8')
-      .digest('hex');
+    return crypto.createHmac('sha256', this.secret).update(body, 'utf-8').digest('hex');
   }
 }

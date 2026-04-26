@@ -9,7 +9,11 @@ export interface ConversionInsights {
   averageTimeToConversion: number;
   stageDropoffs: Record<ConversionStage, number>;
   topConversionActions: Array<{ action: string; impact: number }>;
-  recommendedOptimizations: Array<{ area: string; suggestion: string; impact: 'low' | 'medium' | 'high' }>;
+  recommendedOptimizations: Array<{
+    area: string;
+    suggestion: string;
+    impact: 'low' | 'medium' | 'high';
+  }>;
 }
 
 @Injectable()
@@ -22,7 +26,10 @@ export class ConversionService {
     private readonly conversionAnalytics: ConversionAnalyticsService,
   ) {}
 
-  async getConversionInsights(tenantId?: string, period: 'day' | 'week' | 'month' = 'month'): Promise<ConversionInsights> {
+  async getConversionInsights(
+    tenantId?: string,
+    period: 'day' | 'week' | 'month' = 'month',
+  ): Promise<ConversionInsights> {
     return this.conversionAnalytics.getConversionInsights(tenantId, period);
   }
 
@@ -50,7 +57,9 @@ export class ConversionService {
     };
   }
 
-  private generateRecommendations(funnel: any): Array<{ type: string; priority: number; action: string }> {
+  private generateRecommendations(
+    funnel: any,
+  ): Array<{ type: string; priority: number; action: string }> {
     const recommendations = [];
 
     if (funnel.stage === ConversionStage.VISITOR) {

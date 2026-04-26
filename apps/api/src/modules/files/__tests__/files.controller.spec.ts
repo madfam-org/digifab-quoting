@@ -102,16 +102,13 @@ describe('FilesController', () => {
 
       mockFilesService.createPresignedUrl.mockResolvedValue(presignedData);
 
-      const result = await controller.createPresignedUrl(
-        createPresignedDto,
-        { user: mockUser }
-      );
+      const result = await controller.createPresignedUrl(createPresignedDto, { user: mockUser });
 
       expect(result).toEqual(presignedData);
       expect(mockFilesService.createPresignedUrl).toHaveBeenCalledWith(
         createPresignedDto,
         mockUser.id,
-        mockUser.tenantId
+        mockUser.tenantId,
       );
     });
 
@@ -123,12 +120,12 @@ describe('FilesController', () => {
       };
 
       mockFilesService.createPresignedUrl.mockRejectedValue(
-        new BadRequestException('Invalid file type')
+        new BadRequestException('Invalid file type'),
       );
 
-      await expect(
-        controller.createPresignedUrl(invalidDto, { user: mockUser })
-      ).rejects.toThrow('Invalid file type');
+      await expect(controller.createPresignedUrl(invalidDto, { user: mockUser })).rejects.toThrow(
+        'Invalid file type',
+      );
     });
 
     it('should enforce file size limits', async () => {
@@ -139,12 +136,12 @@ describe('FilesController', () => {
       };
 
       mockFilesService.createPresignedUrl.mockRejectedValue(
-        new BadRequestException('File size exceeds maximum limit (100MB)')
+        new BadRequestException('File size exceeds maximum limit (100MB)'),
       );
 
-      await expect(
-        controller.createPresignedUrl(oversizedDto, { user: mockUser })
-      ).rejects.toThrow('File size exceeds maximum limit');
+      await expect(controller.createPresignedUrl(oversizedDto, { user: mockUser })).rejects.toThrow(
+        'File size exceeds maximum limit',
+      );
     });
 
     it('should sanitize file names', async () => {
@@ -164,10 +161,7 @@ describe('FilesController', () => {
 
       mockFilesService.createPresignedUrl.mockResolvedValue(sanitizedResult);
 
-      const result = await controller.createPresignedUrl(
-        unsafeDto,
-        { user: mockUser }
-      );
+      const result = await controller.createPresignedUrl(unsafeDto, { user: mockUser });
 
       expect(result.uploadFields.key).not.toContain('../');
     });
@@ -187,10 +181,7 @@ describe('FilesController', () => {
           uploadUrl: 'https://s3.amazonaws.com/...',
         });
 
-        await controller.createPresignedUrl(
-          { ...fileInfo, fileSize: 1024 },
-          { user: mockUser }
-        );
+        await controller.createPresignedUrl({ ...fileInfo, fileSize: 1024 }, { user: mockUser });
 
         expect(mockFilesService.createPresignedUrl).toHaveBeenCalled();
       }
@@ -210,17 +201,13 @@ describe('FilesController', () => {
         status: FileStatus.PROCESSING,
       });
 
-      const result = await controller.confirmUpload(
-        'file-123',
-        confirmDto,
-        { user: mockUser }
-      );
+      const result = await controller.confirmUpload('file-123', confirmDto, { user: mockUser });
 
       expect(result.status).toBe(FileStatus.PROCESSING);
       expect(mockFilesService.confirmUpload).toHaveBeenCalledWith(
         'file-123',
         confirmDto,
-        mockUser.id
+        mockUser.id,
       );
     });
 
@@ -236,11 +223,7 @@ describe('FilesController', () => {
         error: 'Network timeout',
       });
 
-      const result = await controller.confirmUpload(
-        'file-123',
-        failureDto,
-        { user: mockUser }
-      );
+      const result = await controller.confirmUpload('file-123', failureDto, { user: mockUser });
 
       expect(result.status).toBe(FileStatus.FAILED);
       expect(result.error).toBe('Network timeout');
@@ -254,11 +237,11 @@ describe('FilesController', () => {
       };
 
       mockFilesService.confirmUpload.mockRejectedValue(
-        new BadRequestException('Checksum mismatch')
+        new BadRequestException('Checksum mismatch'),
       );
 
       await expect(
-        controller.confirmUpload('file-123', invalidChecksumDto, { user: mockUser })
+        controller.confirmUpload('file-123', invalidChecksumDto, { user: mockUser }),
       ).rejects.toThrow('Checksum mismatch');
     });
 
@@ -268,11 +251,7 @@ describe('FilesController', () => {
         status: FileStatus.PROCESSING,
       });
 
-      await controller.confirmUpload(
-        'file-123',
-        { uploadComplete: true },
-        { user: mockUser }
-      );
+      await controller.confirmUpload('file-123', { uploadComplete: true }, { user: mockUser });
 
       expect(mockFilesService.processFile).toHaveBeenCalledWith('file-123');
     });
@@ -285,38 +264,30 @@ describe('FilesController', () => {
       const result = await controller.getFile('file-123', { user: mockUser });
 
       expect(result).toEqual(mockFile);
-      expect(mockFilesService.getFile).toHaveBeenCalledWith(
-        'file-123',
-        mockUser.id,
-        mockUser.role
-      );
+      expect(mockFilesService.getFile).toHaveBeenCalledWith('file-123', mockUser.id, mockUser.role);
     });
 
     it('should throw 404 for non-existent file', async () => {
-      mockFilesService.getFile.mockRejectedValue(
-        new NotFoundException('File not found')
-      );
+      mockFilesService.getFile.mockRejectedValue(new NotFoundException('File not found'));
 
-      await expect(
-        controller.getFile('invalid-id', { user: mockUser })
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.getFile('invalid-id', { user: mockUser })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should enforce access control', async () => {
       const otherUserFile = { ...mockFile, userId: 'other-user' };
-      
-      mockFilesService.getFile.mockRejectedValue(
-        new ForbiddenException('Access denied')
-      );
 
-      await expect(
-        controller.getFile('file-123', { user: mockUser })
-      ).rejects.toThrow(ForbiddenException);
+      mockFilesService.getFile.mockRejectedValue(new ForbiddenException('Access denied'));
+
+      await expect(controller.getFile('file-123', { user: mockUser })).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should allow admin to view any file', async () => {
       const adminUser = { ...mockUser, role: 'admin' };
-      
+
       mockFilesService.getFile.mockResolvedValue(mockFile);
 
       const result = await controller.getFile('file-123', { user: adminUser });
@@ -340,7 +311,7 @@ describe('FilesController', () => {
       expect(mockFilesService.getDownloadUrl).toHaveBeenCalledWith(
         'file-123',
         mockUser.id,
-        mockUser.role
+        mockUser.role,
       );
     });
 
@@ -355,18 +326,18 @@ describe('FilesController', () => {
       expect(mockFilesService.getDownloadUrl).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(String),
-        expect.any(String)
+        expect.any(String),
       );
     });
 
     it('should cache download URLs', async () => {
       const downloadUrl = { url: 'https://s3.amazonaws.com/...' };
-      
+
       mockFilesService.getDownloadUrl.mockResolvedValue(downloadUrl);
 
       // First call
       await controller.getDownloadUrl('file-123', { user: mockUser });
-      
+
       // Second call should use cache
       await controller.getDownloadUrl('file-123', { user: mockUser });
 
@@ -388,18 +359,18 @@ describe('FilesController', () => {
       expect(mockFilesService.deleteFile).toHaveBeenCalledWith(
         'file-123',
         mockUser.id,
-        mockUser.role
+        mockUser.role,
       );
     });
 
     it('should prevent deletion of files in use', async () => {
       mockFilesService.deleteFile.mockRejectedValue(
-        new BadRequestException('File is referenced by quote')
+        new BadRequestException('File is referenced by quote'),
       );
 
-      await expect(
-        controller.deleteFile('file-123', { user: mockUser })
-      ).rejects.toThrow('File is referenced by quote');
+      await expect(controller.deleteFile('file-123', { user: mockUser })).rejects.toThrow(
+        'File is referenced by quote',
+      );
     });
 
     it('should clean up S3 on deletion', async () => {
@@ -410,9 +381,7 @@ describe('FilesController', () => {
 
       await controller.deleteFile('file-123', { user: mockUser });
 
-      expect(mockS3Service.deleteObject).toHaveBeenCalledWith(
-        'uploads/tenant-123/file-123.stl'
-      );
+      expect(mockS3Service.deleteObject).toHaveBeenCalledWith('uploads/tenant-123/file-123.stl');
     });
 
     it('should handle S3 deletion errors gracefully', async () => {
@@ -443,16 +412,13 @@ describe('FilesController', () => {
 
       mockFilesService.listUserFiles.mockResolvedValue(paginatedResult);
 
-      const result = await controller.listUserFiles(
-        { page: 1, limit: 20 },
-        { user: mockUser }
-      );
+      const result = await controller.listUserFiles({ page: 1, limit: 20 }, { user: mockUser });
 
       expect(result).toEqual(paginatedResult);
-      expect(mockFilesService.listUserFiles).toHaveBeenCalledWith(
-        mockUser.id,
-        { page: 1, limit: 20 }
-      );
+      expect(mockFilesService.listUserFiles).toHaveBeenCalledWith(mockUser.id, {
+        page: 1,
+        limit: 20,
+      });
     });
 
     it('should filter files by type', async () => {
@@ -461,14 +427,11 @@ describe('FilesController', () => {
         meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
       });
 
-      await controller.listUserFiles(
-        { fileType: FileType.MODEL },
-        { user: mockUser }
-      );
+      await controller.listUserFiles({ fileType: FileType.MODEL }, { user: mockUser });
 
       expect(mockFilesService.listUserFiles).toHaveBeenCalledWith(
         mockUser.id,
-        expect.objectContaining({ fileType: FileType.MODEL })
+        expect.objectContaining({ fileType: FileType.MODEL }),
       );
     });
 
@@ -478,14 +441,11 @@ describe('FilesController', () => {
         meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
       });
 
-      await controller.listUserFiles(
-        { status: FileStatus.PROCESSING },
-        { user: mockUser }
-      );
+      await controller.listUserFiles({ status: FileStatus.PROCESSING }, { user: mockUser });
 
       expect(mockFilesService.listUserFiles).toHaveBeenCalledWith(
         mockUser.id,
-        expect.objectContaining({ status: FileStatus.PROCESSING })
+        expect.objectContaining({ status: FileStatus.PROCESSING }),
       );
     });
   });
@@ -507,11 +467,7 @@ describe('FilesController', () => {
         status: FileStatus.READY,
       });
 
-      await controller.confirmUpload(
-        'file-123',
-        { uploadComplete: true },
-        { user: mockUser }
-      );
+      await controller.confirmUpload('file-123', { uploadComplete: true }, { user: mockUser });
 
       expect(mockFilesService.processFile).toHaveBeenCalledWith('file-123');
     });
@@ -521,10 +477,7 @@ describe('FilesController', () => {
         ...mockFile,
         status: FileStatus.FAILED,
         error: 'Invalid STL format: missing facet normal',
-        validationErrors: [
-          'Missing facet normal at line 45',
-          'Unclosed solid',
-        ],
+        validationErrors: ['Missing facet normal at line 45', 'Unclosed solid'],
       });
 
       const result = await mockFilesService.processFile('file-123');
@@ -567,12 +520,12 @@ describe('FilesController', () => {
       };
 
       mockFilesService.createPresignedUrl.mockRejectedValue(
-        new BadRequestException('Invalid file name')
+        new BadRequestException('Invalid file name'),
       );
 
-      await expect(
-        controller.createPresignedUrl(maliciousDto, { user: mockUser })
-      ).rejects.toThrow('Invalid file name');
+      await expect(controller.createPresignedUrl(maliciousDto, { user: mockUser })).rejects.toThrow(
+        'Invalid file name',
+      );
     });
 
     it('should scan for malware', async () => {
@@ -591,7 +544,7 @@ describe('FilesController', () => {
       });
 
       await expect(
-        controller.confirmUpload('file-123', { uploadComplete: true }, { user: mockUser })
+        controller.confirmUpload('file-123', { uploadComplete: true }, { user: mockUser }),
       ).rejects.toThrow('File contains malware');
     });
 
@@ -602,12 +555,12 @@ describe('FilesController', () => {
       };
 
       mockFilesService.getFile.mockRejectedValue(
-        new ForbiddenException('Access denied: wrong tenant')
+        new ForbiddenException('Access denied: wrong tenant'),
       );
 
-      await expect(
-        controller.getFile('file-123', { user: mockUser })
-      ).rejects.toThrow('Access denied: wrong tenant');
+      await expect(controller.getFile('file-123', { user: mockUser })).rejects.toThrow(
+        'Access denied: wrong tenant',
+      );
     });
   });
 });

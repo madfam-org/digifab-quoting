@@ -49,7 +49,10 @@ interface DashboardStats {
   revenueCurrency: Currency;
 }
 
-const STATUS_VARIANT_MAP: Record<QuoteStatus, 'default' | 'secondary' | 'destructive' | 'outline' | 'success'> = {
+const STATUS_VARIANT_MAP: Record<
+  QuoteStatus,
+  'default' | 'secondary' | 'destructive' | 'outline' | 'success'
+> = {
   draft: 'secondary',
   submitted: 'default',
   auto_quoted: 'default',
@@ -120,7 +123,9 @@ export default function DashboardPage() {
     } catch {
       // If stats endpoint doesn't exist, compute from quotes list
       try {
-        const quotesData = await apiClient.get<{ data: DashboardQuote[] } | DashboardQuote[]>('/quotes?limit=100');
+        const quotesData = await apiClient.get<{ data: DashboardQuote[] } | DashboardQuote[]>(
+          '/quotes?limit=100',
+        );
         const allQuotes = Array.isArray(quotesData) ? quotesData : quotesData.data || [];
         const pendingStatuses = new Set([
           QuoteStatus.DRAFT,
@@ -165,7 +170,9 @@ export default function DashboardPage() {
     // Load recent quotes
     setLoadingQuotes(true);
     try {
-      const quotesData = await apiClient.get<{ data: DashboardQuote[] } | DashboardQuote[]>('/quotes?limit=5&sort=createdAt:desc');
+      const quotesData = await apiClient.get<{ data: DashboardQuote[] } | DashboardQuote[]>(
+        '/quotes?limit=5&sort=createdAt:desc',
+      );
       const quotes = Array.isArray(quotesData) ? quotesData : quotesData.data || [];
       setRecentQuotes(quotes.slice(0, 5));
     } catch {
@@ -202,9 +209,7 @@ export default function DashboardPage() {
         {/* Header */}
         <header className="mb-8">
           <h1 className="text-3xl font-bold">{t('dashboard.title')}</h1>
-          <p className="text-muted-foreground mt-1">
-            {t('dashboard.welcome', { name: userName })}
-          </p>
+          <p className="text-muted-foreground mt-1">{t('dashboard.welcome', { name: userName })}</p>
         </header>
 
         {/* KPI Cards */}

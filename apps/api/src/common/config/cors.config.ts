@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 export function createCorsConfig(configService: ConfigService): CorsOptions {
   const nodeEnv = configService.get('NODE_ENV', 'development');
   const allowedOrigins = configService.get('ALLOWED_ORIGINS', '').split(',').filter(Boolean);
-  
+
   // Development defaults
   const webPort = configService.get<number>('FALLBACK_WEB_PORT', 3002);
   const devOrigins = [
@@ -16,9 +16,12 @@ export function createCorsConfig(configService: ConfigService): CorsOptions {
     `http://127.0.0.1:${webPort}`,
   ];
 
-  const origin = nodeEnv === 'production' 
-    ? allowedOrigins.length > 0 ? allowedOrigins : false
-    : [...devOrigins, ...allowedOrigins];
+  const origin =
+    nodeEnv === 'production'
+      ? allowedOrigins.length > 0
+        ? allowedOrigins
+        : false
+      : [...devOrigins, ...allowedOrigins];
 
   return {
     origin,
@@ -58,7 +61,10 @@ export function handlePreflightRequest(req: Request, res: Response, next: NextFu
   if (req.method === 'OPTIONS') {
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Tenant-ID, X-API-Key');
+    res.header(
+      'Access-Control-Allow-Headers',
+      'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Tenant-ID, X-API-Key',
+    );
     res.header('Access-Control-Max-Age', '86400'); // TODO: Make this configurable
     res.sendStatus(204);
     return;

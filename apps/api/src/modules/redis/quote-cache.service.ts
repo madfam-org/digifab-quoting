@@ -99,14 +99,26 @@ export class QuoteCacheService {
   /**
    * Cache pricing configuration
    */
-  async cachePricingConfig(service: string, material: string, config: Record<string, unknown>): Promise<void> {
-    await this.cacheService.cachePricingRules(service, material, config as unknown as PricingRule[], this.PRICING_CACHE_TTL);
+  async cachePricingConfig(
+    service: string,
+    material: string,
+    config: Record<string, unknown>,
+  ): Promise<void> {
+    await this.cacheService.cachePricingRules(
+      service,
+      material,
+      config as unknown as PricingRule[],
+      this.PRICING_CACHE_TTL,
+    );
   }
 
   /**
    * Get cached pricing configuration
    */
-  async getCachedPricingConfig(service: string, material: string): Promise<Record<string, unknown> | null> {
+  async getCachedPricingConfig(
+    service: string,
+    material: string,
+  ): Promise<Record<string, unknown> | null> {
     const rules = await this.cacheService.getCachedPricingRules(service, material);
     return rules as unknown as Record<string, unknown> | null;
   }

@@ -6,18 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CurrencySelector, CurrencyBadge } from '@/components/currency/CurrencySelector';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useCurrency } from '@/hooks/useCurrency';
-import { 
-  Currency, 
-  Locale,
-  GeoDetection 
-} from '@cotiza/shared';
+import { Currency, Locale, GeoDetection } from '@cotiza/shared';
 
 interface UserPreferencesProps {
   userId?: string;
@@ -64,7 +66,7 @@ interface GeoDetectionData {
 
 const TIMEZONES = [
   'America/Mexico_City',
-  'America/New_York', 
+  'America/New_York',
   'America/Los_Angeles',
   'America/Sao_Paulo',
   'Europe/London',
@@ -80,21 +82,21 @@ const CURRENCY_DISPLAY_MODES = [
   { value: 'name', label: 'Full name (US Dollar, Euro)' },
 ] as const;
 
-export function UserPreferences({ 
-  userId, 
-  showGeoDetection = true, 
+export function UserPreferences({
+  userId,
+  showGeoDetection = true,
   onSave,
-  className = '' 
+  className = '',
 }: UserPreferencesProps) {
   const { t, locale, changeLanguage } = useTranslation();
   const { currency, setCurrency } = useCurrency();
-  
+
   const [, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [detectingGeo, setDetectingGeo] = useState(false);
   const [geoData, setGeoData] = useState<GeoDetectionData | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
-  
+
   const [preferences, setPreferences] = useState<UserPreferencesData>({
     locale: locale as Locale,
     currency: currency,
@@ -127,8 +129,8 @@ export function UserPreferences({
   useEffect(() => {
     setHasChanges(
       preferences.locale !== locale ||
-      preferences.currency !== currency ||
-      preferences.timezone !== Intl.DateTimeFormat().resolvedOptions().timeZone
+        preferences.currency !== currency ||
+        preferences.timezone !== Intl.DateTimeFormat().resolvedOptions().timeZone,
     );
   }, [preferences, locale, currency]);
 
@@ -141,14 +143,14 @@ export function UserPreferences({
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (response.ok) {
         const data: GeoDetection = await response.json();
         setGeoData(data as GeoDetectionData);
-        
+
         // Auto-apply high-confidence detections
         if (data.detected.confidence > 0.8) {
-          setPreferences(prev => ({
+          setPreferences((prev) => ({
             ...prev,
             locale: data.detected.locale as Locale,
             currency: data.detected.currency,
@@ -169,15 +171,15 @@ export function UserPreferences({
       // Update local state first
       changeLanguage(preferences.locale);
       await setCurrency(preferences.currency);
-      
+
       // Save to backend if user is authenticated
       if (userId && onSave) {
         await onSave(preferences);
       }
-      
+
       // TODO: Save to localStorage for guest users
       localStorage.setItem('userPreferences', JSON.stringify(preferences));
-      
+
       setHasChanges(false);
     } catch (error) {
       console.error('Failed to save preferences:', error);
@@ -188,16 +190,16 @@ export function UserPreferences({
 
   const handleApplyGeoRecommendation = (type: 'locale' | 'currency') => {
     if (!geoData) return;
-    
+
     if (type === 'locale') {
-      setPreferences(prev => ({
+      setPreferences((prev) => ({
         ...prev,
-        locale: geoData.recommended.locale as Locale
+        locale: geoData.recommended.locale as Locale,
       }));
     } else if (type === 'currency') {
-      setPreferences(prev => ({
+      setPreferences((prev) => ({
         ...prev,
-        currency: geoData.recommended.currency
+        currency: geoData.recommended.currency,
       }));
     }
   };
@@ -212,16 +214,10 @@ export function UserPreferences({
             <MapPin className="h-5 w-5" />
             {t('settings.geoDetection')}
           </CardTitle>
-          <CardDescription>
-            {t('settings.geoDetectionDescription')}
-          </CardDescription>
+          <CardDescription>{t('settings.geoDetectionDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button
-            onClick={handleGeoDetection}
-            disabled={detectingGeo}
-            className="w-full"
-          >
+          <Button onClick={handleGeoDetection} disabled={detectingGeo} className="w-full">
             {detectingGeo ? (
               <>
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -240,7 +236,8 @@ export function UserPreferences({
               <Alert>
                 <AlertDescription className="space-y-2">
                   <div className="font-medium">
-                    {t('settings.detectedLocation')}: {geoData.detected.city}, {geoData.detected.country}
+                    {t('settings.detectedLocation')}: {geoData.detected.city},{' '}
+                    {geoData.detected.country}
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={geoData.detected.confidence > 0.8 ? 'default' : 'secondary'}>
@@ -292,7 +289,7 @@ export function UserPreferences({
                       {t('settings.alternativeCurrencies')}
                     </Label>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {geoData.recommended.alternativeCurrencies.slice(0, 3).map(curr => (
+                      {geoData.recommended.alternativeCurrencies.slice(0, 3).map((curr) => (
                         <CurrencyBadge key={curr} currency={curr} className="text-xs" />
                       ))}
                     </div>
@@ -318,9 +315,7 @@ export function UserPreferences({
             <Globe2 className="h-5 w-5" />
             {t('settings.languageAndCurrency')}
           </CardTitle>
-          <CardDescription>
-            {t('settings.languageAndCurrencyDescription')}
-          </CardDescription>
+          <CardDescription>{t('settings.languageAndCurrencyDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -333,7 +328,7 @@ export function UserPreferences({
               <Label htmlFor="currency">{t('settings.currency')}</Label>
               <CurrencySelector
                 value={preferences.currency}
-                onChange={(curr) => setPreferences(prev => ({ ...prev, currency: curr }))}
+                onChange={(curr) => setPreferences((prev) => ({ ...prev, currency: curr }))}
                 showRates={true}
                 showTrends={true}
               />
@@ -344,15 +339,21 @@ export function UserPreferences({
             <Label htmlFor="timezone">{t('settings.timezone')}</Label>
             <Select
               value={preferences.timezone}
-              onValueChange={(value) => setPreferences(prev => ({ ...prev, timezone: value }))}
+              onValueChange={(value) => setPreferences((prev) => ({ ...prev, timezone: value }))}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TIMEZONES.map(tz => (
+                {TIMEZONES.map((tz) => (
                   <SelectItem key={tz} value={tz}>
-                    {tz.replace('_', ' ')} ({Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'short' }).formatToParts().find(part => part.type === 'timeZoneName')?.value})
+                    {tz.replace('_', ' ')} (
+                    {
+                      Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'short' })
+                        .formatToParts()
+                        .find((part) => part.type === 'timeZoneName')?.value
+                    }
+                    )
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -363,15 +364,15 @@ export function UserPreferences({
             <Label htmlFor="currencyDisplay">{t('settings.currencyDisplayMode')}</Label>
             <Select
               value={preferences.currencyDisplayMode}
-              onValueChange={(value: 'symbol' | 'code' | 'name') => 
-                setPreferences(prev => ({ ...prev, currencyDisplayMode: value }))
+              onValueChange={(value: 'symbol' | 'code' | 'name') =>
+                setPreferences((prev) => ({ ...prev, currencyDisplayMode: value }))
               }
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CURRENCY_DISPLAY_MODES.map(mode => (
+                {CURRENCY_DISPLAY_MODES.map((mode) => (
                   <SelectItem key={mode.value} value={mode.value}>
                     {mode.label}
                   </SelectItem>
@@ -389,8 +390,8 @@ export function UserPreferences({
             </div>
             <Switch
               checked={preferences.autoDetect}
-              onCheckedChange={(checked: boolean) => 
-                setPreferences(prev => ({ ...prev, autoDetect: checked }))
+              onCheckedChange={(checked: boolean) =>
+                setPreferences((prev) => ({ ...prev, autoDetect: checked }))
               }
             />
           </div>
@@ -401,9 +402,7 @@ export function UserPreferences({
       <Card>
         <CardHeader>
           <CardTitle>{t('settings.notifications')}</CardTitle>
-          <CardDescription>
-            {t('settings.notificationsDescription')}
-          </CardDescription>
+          <CardDescription>{t('settings.notificationsDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -415,10 +414,10 @@ export function UserPreferences({
             </div>
             <Switch
               checked={preferences.notifications.email}
-              onCheckedChange={(checked: boolean) => 
-                setPreferences(prev => ({ 
-                  ...prev, 
-                  notifications: { ...prev.notifications, email: checked }
+              onCheckedChange={(checked: boolean) =>
+                setPreferences((prev) => ({
+                  ...prev,
+                  notifications: { ...prev.notifications, email: checked },
                 }))
               }
             />
@@ -433,10 +432,10 @@ export function UserPreferences({
             </div>
             <Switch
               checked={preferences.notifications.push}
-              onCheckedChange={(checked: boolean) => 
-                setPreferences(prev => ({ 
-                  ...prev, 
-                  notifications: { ...prev.notifications, push: checked }
+              onCheckedChange={(checked: boolean) =>
+                setPreferences((prev) => ({
+                  ...prev,
+                  notifications: { ...prev.notifications, push: checked },
                 }))
               }
             />
@@ -448,9 +447,7 @@ export function UserPreferences({
       <Card>
         <CardHeader>
           <CardTitle>{t('settings.privacy')}</CardTitle>
-          <CardDescription>
-            {t('settings.privacyDescription')}
-          </CardDescription>
+          <CardDescription>{t('settings.privacyDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -462,10 +459,10 @@ export function UserPreferences({
             </div>
             <Switch
               checked={preferences.privacy.shareLocationData}
-              onCheckedChange={(checked: boolean) => 
-                setPreferences(prev => ({ 
-                  ...prev, 
-                  privacy: { ...prev.privacy, shareLocationData: checked }
+              onCheckedChange={(checked: boolean) =>
+                setPreferences((prev) => ({
+                  ...prev,
+                  privacy: { ...prev.privacy, shareLocationData: checked },
                 }))
               }
             />
@@ -480,10 +477,10 @@ export function UserPreferences({
             </div>
             <Switch
               checked={preferences.privacy.shareUsageAnalytics}
-              onCheckedChange={(checked: boolean) => 
-                setPreferences(prev => ({ 
-                  ...prev, 
-                  privacy: { ...prev.privacy, shareUsageAnalytics: checked }
+              onCheckedChange={(checked: boolean) =>
+                setPreferences((prev) => ({
+                  ...prev,
+                  privacy: { ...prev.privacy, shareUsageAnalytics: checked },
                 }))
               }
             />
@@ -496,11 +493,7 @@ export function UserPreferences({
         <div className="text-sm text-muted-foreground">
           {hasChanges && t('settings.unsavedChanges')}
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={saving || !hasChanges}
-          className="min-w-24"
-        >
+        <Button onClick={handleSave} disabled={saving || !hasChanges} className="min-w-24">
           {saving ? (
             <>
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />

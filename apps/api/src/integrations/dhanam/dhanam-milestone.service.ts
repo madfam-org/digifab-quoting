@@ -110,15 +110,10 @@ export class DhanamMilestoneService {
     }
 
     // Fire-and-forget per-milestone; one failure doesn't cascade.
-    await Promise.allSettled(
-      ctx.items.map((item) => this.postInvoice(ctx, item)),
-    );
+    await Promise.allSettled(ctx.items.map((item) => this.postInvoice(ctx, item)));
   }
 
-  private async postInvoice(
-    ctx: DhanamMilestoneContext,
-    item: DhanamMilestoneItem,
-  ): Promise<void> {
+  private async postInvoice(ctx: DhanamMilestoneContext, item: DhanamMilestoneItem): Promise<void> {
     const payload: DhanamInvoiceRequest = {
       customerId: ctx.customerId,
       amount: item.amount,
@@ -191,9 +186,6 @@ export class DhanamMilestoneService {
   }
 
   private sign(body: string): string {
-    return crypto
-      .createHmac('sha256', this.secret)
-      .update(body, 'utf-8')
-      .digest('hex');
+    return crypto.createHmac('sha256', this.secret).update(body, 'utf-8').digest('hex');
   }
 }

@@ -2,17 +2,17 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Zap, 
-  BarChart3, 
-  Layers, 
-  Clock, 
+import {
+  Zap,
+  BarChart3,
+  Layers,
+  Clock,
   Brain,
   Globe,
   Smartphone,
   Code,
   Users,
-  Shield
+  Shield,
 } from 'lucide-react';
 
 interface Feature {
@@ -38,9 +38,9 @@ const FEATURES: Feature[] = [
     color: 'from-yellow-400 to-orange-500',
     benefits: [
       'Results in under 3 seconds',
-      'Process 100+ files simultaneously', 
+      'Process 100+ files simultaneously',
       'Real-time cost updates',
-      'No waiting for email responses'
+      'No waiting for email responses',
     ],
     demo: {
       title: 'Speed Comparison',
@@ -48,9 +48,9 @@ const FEATURES: Feature[] = [
       metrics: [
         { label: 'Traditional', value: '3-7 days', improvement: '' },
         { label: 'Cotiza Studio', value: '< 3 seconds', improvement: '99.9% faster' },
-        { label: 'Accuracy', value: '±5%', improvement: 'Industry leading' }
-      ]
-    }
+        { label: 'Accuracy', value: '±5%', improvement: 'Industry leading' },
+      ],
+    },
   },
   {
     id: 'smart-optimization',
@@ -62,7 +62,7 @@ const FEATURES: Feature[] = [
       'Automatic cost reduction suggestions',
       'DFM (Design for Manufacturing) analysis',
       'Material selection optimization',
-      'Process recommendations'
+      'Process recommendations',
     ],
     demo: {
       title: 'Cost Savings',
@@ -70,9 +70,9 @@ const FEATURES: Feature[] = [
       metrics: [
         { label: 'Material costs', value: '23%', improvement: 'reduction' },
         { label: 'Process time', value: '35%', improvement: 'faster' },
-        { label: 'Overall project', value: '$234', improvement: 'average savings' }
-      ]
-    }
+        { label: 'Overall project', value: '$234', improvement: 'average savings' },
+      ],
+    },
   },
   {
     id: 'multi-process',
@@ -84,7 +84,7 @@ const FEATURES: Feature[] = [
       'All major processes supported',
       'Material libraries for each process',
       'Quality comparisons',
-      'Lead time analysis'
+      'Lead time analysis',
     ],
     demo: {
       title: 'Process Comparison',
@@ -92,9 +92,9 @@ const FEATURES: Feature[] = [
       metrics: [
         { label: '3D Printing', value: '$25', improvement: '2 days' },
         { label: 'CNC Machining', value: '$89', improvement: '5 days' },
-        { label: 'Injection Molding', value: '$12', improvement: '14 days' }
-      ]
-    }
+        { label: 'Injection Molding', value: '$12', improvement: '14 days' },
+      ],
+    },
   },
   {
     id: 'business-tools',
@@ -106,7 +106,7 @@ const FEATURES: Feature[] = [
       'Customer management system',
       'Team collaboration tools',
       'White-label solutions',
-      'API integrations'
+      'API integrations',
     ],
     demo: {
       title: 'Business Impact',
@@ -114,9 +114,9 @@ const FEATURES: Feature[] = [
       metrics: [
         { label: 'Quote time', value: '60%', improvement: 'reduction' },
         { label: 'Customer satisfaction', value: '40%', improvement: 'increase' },
-        { label: 'Revenue per job', value: '25%', improvement: 'increase' }
-      ]
-    }
+        { label: 'Revenue per job', value: '25%', improvement: 'increase' },
+      ],
+    },
   },
   {
     id: 'market-intelligence',
@@ -128,7 +128,7 @@ const FEATURES: Feature[] = [
       'Real supplier pricing data',
       'Market trend analysis',
       'Competitive intelligence',
-      'Historical price tracking'
+      'Historical price tracking',
     ],
     demo: {
       title: 'Market Data',
@@ -136,9 +136,9 @@ const FEATURES: Feature[] = [
       metrics: [
         { label: 'Price accuracy', value: '95%', improvement: 'confidence' },
         { label: 'Market coverage', value: '1000+', improvement: 'suppliers' },
-        { label: 'Data freshness', value: '< 24h', improvement: 'updated' }
-      ]
-    }
+        { label: 'Data freshness', value: '< 24h', improvement: 'updated' },
+      ],
+    },
   },
   {
     id: 'integrations',
@@ -150,7 +150,7 @@ const FEATURES: Feature[] = [
       'REST API with webhooks',
       'CAD software plugins (coming)',
       'E-commerce integrations',
-      'CRM and ERP connections'
+      'CRM and ERP connections',
     ],
     demo: {
       title: 'Integration Options',
@@ -158,10 +158,10 @@ const FEATURES: Feature[] = [
       metrics: [
         { label: 'API uptime', value: '99.9%', improvement: 'reliability' },
         { label: 'Response time', value: '< 200ms', improvement: 'average' },
-        { label: 'Integrations', value: '50+', improvement: 'available' }
-      ]
-    }
-  }
+        { label: 'Integrations', value: '50+', improvement: 'available' },
+      ],
+    },
+  },
 ];
 
 export function FeatureShowcase() {
@@ -171,11 +171,10 @@ export function FeatureShowcase() {
     <div className="space-y-16">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-4xl font-bold text-white mb-4">
-          Powerful Features for Every Need
-        </h2>
+        <h2 className="text-4xl font-bold text-white mb-4">Powerful Features for Every Need</h2>
         <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-          From instant quotes to market intelligence, Cotiza Studio provides everything you need to make informed manufacturing decisions
+          From instant quotes to market intelligence, Cotiza Studio provides everything you need to
+          make informed manufacturing decisions
         </p>
       </div>
 
@@ -193,7 +192,9 @@ export function FeatureShowcase() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className={`inline-flex p-2 rounded-lg bg-gradient-to-r ${feature.color} text-white mb-3`}>
+            <div
+              className={`inline-flex p-2 rounded-lg bg-gradient-to-r ${feature.color} text-white mb-3`}
+            >
               {feature.icon}
             </div>
             <h3 className="font-semibold text-white mb-1">{feature.title}</h3>
@@ -216,16 +217,14 @@ export function FeatureShowcase() {
             {/* Feature Info */}
             <div>
               <div className="flex items-center mb-6">
-                <div className={`p-4 rounded-xl bg-gradient-to-r ${activeFeature.color} text-white mr-4`}>
+                <div
+                  className={`p-4 rounded-xl bg-gradient-to-r ${activeFeature.color} text-white mr-4`}
+                >
                   {activeFeature.icon}
                 </div>
                 <div>
-                  <h3 className="text-3xl font-bold text-white mb-2">
-                    {activeFeature.title}
-                  </h3>
-                  <p className="text-blue-100">
-                    {activeFeature.description}
-                  </p>
+                  <h3 className="text-3xl font-bold text-white mb-2">{activeFeature.title}</h3>
+                  <p className="text-blue-100">{activeFeature.description}</p>
                 </div>
               </div>
 
@@ -240,7 +239,9 @@ export function FeatureShowcase() {
                     transition={{ delay: idx * 0.1 }}
                     className="flex items-center space-x-3"
                   >
-                    <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${activeFeature.color}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full bg-gradient-to-r ${activeFeature.color}`}
+                    />
                     <span className="text-blue-100">{benefit}</span>
                   </motion.div>
                 ))}
@@ -268,7 +269,9 @@ export function FeatureShowcase() {
                           <div className="text-sm text-gray-600">{metric.improvement}</div>
                         )}
                       </div>
-                      <div className={`text-2xl font-bold bg-gradient-to-r ${activeFeature.color} bg-clip-text text-transparent`}>
+                      <div
+                        className={`text-2xl font-bold bg-gradient-to-r ${activeFeature.color} bg-clip-text text-transparent`}
+                      >
                         {metric.value}
                       </div>
                     </motion.div>
@@ -278,7 +281,9 @@ export function FeatureShowcase() {
 
               {/* CTA */}
               <div className="mt-8">
-                <button className={`w-full py-3 px-6 rounded-xl font-semibold text-white bg-gradient-to-r ${activeFeature.color} hover:scale-105 transition-transform`}>
+                <button
+                  className={`w-full py-3 px-6 rounded-xl font-semibold text-white bg-gradient-to-r ${activeFeature.color} hover:scale-105 transition-transform`}
+                >
                   Try This Feature
                 </button>
               </div>
@@ -293,7 +298,7 @@ export function FeatureShowcase() {
           { icon: <Users />, label: '10,000+', description: 'Happy Users' },
           { icon: <Clock />, label: '99.9%', description: 'Uptime' },
           { icon: <Shield />, label: 'SOC 2', description: 'Compliant' },
-          { icon: <Smartphone />, label: '24/7', description: 'Support' }
+          { icon: <Smartphone />, label: '24/7', description: 'Support' },
         ].map((stat, idx) => (
           <motion.div
             key={idx}
@@ -302,9 +307,7 @@ export function FeatureShowcase() {
             transition={{ delay: idx * 0.1 }}
             className="text-white"
           >
-            <div className="inline-flex p-3 rounded-full bg-white/10 mb-4">
-              {stat.icon}
-            </div>
+            <div className="inline-flex p-3 rounded-full bg-white/10 mb-4">{stat.icon}</div>
             <div className="text-3xl font-bold mb-2">{stat.label}</div>
             <div className="text-blue-100">{stat.description}</div>
           </motion.div>

@@ -49,16 +49,19 @@ export class LaserPricingCalculator extends BasePricingCalculator {
     const marginAmount = this.calculateMargin(costTotal);
 
     const basePrice = costTotal.plus(marginAmount);
-    const { discount, warnings: discountWarnings } = this.calculateVolumeDiscount(basePrice, costTotal);
+    const { discount, warnings: discountWarnings } = this.calculateVolumeDiscount(
+      basePrice,
+      costTotal,
+    );
     const unitPrice = basePrice.minus(discount);
     const totalPrice = unitPrice.mul(this.input.quantity);
-    
+
     // Validate final pricing
     const { warnings: pricingWarnings } = this.validateFinalPricing(
       costTotal,
       unitPrice,
       marginAmount,
-      discount
+      discount,
     );
 
     // Calculate sustainability
@@ -85,11 +88,7 @@ export class LaserPricingCalculator extends BasePricingCalculator {
       ),
       sustainability,
       confidence: 0.98, // Very high confidence for laser cutting
-      warnings: [
-        ...this.generateWarnings(usage),
-        ...discountWarnings,
-        ...pricingWarnings
-      ],
+      warnings: [...this.generateWarnings(usage), ...discountWarnings, ...pricingWarnings],
     };
   }
 

@@ -44,7 +44,7 @@ describe('PaymentsController', () => {
     id: 'payment-123',
     quoteId: 'quote-123',
     orderId: 'order-123',
-    amount: 1500.00,
+    amount: 1500.0,
     currency: 'USD',
     status: PaymentStatus.PENDING,
     method: PaymentMethod.CARD,
@@ -105,56 +105,50 @@ describe('PaymentsController', () => {
 
       mockPaymentsService.createCheckoutSession.mockResolvedValue(checkoutSession);
 
-      const result = await controller.createCheckoutSession(
-        'quote-123',
-        createCheckoutDto,
-        { user: mockUser }
-      );
+      const result = await controller.createCheckoutSession('quote-123', createCheckoutDto, {
+        user: mockUser,
+      });
 
       expect(result).toEqual(checkoutSession);
       expect(mockPaymentsService.createCheckoutSession).toHaveBeenCalledWith(
         'quote-123',
         createCheckoutDto,
-        mockUser.id
+        mockUser.id,
       );
     });
 
     it('should validate quote ownership', async () => {
       mockPaymentsService.createCheckoutSession.mockRejectedValue(
-        new NotFoundException('Quote not found or access denied')
+        new NotFoundException('Quote not found or access denied'),
       );
 
       await expect(
-        controller.createCheckoutSession('quote-456', createCheckoutDto, { user: mockUser })
+        controller.createCheckoutSession('quote-456', createCheckoutDto, { user: mockUser }),
       ).rejects.toThrow('Quote not found or access denied');
     });
 
     it('should prevent duplicate payments', async () => {
       mockPaymentsService.createCheckoutSession.mockRejectedValue(
-        new BadRequestException('Payment already exists for this quote')
+        new BadRequestException('Payment already exists for this quote'),
       );
 
       await expect(
-        controller.createCheckoutSession('quote-123', createCheckoutDto, { user: mockUser })
+        controller.createCheckoutSession('quote-123', createCheckoutDto, { user: mockUser }),
       ).rejects.toThrow('Payment already exists');
     });
 
     it('should validate quote status', async () => {
       mockPaymentsService.createCheckoutSession.mockRejectedValue(
-        new BadRequestException('Quote must be approved before payment')
+        new BadRequestException('Quote must be approved before payment'),
       );
 
       await expect(
-        controller.createCheckoutSession('quote-123', createCheckoutDto, { user: mockUser })
+        controller.createCheckoutSession('quote-123', createCheckoutDto, { user: mockUser }),
       ).rejects.toThrow('Quote must be approved');
     });
 
     it('should handle different payment methods', async () => {
-      const methods = [
-        PaymentMethod.CARD,
-        PaymentMethod.BANK_TRANSFER,
-        PaymentMethod.PAYPAL,
-      ];
+      const methods = [PaymentMethod.CARD, PaymentMethod.BANK_TRANSFER, PaymentMethod.PAYPAL];
 
       for (const method of methods) {
         const dto = { ...createCheckoutDto, paymentMethod: method };
@@ -168,7 +162,7 @@ describe('PaymentsController', () => {
         expect(mockPaymentsService.createCheckoutSession).toHaveBeenCalledWith(
           'quote-123',
           expect.objectContaining({ paymentMethod: method }),
-          mockUser.id
+          mockUser.id,
         );
       }
     });
@@ -195,10 +189,7 @@ describe('PaymentsController', () => {
       const result = await controller.getPaymentStatus('quote-123', { user: mockUser });
 
       expect(result).toEqual(paymentStatus);
-      expect(mockPaymentsService.getPaymentStatus).toHaveBeenCalledWith(
-        'quote-123',
-        mockUser.id
-      );
+      expect(mockPaymentsService.getPaymentStatus).toHaveBeenCalledWith('quote-123', mockUser.id);
     });
 
     it('should handle pending payments', async () => {
@@ -256,16 +247,12 @@ describe('PaymentsController', () => {
         payment: { ...mockPayment, status: PaymentStatus.COMPLETED },
       });
 
-      const result = await controller.handleStripeWebhook(
-        webhookBody,
-        { headers: { 'stripe-signature': signature } }
-      );
+      const result = await controller.handleStripeWebhook(webhookBody, {
+        headers: { 'stripe-signature': signature },
+      });
 
       expect(result.success).toBe(true);
-      expect(mockStripeService.constructWebhookEvent).toHaveBeenCalledWith(
-        webhookBody,
-        signature
-      );
+      expect(mockStripeService.constructWebhookEvent).toHaveBeenCalledWith(webhookBody, signature);
     });
 
     it('should handle payment failure webhook', async () => {
@@ -299,13 +286,13 @@ describe('PaymentsController', () => {
       });
 
       expect(mockPaymentsService.processWebhook).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'payment_intent.payment_failed' })
+        expect.objectContaining({ type: 'payment_intent.payment_failed' }),
       );
     });
 
     it('should validate webhook signature', async () => {
       const invalidSignature = 'invalid-signature';
-      
+
       mockStripeService.constructWebhookEvent.mockImplementation(() => {
         throw new Error('Invalid signature');
       });
@@ -313,7 +300,7 @@ describe('PaymentsController', () => {
       await expect(
         controller.handleStripeWebhook('body', {
           headers: { 'stripe-signature': invalidSignature },
-        })
+        }),
       ).rejects.toThrow('Invalid signature');
     });
 
@@ -349,7 +336,7 @@ describe('PaymentsController', () => {
 
   describe('refundPayment', () => {
     const refundDto = {
-      amount: 500.00,
+      amount: 500.0,
       reason: 'Customer requested refund',
     };
 
@@ -357,14 +344,14 @@ describe('PaymentsController', () => {
       const refundResult = {
         refund: {
           id: 'refund-123',
-          amount: 1500.00,
+          amount: 1500.0,
           status: 'succeeded',
           reason: 'requested_by_customer',
         },
         payment: {
           ...mockPayment,
           status: PaymentStatus.REFUNDED,
-          refundedAmount: 1500.00,
+          refundedAmount: 1500.0,
         },
       };
 
@@ -373,14 +360,14 @@ describe('PaymentsController', () => {
       const result = await controller.refundPayment(
         'payment-123',
         { reason: 'Customer requested refund' },
-        { user: { ...mockUser, role: 'admin' } }
+        { user: { ...mockUser, role: 'admin' } },
       );
 
       expect(result).toEqual(refundResult);
       expect(mockPaymentsService.refundPayment).toHaveBeenCalledWith(
         'payment-123',
         undefined, // Full refund when amount not specified
-        'Customer requested refund'
+        'Customer requested refund',
       );
     });
 
@@ -388,69 +375,60 @@ describe('PaymentsController', () => {
       const partialRefundResult = {
         refund: {
           id: 'refund-456',
-          amount: 500.00,
+          amount: 500.0,
           status: 'succeeded',
         },
         payment: {
           ...mockPayment,
           status: PaymentStatus.PARTIALLY_REFUNDED,
-          refundedAmount: 500.00,
+          refundedAmount: 500.0,
         },
       };
 
       mockPaymentsService.refundPayment.mockResolvedValue(partialRefundResult);
 
-      const result = await controller.refundPayment(
-        'payment-123',
-        refundDto,
-        { user: { ...mockUser, role: 'admin' } }
-      );
+      const result = await controller.refundPayment('payment-123', refundDto, {
+        user: { ...mockUser, role: 'admin' },
+      });
 
       expect(result.payment.status).toBe(PaymentStatus.PARTIALLY_REFUNDED);
-      expect(result.payment.refundedAmount).toBe(500.00);
+      expect(result.payment.refundedAmount).toBe(500.0);
     });
 
     it('should prevent refund for non-admin users', async () => {
       await expect(
-        controller.refundPayment('payment-123', refundDto, { user: mockUser })
+        controller.refundPayment('payment-123', refundDto, { user: mockUser }),
       ).rejects.toThrow('Insufficient permissions');
     });
 
     it('should validate refund amount', async () => {
       mockPaymentsService.refundPayment.mockRejectedValue(
-        new BadRequestException('Refund amount exceeds payment amount')
+        new BadRequestException('Refund amount exceeds payment amount'),
       );
 
       await expect(
         controller.refundPayment(
           'payment-123',
-          { amount: 2000.00 },
-          { user: { ...mockUser, role: 'admin' } }
-        )
+          { amount: 2000.0 },
+          { user: { ...mockUser, role: 'admin' } },
+        ),
       ).rejects.toThrow('Refund amount exceeds');
     });
 
     it('should prevent duplicate refunds', async () => {
       mockPaymentsService.refundPayment.mockRejectedValue(
-        new BadRequestException('Payment already fully refunded')
+        new BadRequestException('Payment already fully refunded'),
       );
 
       await expect(
-        controller.refundPayment(
-          'payment-123',
-          {},
-          { user: { ...mockUser, role: 'admin' } }
-        )
+        controller.refundPayment('payment-123', {}, { user: { ...mockUser, role: 'admin' } }),
       ).rejects.toThrow('already fully refunded');
     });
   });
 
   describe('listPayments', () => {
     it('should list user payments', async () => {
-      const payments = [
-        mockPayment,
-        { ...mockPayment, id: 'payment-456', amount: 2500.00 },
-      ];
+      const payments = [mockPayment, { ...mockPayment, id: 'payment-456', amount: 2500.0 }];
 
       const paginatedResult = {
         data: payments,
@@ -464,16 +442,13 @@ describe('PaymentsController', () => {
 
       mockPaymentsService.listPayments.mockResolvedValue(paginatedResult);
 
-      const result = await controller.listPayments(
-        { page: 1, limit: 20 },
-        { user: mockUser }
-      );
+      const result = await controller.listPayments({ page: 1, limit: 20 }, { user: mockUser });
 
       expect(result).toEqual(paginatedResult);
       expect(mockPaymentsService.listPayments).toHaveBeenCalledWith(
         mockUser.id,
         { page: 1, limit: 20 },
-        mockUser.role
+        mockUser.role,
       );
     });
 
@@ -483,15 +458,12 @@ describe('PaymentsController', () => {
         meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
       });
 
-      await controller.listPayments(
-        { status: PaymentStatus.COMPLETED },
-        { user: mockUser }
-      );
+      await controller.listPayments({ status: PaymentStatus.COMPLETED }, { user: mockUser });
 
       expect(mockPaymentsService.listPayments).toHaveBeenCalledWith(
         mockUser.id,
         expect.objectContaining({ status: PaymentStatus.COMPLETED }),
-        mockUser.role
+        mockUser.role,
       );
     });
 
@@ -511,7 +483,7 @@ describe('PaymentsController', () => {
       expect(mockPaymentsService.listPayments).toHaveBeenCalledWith(
         mockUser.id,
         expect.objectContaining(dateFilter),
-        mockUser.role
+        mockUser.role,
       );
     });
   });
@@ -527,10 +499,7 @@ describe('PaymentsController', () => {
 
       mockPaymentsService.getPaymentDetails.mockResolvedValue(paymentWithCard);
 
-      const result = await controller.getPaymentDetails(
-        'payment-123',
-        { user: mockUser }
-      );
+      const result = await controller.getPaymentDetails('payment-123', { user: mockUser });
 
       expect(result.cardLast4).toBe('4242');
       expect(result.cardFingerprint).toBeUndefined(); // Should be removed
@@ -544,7 +513,7 @@ describe('PaymentsController', () => {
 
       // Controller should never accept full card details
       await expect(
-        controller.updatePaymentMethod('payment-123', sensitiveData, { user: mockUser })
+        controller.updatePaymentMethod('payment-123', sensitiveData, { user: mockUser }),
       ).rejects.toThrow('Invalid request');
     });
 
@@ -559,9 +528,9 @@ describe('PaymentsController', () => {
         throw new Error('Invalid webhook source');
       });
 
-      await expect(
-        controller.handleStripeWebhook('body', req)
-      ).rejects.toThrow('Invalid webhook source');
+      await expect(controller.handleStripeWebhook('body', req)).rejects.toThrow(
+        'Invalid webhook source',
+      );
     });
   });
 
@@ -578,10 +547,7 @@ describe('PaymentsController', () => {
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       });
 
-      const result = await controller.createSubscription(
-        subscriptionDto,
-        { user: mockUser }
-      );
+      const result = await controller.createSubscription(subscriptionDto, { user: mockUser });
 
       expect(result.status).toBe('active');
       expect(result.subscriptionId).toBe('sub_123');
@@ -597,14 +563,14 @@ describe('PaymentsController', () => {
       const result = await controller.cancelSubscription(
         'sub_123',
         { reason: 'Customer request' },
-        { user: mockUser }
+        { user: mockUser },
       );
 
       expect(result.status).toBe('canceled');
       expect(mockPaymentsService.cancelSubscription).toHaveBeenCalledWith(
         'sub_123',
         mockUser.id,
-        'Customer request'
+        'Customer request',
       );
     });
   });
@@ -626,7 +592,7 @@ describe('PaymentsController', () => {
 
       const result = await controller.getPaymentAnalytics(
         { startDate: new Date('2025-01-01'), endDate: new Date('2025-01-31') },
-        { user: { ...mockUser, role: 'admin' } }
+        { user: { ...mockUser, role: 'admin' } },
       );
 
       expect(result).toEqual(analyticsData);

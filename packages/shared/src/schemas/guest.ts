@@ -49,11 +49,13 @@ export const guestQuoteSchema = z.object({
 
 export const createGuestQuoteSchema = z.object({
   uploadId: z.string(),
-  files: z.array(z.object({
-    key: z.string(),
-    filename: z.string(),
-    size: z.number().int().positive(),
-  })),
+  files: z.array(
+    z.object({
+      key: z.string(),
+      filename: z.string(),
+      size: z.number().int().positive(),
+    }),
+  ),
 });
 
 export const updateGuestQuoteItemSchema = z.object({

@@ -41,6 +41,7 @@ aws --endpoint-url=http://localhost:4566 s3 ls
 #### Connection Refused / Can't Connect
 
 **Symptoms:**
+
 - `ECONNREFUSED` errors
 - `Connection terminated unexpectedly`
 - `password authentication failed`
@@ -68,6 +69,7 @@ npm run db:migrate
 ```
 
 **Common Causes:**
+
 - Docker container not running
 - Wrong connection credentials
 - Port conflict (5432 in use)
@@ -76,6 +78,7 @@ npm run db:migrate
 #### Migration Failures
 
 **Symptoms:**
+
 - `Migration failed` errors
 - `Column already exists`
 - `Relation does not exist`
@@ -103,6 +106,7 @@ npm run db:generate
 #### Slow Queries
 
 **Symptoms:**
+
 - Long response times
 - Database timeouts
 - High CPU usage
@@ -146,6 +150,7 @@ psql $DATABASE_URL -c "EXPLAIN ANALYZE SELECT * FROM quotes WHERE status = 'quot
 #### Connection Problems
 
 **Symptoms:**
+
 - `Redis connection failed`
 - `ECONNREFUSED` to Redis
 - Session/cache misses
@@ -172,6 +177,7 @@ redis-cli FLUSHALL
 #### Memory Issues
 
 **Symptoms:**
+
 - Redis running out of memory
 - `OOM` errors
 - Evicted keys
@@ -208,6 +214,7 @@ redis-cli --scan --pattern "cache:*" | xargs redis-cli DEL
 #### API Server Won't Start
 
 **Symptoms:**
+
 - `Port already in use`
 - `Module not found`
 - Compilation errors
@@ -236,6 +243,7 @@ DEBUG=* npm run start:dev
 #### Module Resolution Errors
 
 **Symptoms:**
+
 - `Cannot find module '@/...'`
 - `Module not found` errors
 - Import path issues
@@ -260,6 +268,7 @@ npm ci
 #### Worker Process Issues
 
 **Symptoms:**
+
 - Jobs stuck in queue
 - Python import errors
 - Geometry analysis failures
@@ -290,6 +299,7 @@ python -c "from geometry_analyzer import process_file; process_file('path/to/fil
 #### Build Failures
 
 **Symptoms:**
+
 - `next build` fails
 - TypeScript errors
 - Module not found
@@ -318,6 +328,7 @@ env | grep NEXT_PUBLIC
 #### Runtime Errors
 
 **Symptoms:**
+
 - White screen of death
 - `hydration mismatch` errors
 - API connection failures
@@ -346,6 +357,7 @@ npm run dev
 #### High Response Times
 
 **Symptoms:**
+
 - API latency > 1s
 - Database connection pool exhaustion
 - High CPU usage
@@ -395,6 +407,7 @@ redis-cli CONFIG SET maxmemory 1gb
 #### Memory Leaks
 
 **Symptoms:**
+
 - Gradual memory increase
 - OOM kills
 - Container restarts
@@ -444,6 +457,7 @@ aws cloudwatch put-metric-alarm \
 #### Connection Pool Exhaustion
 
 **Symptoms:**
+
 - `remaining connection slots reserved`
 - `too many clients already`
 - Connection timeouts
@@ -469,6 +483,7 @@ psql $DATABASE_URL -c "SELECT pg_reload_conf();"
 #### Lock Contention
 
 **Symptoms:**
+
 - Deadlock detected
 - Long-running transactions
 - Query timeouts
@@ -511,6 +526,7 @@ psql $DATABASE_URL -c "EXPLAIN ANALYZE SELECT ..."
 #### JWT Token Problems
 
 **Symptoms:**
+
 - `Invalid token` errors
 - Frequent token expiration
 - Token verification failures
@@ -535,6 +551,7 @@ date
 #### Session Management
 
 **Symptoms:**
+
 - Users logged out unexpectedly
 - Session data lost
 - Cross-device session issues
@@ -560,6 +577,7 @@ redis-cli MONITOR | grep sess
 #### Stripe Integration Issues
 
 **Symptoms:**
+
 - Payment webhooks failing
 - Checkout sessions not created
 - Payment status not updating
@@ -604,6 +622,7 @@ aws secretsmanager update-secret \
 #### Upload Failures
 
 **Symptoms:**
+
 - S3 upload timeouts
 - File corruption
 - Permission denied errors
@@ -634,6 +653,7 @@ aws cloudwatch get-metric-statistics \
 #### Geometry Analysis Failures
 
 **Symptoms:**
+
 - DFM analysis stuck
 - Invalid geometry errors
 - Worker process crashes
@@ -891,11 +911,13 @@ alias mf-restart='aws ecs update-service --cluster madfam-prod --service madfam-
 ### Internal Resources
 
 1. **Check Documentation:**
+
    - [API Documentation](/docs/API.md)
    - [Architecture Guide](/docs/ARCHITECTURE.md)
    - [Development Guide](/docs/DEVELOPMENT.md)
 
 2. **Check Logs:**
+
    - Application logs in CloudWatch
    - Database logs in RDS console
    - Load balancer logs in S3
@@ -908,10 +930,12 @@ alias mf-restart='aws ecs update-service --cluster madfam-prod --service madfam-
 ### External Support
 
 1. **AWS Support:**
+
    - Check AWS Health Dashboard
    - Open support case for infrastructure issues
 
 2. **Third-Party Services:**
+
    - Stripe Dashboard for payment issues
    - SendGrid logs for email delivery
 
@@ -929,4 +953,4 @@ alias mf-restart='aws ecs update-service --cluster madfam-prod --service madfam-
 
 ---
 
-*This troubleshooting guide is maintained by the development team. Please update it when you discover new issues or solutions.*
+_This troubleshooting guide is maintained by the development team. Please update it when you discover new issues or solutions._

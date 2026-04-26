@@ -14,25 +14,25 @@ graph TB
         Browser[Browser Client]
         Mobile[Mobile App]
     end
-    
+
     subgraph "Edge Layer"
         CDN[CDN/Edge Worker]
         GeoIP[IP Geolocation Service]
     end
-    
+
     subgraph "API Layer"
         Gateway[API Gateway]
         LocaleAPI[Locale Service]
         CurrencyAPI[Currency Service]
         ExchangeAPI[Exchange Rate Service]
     end
-    
+
     subgraph "Data Layer"
         Cache[Redis Cache]
         DB[(PostgreSQL)]
         RateProvider[FX Rate Provider]
     end
-    
+
     Browser --> CDN
     Mobile --> CDN
     CDN --> GeoIP
@@ -49,12 +49,15 @@ graph TB
 ### 1.2 Geo-Detection Strategy
 
 **Multi-Layer Detection:**
+
 1. **CloudFlare/Vercel Edge Headers** (Primary)
+
    - `CF-IPCountry` / `X-Vercel-IP-Country`
    - `CF-IPCity` / `X-Vercel-IP-City`
    - `CF-Timezone` / `X-Vercel-IP-Timezone`
 
 2. **IP Geolocation API** (Fallback)
+
    - MaxMind GeoIP2
    - IPinfo.io
    - IP2Location
@@ -76,33 +79,33 @@ interface GeoMapping {
 }
 
 const geoMappings: Record<string, GeoMapping> = {
-  'MX': {
+  MX: {
     country: 'Mexico',
     defaultCurrency: 'MXN',
     defaultLocale: 'es',
     supportedCurrencies: ['MXN', 'USD'],
-    timezone: 'America/Mexico_City'
+    timezone: 'America/Mexico_City',
   },
-  'US': {
+  US: {
     country: 'United States',
     defaultCurrency: 'USD',
     defaultLocale: 'en',
     supportedCurrencies: ['USD'],
-    timezone: 'America/New_York'
+    timezone: 'America/New_York',
   },
-  'BR': {
+  BR: {
     country: 'Brazil',
     defaultCurrency: 'BRL',
     defaultLocale: 'pt-BR',
     supportedCurrencies: ['BRL', 'USD'],
-    timezone: 'America/Sao_Paulo'
+    timezone: 'America/Sao_Paulo',
   },
-  'ES': {
+  ES: {
     country: 'Spain',
     defaultCurrency: 'EUR',
     defaultLocale: 'es',
     supportedCurrencies: ['EUR'],
-    timezone: 'Europe/Madrid'
+    timezone: 'Europe/Madrid',
   },
   // ... more countries
 };
@@ -135,7 +138,7 @@ model ExchangeRate {
   validFrom    DateTime
   validUntil   DateTime
   createdAt    DateTime @default(now())
-  
+
   @@unique([baseCurrency, targetCurrency, validFrom])
   @@index([validFrom, validUntil])
 }
@@ -150,7 +153,7 @@ model UserPreferences {
   autoDetect      Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   user User @relation(fields: [userId], references: [id])
 }
 
@@ -170,7 +173,7 @@ model GeoSession {
   userAgent       String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@index([sessionId])
   @@index([ipAddress])
 }
@@ -196,9 +199,9 @@ model MaterialPricing {
   pricePerUnit Decimal  @db.Decimal(10, 2)
   validFrom    DateTime
   validUntil   DateTime?
-  
+
   material Material @relation(fields: [materialId], references: [id])
-  
+
   @@unique([materialId, currency, validFrom])
   @@index([materialId, currency])
 }
@@ -211,9 +214,9 @@ model ProcessPricing {
   hourlyRate Decimal  @db.Decimal(10, 2)
   validFrom  DateTime
   validUntil DateTime?
-  
+
   process ManufacturingProcess @relation(fields: [processId], references: [id])
-  
+
   @@unique([processId, currency, validFrom])
 }
 ```
@@ -333,30 +336,35 @@ interface CreateQuoteRequest {
 ## 4. Implementation Strategy
 
 ### 4.1 Phase 1: Infrastructure (Week 1-2)
+
 - [ ] Set up edge detection using Vercel/CloudFlare headers
 - [ ] Implement IP geolocation fallback service
 - [ ] Create GeoSession tracking for guests
 - [ ] Add UserPreferences model and API
 
 ### 4.2 Phase 2: Currency Engine (Week 2-3)
+
 - [ ] Integrate exchange rate provider (OpenExchangeRates/XE)
 - [ ] Implement rate caching with Redis (1hr TTL)
 - [ ] Build currency conversion service with fee calculation
 - [ ] Add historical rate support for reporting
 
 ### 4.3 Phase 3: Frontend Integration (Week 3-4)
+
 - [ ] Implement geo-detection hook
 - [ ] Add currency selector component
 - [ ] Update pricing displays with currency symbols
 - [ ] Implement real-time currency conversion UI
 
 ### 4.4 Phase 4: Quote System Update (Week 4-5)
+
 - [ ] Update quote creation with currency selection
 - [ ] Add multi-currency pricing display
 - [ ] Implement currency lock at quote creation
 - [ ] Add currency conversion audit trail
 
 ### 4.5 Phase 5: Testing & Optimization (Week 5-6)
+
 - [ ] Load testing with multiple currencies
 - [ ] Edge case testing (VPN, proxies)
 - [ ] A/B testing for auto-detection accuracy
@@ -378,11 +386,11 @@ export class GeoDetectionService {
 
   async detectFromRequest(req: Request): Promise<GeoDetection> {
     // 1. Check edge headers
-    const countryCode = 
-      req.headers['cf-ipcountry'] || 
+    const countryCode =
+      req.headers['cf-ipcountry'] ||
       req.headers['x-vercel-ip-country'] ||
       req.headers['x-country-code'];
-    
+
     if (countryCode && countryCode !== 'XX') {
       return this.mapCountryToGeo(countryCode as string);
     }
@@ -394,13 +402,13 @@ export class GeoDetectionService {
 
     // 3. Call IP service
     const geoData = await this.fetchGeoData(ip);
-    
+
     // 4. Cache result
     await this.redis.set(
-      `geo:${ip}`, 
+      `geo:${ip}`,
       JSON.stringify(geoData),
       'EX',
-      86400 // 24 hours
+      86400, // 24 hours
     );
 
     return geoData;
@@ -412,8 +420,8 @@ export class GeoDetectionService {
       const response = await this.httpService
         .get(`https://ipinfo.io/${ip}/json`, {
           headers: {
-            'Authorization': `Bearer ${process.env.IPINFO_TOKEN}`
-          }
+            Authorization: `Bearer ${process.env.IPINFO_TOKEN}`,
+          },
         })
         .toPromise();
 
@@ -433,7 +441,7 @@ export class GeoDetectionService {
 @Injectable()
 export class CurrencyService {
   private rates: Map<string, ExchangeRate> = new Map();
-  
+
   constructor(
     private readonly redis: RedisService,
     private readonly httpService: HttpService,
@@ -442,25 +450,21 @@ export class CurrencyService {
     this.scheduleRateUpdates();
   }
 
-  async getRate(
-    from: Currency, 
-    to: Currency, 
-    date?: Date
-  ): Promise<number> {
+  async getRate(from: Currency, to: Currency, date?: Date): Promise<number> {
     if (from === to) return 1;
 
     const key = `${from}-${to}`;
-    
+
     // Check cache
     const cached = await this.redis.get(`rate:${key}`);
     if (cached) return parseFloat(cached);
 
     // Fetch from DB or provider
     const rate = await this.fetchRate(from, to, date);
-    
+
     // Cache for 1 hour
     await this.redis.set(`rate:${key}`, rate.toString(), 'EX', 3600);
-    
+
     return rate;
   }
 
@@ -468,12 +472,12 @@ export class CurrencyService {
     amount: number,
     from: Currency,
     to: Currency,
-    options?: ConversionOptions
+    options?: ConversionOptions,
   ): Promise<ConversionResult> {
     const rate = await this.getRate(from, to, options?.date);
-    
+
     let convertedAmount = amount * rate;
-    
+
     // Apply fees if configured
     if (options?.includeFees) {
       const fees = this.calculateFees(amount, from, to);
@@ -519,12 +523,12 @@ export class CurrencyService {
           params: {
             app_id: process.env.OPENEXCHANGE_APP_ID,
             base: 'USD',
-          }
+          },
         })
         .toPromise();
 
       const rates = response.data.rates;
-      
+
       // Store in database
       for (const [currency, rate] of Object.entries(rates)) {
         if (this.isSupportedCurrency(currency)) {
@@ -536,11 +540,11 @@ export class CurrencyService {
               source: 'openexchangerates',
               validFrom: new Date(),
               validUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
-            }
+            },
           });
         }
       }
-      
+
       // Invalidate cache
       await this.redis.del('rate:*');
     } catch (error) {
@@ -565,7 +569,8 @@ export function useGeoDetection() {
         const stored = localStorage.getItem('geo-detection');
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (Date.now() - parsed.timestamp < 86400000) { // 24h
+          if (Date.now() - parsed.timestamp < 86400000) {
+            // 24h
             setGeoData(parsed.data);
             setLoading(false);
             return;
@@ -575,13 +580,16 @@ export function useGeoDetection() {
         // Call API
         const response = await fetch('/api/v1/geo/detect');
         const data = await response.json();
-        
+
         // Store in localStorage
-        localStorage.setItem('geo-detection', JSON.stringify({
-          data,
-          timestamp: Date.now()
-        }));
-        
+        localStorage.setItem(
+          'geo-detection',
+          JSON.stringify({
+            data,
+            timestamp: Date.now(),
+          }),
+        );
+
         setGeoData(data);
       } catch (error) {
         console.error('Geo detection failed', error);
@@ -593,14 +601,14 @@ export function useGeoDetection() {
             timezone: 'America/Mexico_City',
             locale: 'es',
             currency: 'MXN',
-            confidence: 0
+            confidence: 0,
           },
           recommended: {
             locale: 'es',
             currency: 'MXN',
             alternativeLocales: ['en', 'pt-BR'],
-            alternativeCurrencies: ['USD', 'EUR']
-          }
+            alternativeCurrencies: ['USD', 'EUR'],
+          },
         });
       } finally {
         setLoading(false);
@@ -615,16 +623,16 @@ export function useGeoDetection() {
       await fetch('/api/v1/geo/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(prefs)
+        body: JSON.stringify(prefs),
       });
-      
+
       // Update local state
-      setGeoData(prev => ({
+      setGeoData((prev) => ({
         ...prev!,
         userPreferences: {
           ...prev?.userPreferences,
-          ...prefs
-        }
+          ...prefs,
+        },
       }));
     } catch (error) {
       console.error('Failed to update preferences', error);
@@ -666,17 +674,17 @@ export function useCurrency() {
       style: 'currency',
       currency: targetCurrency,
       minimumFractionDigits: getCurrencyDecimals(targetCurrency),
-      maximumFractionDigits: getCurrencyDecimals(targetCurrency)
+      maximumFractionDigits: getCurrencyDecimals(targetCurrency),
     }).format(amount);
   };
 
   const convert = (amount: number, from: Currency, to: Currency) => {
     if (from === to) return amount;
-    
+
     // Convert to base currency first, then to target
     const toBase = rates[from] ? amount / rates[from] : amount;
     const converted = rates[to] ? toBase * rates[to] : toBase;
-    
+
     return Math.round(converted * 100) / 100;
   };
 
@@ -694,17 +702,20 @@ export function useCurrency() {
 ## 6. Security Considerations
 
 ### 6.1 Rate Limiting
+
 - Implement rate limiting on geo-detection endpoints (100 req/min per IP)
 - Cache geo-detection results for 24 hours per IP
 - Rate limit currency conversion API (1000 req/hour per user)
 
 ### 6.2 Data Privacy
+
 - Store only necessary geo data
 - Comply with GDPR for EU users
 - Allow users to opt-out of geo-detection
 - Provide data deletion options
 
 ### 6.3 Exchange Rate Security
+
 - Validate rate changes (max ±10% daily change)
 - Audit trail for manual rate overrides
 - Implement rate source verification
@@ -713,27 +724,29 @@ export function useCurrency() {
 ## 7. Performance Optimization
 
 ### 7.1 Caching Strategy
+
 ```typescript
 // Multi-layer caching
 const cacheStrategy = {
   edgeCache: {
     geoDetection: '24 hours',
-    staticRates: '1 hour'
+    staticRates: '1 hour',
   },
   redisCache: {
     exchangeRates: '1 hour',
     userPreferences: '30 minutes',
-    geoSessions: '24 hours'
+    geoSessions: '24 hours',
   },
   browserCache: {
     geoData: '24 hours',
     rates: '30 minutes',
-    preferences: 'session'
-  }
+    preferences: 'session',
+  },
 };
 ```
 
 ### 7.2 Database Optimization
+
 - Index on currency fields
 - Materialized views for common currency pairs
 - Partition exchange rate tables by month
@@ -742,6 +755,7 @@ const cacheStrategy = {
 ## 8. Monitoring & Analytics
 
 ### 8.1 Metrics to Track
+
 - Geo-detection accuracy rate
 - Currency conversion volume
 - Most used currency pairs
@@ -750,6 +764,7 @@ const cacheStrategy = {
 - User preference overrides
 
 ### 8.2 Alerts
+
 - Exchange rate API failures
 - Unusual rate movements (>5% change)
 - High error rates on geo-detection
@@ -759,18 +774,21 @@ const cacheStrategy = {
 ## 9. Testing Strategy
 
 ### 9.1 Unit Tests
+
 - Currency conversion accuracy
 - Rounding rules per currency
 - Rate caching logic
 - Geo-detection parsing
 
 ### 9.2 Integration Tests
+
 - End-to-end quote creation with currency
 - Multi-currency quote display
 - Exchange rate updates
 - User preference persistence
 
 ### 9.3 E2E Tests
+
 - VPN/proxy detection handling
 - Currency switch during checkout
 - Historical rate accuracy
@@ -779,37 +797,41 @@ const cacheStrategy = {
 ## 10. Migration Plan
 
 ### 10.1 Database Migration
+
 ```sql
 -- Add currency support to existing quotes
-ALTER TABLE quotes 
+ALTER TABLE quotes
 ADD COLUMN exchange_rate DECIMAL(12,6),
 ADD COLUMN base_currency VARCHAR(3);
 
 -- Migrate existing MXN quotes
-UPDATE quotes 
-SET base_currency = 'MXN', 
-    exchange_rate = 1.0 
+UPDATE quotes
+SET base_currency = 'MXN',
+    exchange_rate = 1.0
 WHERE currency = 'MXN';
 ```
 
 ### 10.2 Feature Flags
+
 ```typescript
 const featureFlags = {
   enableGeoDetection: process.env.ENABLE_GEO_DETECTION === 'true',
   enableMultiCurrency: process.env.ENABLE_MULTI_CURRENCY === 'true',
   supportedCurrencies: process.env.SUPPORTED_CURRENCIES?.split(',') || ['MXN'],
-  defaultCurrency: process.env.DEFAULT_CURRENCY || 'MXN'
+  defaultCurrency: process.env.DEFAULT_CURRENCY || 'MXN',
 };
 ```
 
 ## 11. Documentation
 
 ### 11.1 API Documentation
+
 - OpenAPI 3.0 specification updates
 - Postman collection with currency examples
 - GraphQL schema updates (if applicable)
 
 ### 11.2 User Documentation
+
 - Currency selection guide
 - Exchange rate explanation
 - Geo-detection privacy policy
@@ -818,12 +840,14 @@ const featureFlags = {
 ## 12. Success Metrics
 
 ### 12.1 KPIs
+
 - Conversion rate improvement: Target +15%
 - Quote abandonment reduction: Target -20%
 - International traffic increase: Target +50%
 - API response time: <200ms p95
 
 ### 12.2 User Satisfaction
+
 - Currency display accuracy: 99.9%
 - Geo-detection accuracy: >95%
 - User preference persistence: 100%
@@ -842,7 +866,7 @@ const CURRENCY_CONFIG = {
   GBP: { symbol: '£', position: 'before', decimals: 2, separator: ',' },
   CAD: { symbol: 'C$', position: 'before', decimals: 2, separator: ',' },
   CNY: { symbol: '¥', position: 'before', decimals: 2, separator: ',' },
-  JPY: { symbol: '¥', position: 'before', decimals: 0, separator: ',' }
+  JPY: { symbol: '¥', position: 'before', decimals: 0, separator: ',' },
 };
 ```
 
@@ -851,46 +875,69 @@ const CURRENCY_CONFIG = {
 ```typescript
 const COUNTRY_CURRENCY_MAP = {
   // Americas
-  'MX': 'MXN', 'US': 'USD', 'CA': 'CAD', 'BR': 'BRL',
-  'AR': 'ARS', 'CL': 'CLP', 'CO': 'COP', 'PE': 'PEN',
-  
+  MX: 'MXN',
+  US: 'USD',
+  CA: 'CAD',
+  BR: 'BRL',
+  AR: 'ARS',
+  CL: 'CLP',
+  CO: 'COP',
+  PE: 'PEN',
+
   // Europe
-  'ES': 'EUR', 'FR': 'EUR', 'DE': 'EUR', 'IT': 'EUR',
-  'GB': 'GBP', 'CH': 'CHF', 'SE': 'SEK', 'NO': 'NOK',
-  
+  ES: 'EUR',
+  FR: 'EUR',
+  DE: 'EUR',
+  IT: 'EUR',
+  GB: 'GBP',
+  CH: 'CHF',
+  SE: 'SEK',
+  NO: 'NOK',
+
   // Asia
-  'CN': 'CNY', 'JP': 'JPY', 'KR': 'KRW', 'IN': 'INR',
-  'SG': 'SGD', 'HK': 'HKD', 'TW': 'TWD', 'TH': 'THB',
-  
+  CN: 'CNY',
+  JP: 'JPY',
+  KR: 'KRW',
+  IN: 'INR',
+  SG: 'SGD',
+  HK: 'HKD',
+  TW: 'TWD',
+  TH: 'THB',
+
   // Oceania
-  'AU': 'AUD', 'NZ': 'NZD',
-  
+  AU: 'AUD',
+  NZ: 'NZD',
+
   // Default
-  'default': 'USD'
+  default: 'USD',
 };
 ```
 
 ## Appendix C: Implementation Checklist
 
 - [ ] **Week 1-2: Infrastructure**
+
   - [ ] Edge detection setup
   - [ ] IP geolocation service
   - [ ] Database schema updates
   - [ ] Redis caching setup
 
 - [ ] **Week 2-3: Currency Engine**
+
   - [ ] Exchange rate provider integration
   - [ ] Currency conversion service
   - [ ] Rate caching implementation
   - [ ] Historical rates support
 
 - [ ] **Week 3-4: Frontend**
+
   - [ ] Geo-detection hook
   - [ ] Currency selector component
   - [ ] Price formatting utilities
   - [ ] Real-time conversion UI
 
 - [ ] **Week 4-5: Quote System**
+
   - [ ] Multi-currency quote creation
   - [ ] Currency display throughout app
   - [ ] Exchange rate locking
@@ -904,6 +951,6 @@ const COUNTRY_CURRENCY_MAP = {
 
 ---
 
-*Document Version: 1.0*  
-*Last Updated: December 2024*  
-*Status: Design Phase*
+_Document Version: 1.0_  
+_Last Updated: December 2024_  
+_Status: Design Phase_

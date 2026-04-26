@@ -31,12 +31,12 @@ export function LanguageSwitcher() {
     setMounted(true);
   }, []);
 
-  const currentLanguage = languages.find(lang => lang.code === locale) || languages[0];
+  const currentLanguage = languages.find((lang) => lang.code === locale) || languages[0];
 
   const handleLanguageChange = (newLocale: string) => {
     // Save preference in cookie (expires in 1 year)
     document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000;SameSite=Lax`;
-    
+
     // Save to localStorage as backup
     if (typeof window !== 'undefined') {
       localStorage.setItem('preferredLocale', newLocale);
@@ -77,9 +77,7 @@ export function LanguageSwitcher() {
               <div className="font-medium">{lang.nativeName}</div>
               <div className="text-xs text-gray-500">{lang.name}</div>
             </div>
-            {locale === lang.code && (
-              <span className="ml-auto text-blue-600">✓</span>
-            )}
+            {locale === lang.code && <span className="ml-auto text-blue-600">✓</span>}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -94,9 +92,9 @@ export function detectUserLanguage(): string {
   // Check cookie first
   const cookieLocale = document.cookie
     .split('; ')
-    .find(row => row.startsWith('NEXT_LOCALE='))
+    .find((row) => row.startsWith('NEXT_LOCALE='))
     ?.split('=')[1];
-  
+
   if (cookieLocale && ['es', 'en', 'pt-BR'].includes(cookieLocale)) {
     return cookieLocale;
   }

@@ -14,13 +14,16 @@ export interface MeterReading {
 export interface MeterSnapshot {
   tenantId: string;
   period: string; // YYYY-MM
-  readings: Record<UsageEventType, {
-    total: number;
-    count: number;
-    average: number;
-    peak: number;
-    samples: number;
-  }>;
+  readings: Record<
+    UsageEventType,
+    {
+      total: number;
+      count: number;
+      average: number;
+      peak: number;
+      samples: number;
+    }
+  >;
   aggregatedAt: Date;
 }
 
@@ -36,23 +39,41 @@ export class MeteringService {
   async recordMeter(reading: MeterReading): Promise<void> {
     const key = `meter:${reading.tenantId}:${reading.eventType}`;
     const timestamp = Math.floor(reading.timestamp.getTime() / 1000);
-    
+
     // Store time-series data in Redis
     await Promise.all([
       // Raw meter reading with timestamp
-      this.redis.zadd(key, timestamp, JSON.stringify({
-        value: reading.value,
-        metadata: reading.metadata || {},
-      })),
-      
+      this.redis.zadd(
+        key,
+        timestamp,
+        JSON.stringify({
+          value: reading.value,
+          metadata: reading.metadata || {},
+        }),
+      ),
+
       // Aggregate counters
-      this.redis.hincrby(`meter:${reading.tenantId}:daily:${this.getDateKey(reading.timestamp)}`, reading.eventType, reading.value),
-      this.redis.hincrby(`meter:${reading.tenantId}:hourly:${this.getHourKey(reading.timestamp)}`, reading.eventType, reading.value),
-      
+      this.redis.hincrby(
+        `meter:${reading.tenantId}:daily:${this.getDateKey(reading.timestamp)}`,
+        reading.eventType,
+        reading.value,
+      ),
+      this.redis.hincrby(
+        `meter:${reading.tenantId}:hourly:${this.getHourKey(reading.timestamp)}`,
+        reading.eventType,
+        reading.value,
+      ),
+
       // Set expiration (30 days for raw data, 90 days for aggregates)
       this.redis.expire(key, 30 * 24 * 60 * 60),
-      this.redis.expire(`meter:${reading.tenantId}:daily:${this.getDateKey(reading.timestamp)}`, 90 * 24 * 60 * 60),
-      this.redis.expire(`meter:${reading.tenantId}:hourly:${this.getHourKey(reading.timestamp)}`, 90 * 24 * 60 * 60),
+      this.redis.expire(
+        `meter:${reading.tenantId}:daily:${this.getDateKey(reading.timestamp)}`,
+        90 * 24 * 60 * 60,
+      ),
+      this.redis.expire(
+        `meter:${reading.tenantId}:hourly:${this.getHourKey(reading.timestamp)}`,
+        90 * 24 * 60 * 60,
+      ),
     ]);
 
     // Also persist to database for long-term storage
@@ -63,15 +84,15 @@ export class MeteringService {
     tenantId: string,
     eventType: UsageEventType,
     startTime: Date,
-    endTime: Date
+    endTime: Date,
   ): Promise<Array<{ timestamp: Date; value: number; metadata?: Record<string, unknown> }>> {
     const key = `meter:${tenantId}:${eventType}`;
     const startTimestamp = Math.floor(startTime.getTime() / 1000);
     const endTimestamp = Math.floor(endTime.getTime() / 1000);
 
     const results = await this.redis.zrangebyscore(key, startTimestamp, endTimestamp);
-    
-    return results.map(result => {
+
+    return results.map((result) => {
       const data = JSON.parse(result);
       return {
         timestamp: new Date(data.timestamp * 1000),
@@ -85,16 +106,16 @@ export class MeteringService {
     tenantId: string,
     period: 'hour' | 'day' | 'month',
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<Record<UsageEventType, number[]>> {
     const metrics: Record<string, number[]> = {};
-    
+
     if (period === 'hour') {
       const hours = this.getHoursBetween(startDate, endDate);
       for (const hour of hours) {
         const key = `meter:${tenantId}:hourly:${hour}`;
         const data = await this.redis.hgetall(key);
-        
+
         for (const [eventType, value] of Object.entries(data)) {
           if (!metrics[eventType]) metrics[eventType] = [];
           metrics[eventType].push(parseInt(String(value)));
@@ -105,7 +126,7 @@ export class MeteringService {
       for (const day of days) {
         const key = `meter:${tenantId}:daily:${day}`;
         const data = await this.redis.hgetall(key);
-        
+
         for (const [eventType, value] of Object.entries(data)) {
           if (!metrics[eventType]) metrics[eventType] = [];
           metrics[eventType].push(parseInt(String(value)));
@@ -173,7 +194,7 @@ export class MeteringService {
     await this.redis.set(
       `meter:snapshot:${tenantId}:${period}`,
       JSON.stringify(snapshot),
-      365 * 24 * 60 * 60 // 1 year retention
+      365 * 24 * 60 * 60, // 1 year retention
     );
 
     return snapshot;
@@ -187,11 +208,16 @@ export class MeteringService {
     return null;
   }
 
-  async getRealtimeMetrics(tenantId: string): Promise<Record<UsageEventType, {
-    current: number;
-    rate: number; // per minute
-    trend: 'up' | 'down' | 'stable';
-  }>> {
+  async getRealtimeMetrics(tenantId: string): Promise<
+    Record<
+      UsageEventType,
+      {
+        current: number;
+        rate: number; // per minute
+        trend: 'up' | 'down' | 'stable';
+      }
+    >
+  > {
     const now = new Date();
     const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
@@ -205,9 +231,10 @@ export class MeteringService {
       ]);
 
       const currentValue = currentMinute.reduce((sum, r) => sum + r.value, 0);
-      const averageValue = previousMinutes.length > 0 
-        ? previousMinutes.reduce((sum, r) => sum + r.value, 0) / 4  // 4 minutes average
-        : currentValue;
+      const averageValue =
+        previousMinutes.length > 0
+          ? previousMinutes.reduce((sum, r) => sum + r.value, 0) / 4 // 4 minutes average
+          : currentValue;
 
       let trend: 'up' | 'down' | 'stable' = 'stable';
       if (currentValue > averageValue * 1.1) trend = 'up';
@@ -250,12 +277,12 @@ export class MeteringService {
   private getDaysBetween(start: Date, end: Date): string[] {
     const days: string[] = [];
     const current = new Date(start);
-    
+
     while (current <= end) {
       days.push(this.getDateKey(current));
       current.setDate(current.getDate() + 1);
     }
-    
+
     return days;
   }
 
@@ -263,12 +290,12 @@ export class MeteringService {
     const hours: string[] = [];
     const current = new Date(start);
     current.setMinutes(0, 0, 0);
-    
+
     while (current <= end) {
       hours.push(this.getHourKey(current));
       current.setHours(current.getHours() + 1);
     }
-    
+
     return hours;
   }
 }

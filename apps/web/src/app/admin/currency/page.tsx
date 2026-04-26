@@ -8,13 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import {
   Select,
@@ -23,14 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  RefreshCw, 
-  TrendingUp, 
-  TrendingDown, 
-  AlertCircle, 
-  CheckCircle,
-  Clock
-} from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { Currency } from '@cotiza/shared';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/components/ui/use-toast';
@@ -47,7 +40,6 @@ interface ExchangeRate {
   lastUpdated: string;
 }
 
-
 interface RateAlert {
   id: string;
   currency: Currency;
@@ -60,19 +52,19 @@ export default function CurrencyAdminPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // State for different sections
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
   const [alerts, setAlerts] = useState<RateAlert[]>([]);
   const [baseCurrency, setBaseCurrency] = useState<Currency>(Currency.USD);
   const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(true);
   const [updateInterval, setUpdateInterval] = useState('6');
-  
+
   // Currency configuration
   const [enabledCurrencies, setEnabledCurrencies] = useState<Currency[]>([]);
   const [feeConfiguration, setFeeConfiguration] = useState({
     percentage: 0.5,
-    fixed: 0.30,
+    fixed: 0.3,
   });
 
   useEffect(() => {
@@ -82,11 +74,7 @@ export default function CurrencyAdminPage() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      await Promise.all([
-        loadExchangeRates(),
-        loadAlerts(),
-        loadConfiguration(),
-      ]);
+      await Promise.all([loadExchangeRates(), loadAlerts(), loadConfiguration()]);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
       toast({
@@ -102,9 +90,9 @@ export default function CurrencyAdminPage() {
   const loadExchangeRates = async () => {
     try {
       const response = await apiClient.get<{ rates: Record<Currency, number> }>(
-        `/currency/rates?base=${baseCurrency}`
+        `/currency/rates?base=${baseCurrency}`,
       );
-      
+
       // Convert to rate objects
       const rateObjects: ExchangeRate[] = Object.entries(response.rates).map(([target, rate]) => ({
         base: baseCurrency,
@@ -115,13 +103,12 @@ export default function CurrencyAdminPage() {
         validUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         lastUpdated: new Date().toISOString(),
       }));
-      
+
       setExchangeRates(rateObjects);
     } catch (error) {
       console.error('Failed to load exchange rates:', error);
     }
   };
-
 
   const loadAlerts = async () => {
     // Mock alerts for demo
@@ -170,9 +157,9 @@ export default function CurrencyAdminPage() {
   };
 
   const handleToggleCurrency = (currency: Currency) => {
-    setEnabledCurrencies(prev => {
+    setEnabledCurrencies((prev) => {
       if (prev.includes(currency)) {
-        return prev.filter(c => c !== currency);
+        return prev.filter((c) => c !== currency);
       }
       return [...prev, currency];
     });
@@ -186,7 +173,7 @@ export default function CurrencyAdminPage() {
         autoUpdateEnabled,
         updateInterval: parseInt(updateInterval),
       });
-      
+
       toast({
         title: 'Success',
         description: 'Configuration saved successfully',
@@ -204,7 +191,7 @@ export default function CurrencyAdminPage() {
     // Calculate mock change
     const change = (Math.random() - 0.5) * 5;
     const isPositive = change > 0;
-    
+
     return (
       <div className="flex items-center gap-1">
         {isPositive ? (
@@ -238,16 +225,8 @@ export default function CurrencyAdminPage() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <CurrencySelector
-            value={baseCurrency}
-            onChange={setBaseCurrency}
-            size="sm"
-          />
-          <Button
-            onClick={handleForceRefresh}
-            disabled={refreshing}
-            variant="outline"
-          >
+          <CurrencySelector value={baseCurrency} onChange={setBaseCurrency} size="sm" />
+          <Button onClick={handleForceRefresh} disabled={refreshing} variant="outline">
             {refreshing ? (
               <>
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -274,7 +253,7 @@ export default function CurrencyAdminPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {alerts.map(alert => (
+              {alerts.map((alert) => (
                 <div
                   key={alert.id}
                   className="flex items-center justify-between p-3 border rounded-lg"
@@ -324,9 +303,7 @@ export default function CurrencyAdminPage() {
               <Clock className="h-5 w-5" />
               2h ago
             </div>
-            <p className="text-xs text-muted-foreground">
-              Next update in 4 hours
-            </p>
+            <p className="text-xs text-muted-foreground">Next update in 4 hours</p>
           </CardContent>
         </Card>
 
@@ -336,9 +313,7 @@ export default function CurrencyAdminPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from yesterday
-            </p>
+            <p className="text-xs text-muted-foreground">+12% from yesterday</p>
           </CardContent>
         </Card>
 
@@ -348,9 +323,7 @@ export default function CurrencyAdminPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">94.5%</div>
-            <p className="text-xs text-muted-foreground">
-              Optimal performance
-            </p>
+            <p className="text-xs text-muted-foreground">Optimal performance</p>
           </CardContent>
         </Card>
       </div>
@@ -386,7 +359,7 @@ export default function CurrencyAdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {exchangeRates.map(rate => (
+                  {exchangeRates.map((rate) => (
                     <TableRow key={rate.target}>
                       <TableCell className="font-medium">{rate.target}</TableCell>
                       <TableCell>{rate.rate.toFixed(4)}</TableCell>
@@ -419,15 +392,13 @@ export default function CurrencyAdminPage() {
           <Card>
             <CardHeader>
               <CardTitle>Currency Configuration</CardTitle>
-              <CardDescription>
-                Enable or disable currencies for your platform
-              </CardDescription>
+              <CardDescription>Enable or disable currencies for your platform</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <Label className="text-base">Enabled Currencies</Label>
                 <div className="grid grid-cols-4 gap-4 mt-3">
-                  {Object.values(Currency).map(currency => (
+                  {Object.values(Currency).map((currency) => (
                     <div key={currency} className="flex items-center justify-between">
                       <Label htmlFor={currency} className="text-sm font-normal">
                         {currency}
@@ -451,10 +422,12 @@ export default function CurrencyAdminPage() {
                       type="number"
                       step="0.01"
                       value={feeConfiguration.percentage}
-                      onChange={(e) => setFeeConfiguration(prev => ({
-                        ...prev,
-                        percentage: parseFloat(e.target.value),
-                      }))}
+                      onChange={(e) =>
+                        setFeeConfiguration((prev) => ({
+                          ...prev,
+                          percentage: parseFloat(e.target.value),
+                        }))
+                      }
                     />
                   </div>
                   <div>
@@ -464,18 +437,18 @@ export default function CurrencyAdminPage() {
                       type="number"
                       step="0.01"
                       value={feeConfiguration.fixed}
-                      onChange={(e) => setFeeConfiguration(prev => ({
-                        ...prev,
-                        fixed: parseFloat(e.target.value),
-                      }))}
+                      onChange={(e) =>
+                        setFeeConfiguration((prev) => ({
+                          ...prev,
+                          fixed: parseFloat(e.target.value),
+                        }))
+                      }
                     />
                   </div>
                 </div>
               </div>
 
-              <Button onClick={handleSaveConfiguration}>
-                Save Configuration
-              </Button>
+              <Button onClick={handleSaveConfiguration}>Save Configuration</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -498,8 +471,11 @@ export default function CurrencyAdminPage() {
                       { from: Currency.USD, to: Currency.EUR, count: 456 },
                       { from: Currency.USD, to: Currency.MXN, count: 324 },
                       { from: Currency.EUR, to: Currency.GBP, count: 198 },
-                    ].map(pair => (
-                      <div key={`${pair.from}-${pair.to}`} className="flex items-center justify-between">
+                    ].map((pair) => (
+                      <div
+                        key={`${pair.from}-${pair.to}`}
+                        className="flex items-center justify-between"
+                      >
                         <span className="text-sm">
                           {pair.from} → {pair.to}
                         </span>
@@ -540,9 +516,7 @@ export default function CurrencyAdminPage() {
           <Card>
             <CardHeader>
               <CardTitle>Update Settings</CardTitle>
-              <CardDescription>
-                Configure automatic exchange rate updates
-              </CardDescription>
+              <CardDescription>Configure automatic exchange rate updates</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -552,19 +526,13 @@ export default function CurrencyAdminPage() {
                     Automatically fetch latest exchange rates
                   </p>
                 </div>
-                <Switch
-                  checked={autoUpdateEnabled}
-                  onCheckedChange={setAutoUpdateEnabled}
-                />
+                <Switch checked={autoUpdateEnabled} onCheckedChange={setAutoUpdateEnabled} />
               </div>
 
               {autoUpdateEnabled && (
                 <div>
                   <Label htmlFor="interval">Update Interval (hours)</Label>
-                  <Select
-                    value={updateInterval}
-                    onValueChange={setUpdateInterval}
-                  >
+                  <Select value={updateInterval} onValueChange={setUpdateInterval}>
                     <SelectTrigger id="interval">
                       <SelectValue />
                     </SelectTrigger>
@@ -593,9 +561,7 @@ export default function CurrencyAdminPage() {
                 </Select>
               </div>
 
-              <Button onClick={handleSaveConfiguration}>
-                Save Settings
-              </Button>
+              <Button onClick={handleSaveConfiguration}>Save Settings</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -603,4 +569,3 @@ export default function CurrencyAdminPage() {
     </div>
   );
 }
-

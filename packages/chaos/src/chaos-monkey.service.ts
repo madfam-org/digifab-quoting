@@ -104,9 +104,9 @@ export class ChaosMonkeyService extends EventEmitter {
       // Inject chaos
       this.logger.warn(`CHAOS: Injecting ${name} with options:`, options);
       this.emit('chaos.started', { experiment: name, options });
-      
+
       await experiment.inject(options);
-      
+
       // Wait for duration if specified
       if (options.duration) {
         await this.wait(options.duration * 1000);
@@ -139,17 +139,15 @@ export class ChaosMonkeyService extends EventEmitter {
         this.logger.warn(`CHAOS FAILURE: System degraded during ${name}`);
         this.emit('chaos.failure', result);
       }
-
     } catch (error) {
       result.errors.push(error);
       result.success = false;
-      
+
       this.logger.error(`CHAOS ERROR: Experiment ${name} failed`, error);
       this.emit('chaos.error', { experiment: name, error });
-      
+
       // Trigger self-healing
       await this.triggerSelfHealing(name, error);
-      
     } finally {
       // Always rollback chaos
       try {
@@ -172,14 +170,15 @@ export class ChaosMonkeyService extends EventEmitter {
 
   async runRandomExperiment(options: ChaosOptions = {}): Promise<ChaosResult> {
     const experiments = Array.from(this.experiments.keys());
-    
+
     // Filter by severity if in production
-    const filtered = process.env.NODE_ENV === 'production'
-      ? experiments.filter(name => {
-          const exp = this.experiments.get(name)!;
-          return exp.severity === 'low' || exp.severity === 'medium';
-        })
-      : experiments;
+    const filtered =
+      process.env.NODE_ENV === 'production'
+        ? experiments.filter((name) => {
+            const exp = this.experiments.get(name)!;
+            return exp.severity === 'low' || exp.severity === 'medium';
+          })
+        : experiments;
 
     if (filtered.length === 0) {
       throw new Error('No suitable experiments available');
@@ -194,22 +193,21 @@ export class ChaosMonkeyService extends EventEmitter {
 
   async scheduleGameDay(experiments: string[], interval: number = 3600000): Promise<void> {
     this.logger.warn('CHAOS GAME DAY: Starting scheduled chaos experiments');
-    
+
     for (const experimentName of experiments) {
       try {
         await this.runExperiment(experimentName, {
           duration: 60,
           intensity: 'medium',
         });
-        
+
         // Wait between experiments
         await this.wait(interval);
-        
       } catch (error) {
         this.logger.error(`Game day experiment ${experimentName} failed`, error);
       }
     }
-    
+
     this.logger.warn('CHAOS GAME DAY: Completed');
     this.generateGameDayReport();
   }
@@ -218,7 +216,7 @@ export class ChaosMonkeyService extends EventEmitter {
     const cpu = await si.currentLoad();
     const mem = await si.mem();
     const network = await si.networkStats();
-    
+
     return {
       cpu: cpu.currentLoad,
       memory: (mem.used / mem.total) * 100,
@@ -235,7 +233,8 @@ export class ChaosMonkeyService extends EventEmitter {
       cpuImpact: ((after.cpu - before.cpu) / before.cpu) * 100,
       memoryImpact: ((after.memory - before.memory) / before.memory) * 100,
       errorRateIncrease: after.errorRate - before.errorRate,
-      responseTimeDegradation: ((after.responseTime - before.responseTime) / before.responseTime) * 100,
+      responseTimeDegradation:
+        ((after.responseTime - before.responseTime) / before.responseTime) * 100,
       throughputLoss: ((before.throughput - after.throughput) / before.throughput) * 100,
       connectionIncrease: after.activeConnections - before.activeConnections,
       queueGrowth: after.queueDepth - before.queueDepth,
@@ -250,7 +249,9 @@ export class ChaosMonkeyService extends EventEmitter {
     }
 
     if (impact.memoryImpact > 30) {
-      learnings.push('Memory usage spikes significantly - potential memory leak or inefficient caching');
+      learnings.push(
+        'Memory usage spikes significantly - potential memory leak or inefficient caching',
+      );
     }
 
     if (impact.errorRateIncrease > 0.05) {
@@ -300,7 +301,7 @@ export class ChaosMonkeyService extends EventEmitter {
 
   private async triggerSelfHealing(experiment: string, error: any): Promise<void> {
     this.logger.log(`Triggering self-healing for ${experiment}`);
-    
+
     // Implement self-healing strategies based on experiment type
     const exp = this.experiments.get(experiment);
     if (!exp) return;
@@ -329,7 +330,7 @@ export class ChaosMonkeyService extends EventEmitter {
     const report = {
       date: new Date(),
       experimentsRun: this.history.length,
-      successRate: this.history.filter(r => r.success).length / this.history.length,
+      successRate: this.history.filter((r) => r.success).length / this.history.length,
       topLearnings: this.aggregateLearnings(),
       criticalRecommendations: this.prioritizeRecommendations(),
       systemWeaknesses: this.identifyWeaknesses(),
@@ -340,9 +341,9 @@ export class ChaosMonkeyService extends EventEmitter {
   }
 
   private aggregateLearnings(): string[] {
-    const allLearnings = this.history.flatMap(r => r.learnings);
+    const allLearnings = this.history.flatMap((r) => r.learnings);
     const frequency = new Map<string, number>();
-    
+
     for (const learning of allLearnings) {
       frequency.set(learning, (frequency.get(learning) || 0) + 1);
     }
@@ -354,9 +355,9 @@ export class ChaosMonkeyService extends EventEmitter {
   }
 
   private prioritizeRecommendations(): string[] {
-    const allRecommendations = this.history.flatMap(r => r.recommendations);
+    const allRecommendations = this.history.flatMap((r) => r.recommendations);
     const frequency = new Map<string, number>();
-    
+
     for (const rec of allRecommendations) {
       frequency.set(rec, (frequency.get(rec) || 0) + 1);
     }
@@ -369,8 +370,8 @@ export class ChaosMonkeyService extends EventEmitter {
 
   private identifyWeaknesses(): string[] {
     return this.history
-      .filter(r => !r.success)
-      .map(r => `${r.experiment}: ${r.errors[0]?.message || 'Unknown failure'}`)
+      .filter((r) => !r.success)
+      .map((r) => `${r.experiment}: ${r.errors[0]?.message || 'Unknown failure'}`)
       .slice(0, 5);
   }
 
@@ -396,7 +397,7 @@ export class ChaosMonkeyService extends EventEmitter {
   }
 
   private wait(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   // Get chaos history for analysis
@@ -412,17 +413,17 @@ export class ChaosMonkeyService extends EventEmitter {
   // Check if safe to run chaos
   async isSafeToRunChaos(): Promise<boolean> {
     const state = await this.recordSteadyState();
-    
+
     // Don't run chaos if system is already degraded
     if (state.errorRate > 0.1) return false;
     if (state.cpu > 80) return false;
     if (state.memory > 85) return false;
     if (state.responseTime > 1000) return false;
-    
+
     // Check business hours (avoid peak times)
     const hour = new Date().getHours();
     if (hour >= 9 && hour <= 17) return false;
-    
+
     return true;
   }
 }
