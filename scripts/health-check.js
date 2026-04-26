@@ -226,7 +226,7 @@ async function checkEnvironment() {
 
   const optionalVars = [
     { name: 'S3_BUCKET', description: 'S3 bucket for file uploads' },
-    { name: 'STRIPE_KEY', description: 'Stripe API key' },
+    { name: 'DHANAM_WEBHOOK_URL', description: 'Dhanam billing relay webhook URL' },
     { name: 'DEFAULT_CURRENCY', description: 'Default currency (MXN)' },
   ];
 

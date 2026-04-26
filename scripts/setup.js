@@ -208,17 +208,12 @@ API_URL="http://localhost:4000"
 # SMTP_USER="your-email@gmail.com"
 # SMTP_PASS="your-app-password"
 
-# Stripe (optional)
-# STRIPE_KEY="sk_test_..."
-# STRIPE_WEBHOOK_SECRET="whsec_..."
-
 # Currency Configuration
 DEFAULT_CURRENCY="MXN"
 SUPPORTED_CURRENCIES="MXN,USD"
 DEFAULT_LOCALES="es,en"
 
 # Feature Flags
-FEATURE_STRIPE_PAYMENTS="false"
 FEATURE_EMAIL_NOTIFICATIONS="false"
 FEATURE_FILE_UPLOAD="false"
 `;
