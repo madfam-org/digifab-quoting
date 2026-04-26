@@ -121,7 +121,7 @@ export class CircuitBreakerService extends EventEmitter {
   }
 
   resetAll(): void {
-    for (const [name, breaker] of this.breakers) {
+    for (const breaker of this.breakers.values()) {
       breaker.close();
     }
     this.logger.log('All circuit breakers reset');
