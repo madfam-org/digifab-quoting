@@ -524,20 +524,25 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
       healthy: false,
     };
 
-    // Test L2
+    // Test L2 — ping failures leave health.l2 = false (default).
     if (this.l2Cache) {
       try {
         await this.l2Cache.ping();
         health.l2 = true;
-      } catch {}
+      } catch {
+        // Intentional: a failed ping means unhealthy, which is the
+        // initialised default. No state change, no log noise.
+      }
     }
 
-    // Test L3
+    // Test L3 — same fail-quiet semantics as L2.
     if (this.l3Cache) {
       try {
         await this.l3Cache.ping();
         health.l3 = true;
-      } catch {}
+      } catch {
+        // Intentional: see L2 comment above.
+      }
     }
 
     // Consider healthy if at least L1 and one Redis layer work
