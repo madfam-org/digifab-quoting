@@ -218,11 +218,27 @@ export class QuotesController {
     return this.quotesService.calculate(req.user.tenantId, id, calculateQuoteDto);
   }
 
-  @Post(':id/approve')
+  // POST /quotes/:id/accept
+  //
+  // Renamed 2026-04-26 from `/approve` to `/accept` to match the
+  // commercial-language semantic the customer-facing frontend uses
+  // ("Accept Quote" button) and the docs reference at
+  // `docs/API_REFERENCE.md` + `CLAUDE.md`. The internal service method
+  // is still `QuotesService.approve()` (no internal callers were
+  // affected — only the controller reaches that method).
+  //
+  // Returns a Dhanam-minted Stripe checkout URL the frontend redirects
+  // to for payment. Cotiza is a Dhanam billing-API client per the
+  // 2026-04-25 monetization-architecture directive — Stripe keys live
+  // SOLELY at Dhanam.
+  @Post(':id/accept')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Customer approves quote',
-    description: 'Customer accepts the quote and proceeds to order placement',
+    summary: 'Customer accepts quote and proceeds to checkout',
+    description:
+      'Customer accepts the quote, transitions it to APPROVED, and receives a Stripe ' +
+      'checkout URL (minted by Dhanam) to complete payment. Also relays a ' +
+      'quote.accepted event to Dhanam for ecosystem observability.',
   })
   @ApiParam({
     name: 'id',
@@ -231,12 +247,20 @@ export class QuotesController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Quote approved successfully',
+    description: 'Quote accepted; checkout session minted',
     schema: {
       properties: {
-        message: { type: 'string', example: 'Quote approved' },
-        orderId: { type: 'string', example: 'order_123456' },
-        paymentUrl: { type: 'string', example: 'https://payment.stripe.com/...' },
+        quote: { type: 'object', description: 'Updated quote (status: APPROVED)' },
+        checkoutUrl: {
+          type: 'string',
+          example: 'https://checkout.stripe.com/c/pay/cs_...',
+          description: 'Stripe checkout URL minted via Dhanam',
+        },
+        sessionId: {
+          type: 'string',
+          example: 'cs_test_abc123',
+          description: 'Stripe checkout session id (forwarded by Dhanam)',
+        },
       },
     },
   })
@@ -248,7 +272,11 @@ export class QuotesController {
     description: 'Quote is not in ready status or has expired',
     type: ValidationErrorResponseDto,
   })
-  approve(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
+  @ApiResponse({
+    status: 502,
+    description: 'Dhanam billing upstream error (checkout could not be minted)',
+  })
+  accept(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.quotesService.approve(req.user.tenantId, id, req.user.id);
   }
 

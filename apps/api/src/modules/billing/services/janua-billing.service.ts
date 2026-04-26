@@ -1,6 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadGatewayException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
+
+/**
+ * Thrown when the synchronous call to Dhanam's billing API fails.
+ *
+ * Mapped to HTTP 502 by Nest so callers (frontend `quote/[id]/page.tsx`)
+ * see a clear "upstream billing service unavailable" rather than a
+ * generic 500. Carries no Dhanam internals back to the client.
+ */
+export class DhanamBillingUpstreamError extends BadGatewayException {
+  constructor(message: string) {
+    super(`Dhanam billing upstream error: ${message}`);
+  }
+}
 
 /**
  * Janua Billing Service for Digifab-Quoting
@@ -22,16 +35,157 @@ export class JanuaBillingService {
   private readonly januaApiKey: string;
   private readonly enabled: boolean;
 
+  // Dhanam billing-API client config. Cotiza is a CLIENT of Dhanam's
+  // billing surface (per the 2026-04-25 monetization-architecture
+  // directive). Stripe keys live SOLELY at Dhanam — this service calls
+  // POST {DHANAM_API_URL}/v1/billing/upgrade to mint checkout URLs.
+  private readonly dhanamApiUrl: string;
+  private readonly dhanamApiToken: string;
+  private readonly dhanamCheckoutTimeoutMs: number;
+
   constructor(private config: ConfigService) {
     this.januaApiUrl = this.config.get<string>('JANUA_API_URL', 'http://janua-api:8001');
     this.januaApiKey = this.config.get<string>('JANUA_API_KEY', '');
     this.enabled = this.config.get<boolean>('JANUA_BILLING_ENABLED', true);
+
+    this.dhanamApiUrl = (this.config.get<string>('DHANAM_API_URL', '') || '').replace(/\/+$/, '');
+    this.dhanamApiToken = this.config.get<string>('DHANAM_API_TOKEN', '');
+    this.dhanamCheckoutTimeoutMs = this.config.get<number>('DHANAM_CHECKOUT_TIMEOUT_MS', 10_000);
 
     if (this.enabled && this.januaApiKey) {
       this.logger.log('Janua billing service initialized for Digifab-Quoting');
     } else {
       this.logger.warn('Janua billing disabled - falling back to direct Stripe');
     }
+
+    if (this.dhanamApiUrl && this.dhanamApiToken) {
+      this.logger.log(`Dhanam checkout client wired -> ${this.dhanamApiUrl}/v1/billing/upgrade`);
+    } else {
+      this.logger.warn(
+        'Dhanam checkout client disabled: DHANAM_API_URL or DHANAM_API_TOKEN not set',
+      );
+    }
+  }
+
+  /**
+   * Whether the Dhanam checkout client is fully configured.
+   * Used by callers that want to short-circuit before attempting a
+   * `createCheckoutSession()` call.
+   */
+  isDhanamCheckoutEnabled(): boolean {
+    return !!this.dhanamApiUrl && !!this.dhanamApiToken;
+  }
+
+  /**
+   * Create a Stripe checkout session via Dhanam's billing API.
+   *
+   * Cotiza is a billing-API CLIENT of Dhanam — it does NOT hold Stripe
+   * keys. This method calls Dhanam's `POST /v1/billing/upgrade` (JWT
+   * auth, returns the Stripe checkout URL) and returns the URL/session
+   * pair to the controller, which forwards it to the frontend.
+   *
+   * The companion `DhanamRelayService.relay('quote.accepted', ...)` is
+   * a fire-and-forget event broadcast for fan-out / observability;
+   * THIS method is the synchronous URL-mint that the user is redirected
+   * to immediately after clicking "Accept Quote".
+   *
+   * Errors are logged and re-thrown as `DhanamBillingUpstreamError`
+   * (HTTP 502) so the frontend receives a clean upstream-billing-down
+   * message rather than a generic 500.
+   *
+   * @param quoteId      Cotiza quote id (forwarded as metadata)
+   * @param userId       Cotiza/Dhanam user id (forwarded as metadata)
+   * @param plan         Plan slug to upgrade to (e.g. `cotiza_quote_payment`)
+   * @param successUrl   URL Stripe redirects to on payment success
+   * @param cancelUrl    URL Stripe redirects to on payment cancel
+   */
+  async createCheckoutSession(
+    quoteId: string,
+    userId: string,
+    plan: string,
+    successUrl: string,
+    cancelUrl: string,
+  ): Promise<{ checkoutUrl: string; sessionId: string }> {
+    if (!this.isDhanamCheckoutEnabled()) {
+      throw new DhanamBillingUpstreamError(
+        'Dhanam checkout not configured (DHANAM_API_URL / DHANAM_API_TOKEN missing)',
+      );
+    }
+
+    const url = `${this.dhanamApiUrl}/v1/billing/upgrade`;
+    const body = {
+      plan,
+      product: 'cotiza',
+      successUrl,
+      cancelUrl,
+      // Forward quote/user as metadata so Dhanam's webhook → cotiza
+      // round-trip can correlate the payment back to the originating
+      // quote without a separate state lookup.
+      metadata: {
+        cotiza_quote_id: quoteId,
+        cotiza_user_id: userId,
+        source_product: 'cotiza',
+      },
+    };
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.dhanamCheckoutTimeoutMs);
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.dhanamApiToken}`,
+          'User-Agent': 'Cotiza-DhanamCheckoutClient/1.0',
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'unknown fetch error';
+      this.logger.error(
+        `Dhanam createCheckoutSession network error for quote=${quoteId}: ${message}`,
+      );
+      throw new DhanamBillingUpstreamError(message);
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '<unreadable>');
+      this.logger.error(
+        `Dhanam createCheckoutSession returned HTTP ${response.status} for quote=${quoteId}: ${detail}`,
+      );
+      throw new DhanamBillingUpstreamError(`HTTP ${response.status}`);
+    }
+
+    let data: { checkoutUrl?: string; sessionId?: string; checkout_url?: string; session_id?: string };
+    try {
+      data = (await response.json()) as typeof data;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'invalid JSON';
+      this.logger.error(`Dhanam createCheckoutSession invalid JSON for quote=${quoteId}: ${message}`);
+      throw new DhanamBillingUpstreamError('invalid response body');
+    }
+
+    // Dhanam's contract returns `checkoutUrl` in camelCase per its
+    // OpenAPI surface; we tolerate snake_case for forward-compat with
+    // any future contract drift since both shapes are common in the
+    // ecosystem.
+    const checkoutUrl = data.checkoutUrl ?? data.checkout_url;
+    const sessionId = data.sessionId ?? data.session_id ?? '';
+
+    if (!checkoutUrl) {
+      this.logger.error(
+        `Dhanam createCheckoutSession missing checkoutUrl for quote=${quoteId}: ${JSON.stringify(data)}`,
+      );
+      throw new DhanamBillingUpstreamError('response missing checkoutUrl');
+    }
+
+    this.logger.log(`Dhanam checkout session created for quote=${quoteId} -> ${sessionId || '<unknown>'}`);
+    return { checkoutUrl, sessionId };
   }
 
   /**
