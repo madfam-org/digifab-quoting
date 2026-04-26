@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import CircuitBreaker from 'opossum';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const CircuitBreaker = require('opossum');
+type CircuitBreaker = any;
 import { EventEmitter } from 'events';
 
 export interface CircuitBreakerOptions {
@@ -133,7 +135,7 @@ export class CircuitBreakerService extends EventEmitter {
   private setupEventHandlers(name: string, breaker: CircuitBreaker): void {
     const metrics = this.metrics.get(name)!;
 
-    breaker.on('success', (result: any, latency: number) => {
+    breaker.on('success', (_result: any, latency: number) => {
       metrics.requests++;
       metrics.success++;
       this.updateResponseTimeMetrics(name, latency);
@@ -147,7 +149,7 @@ export class CircuitBreakerService extends EventEmitter {
       this.emit('breaker.failure', { name, error, latency });
     });
 
-    breaker.on('timeout', (error: Error, latency: number) => {
+    breaker.on('timeout', (_error: Error, latency: number) => {
       metrics.requests++;
       metrics.timeout++;
       this.logger.warn(`Circuit breaker timeout: ${name}`);
@@ -276,7 +278,7 @@ export class CircuitBreakerService extends EventEmitter {
 
   // Get recommendation for circuit breaker configuration
   getRecommendedSettings(
-    serviceName: string,
+    _serviceName: string,
     sla: { latencyP99: number; errorRate: number },
   ): CircuitBreakerOptions {
     return {

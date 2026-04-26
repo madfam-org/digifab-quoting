@@ -82,7 +82,7 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
         return JSON.stringify(value).length;
       },
       maxSize: 50 * 1024 * 1024, // 50MB max size
-      dispose: (value, key) => {
+      dispose: (_value, key) => {
         this.logger.debug(`L1 cache evicted: ${key}`);
       },
     });

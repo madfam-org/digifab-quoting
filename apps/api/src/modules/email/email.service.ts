@@ -71,9 +71,12 @@ export class EmailService {
         secretAccessKey: this.config.get('AWS_SECRET_ACCESS_KEY'),
         region: this.config.get('AWS_REGION', 'us-east-1'),
       });
+      // Cast at the lib boundary: nodemailer's SES option is typed against
+      // its own bundled aws-sdk shape, which drifts from the standalone
+      // aws-sdk package's SES instance type.
       this.transporter = nodemailer.createTransport({
         SES: new aws.SES({ apiVersion: '2010-12-01' }),
-      });
+      } as nodemailer.TransportOptions);
     } else {
       // Default SMTP configuration
       this.transporter = nodemailer.createTransport({
