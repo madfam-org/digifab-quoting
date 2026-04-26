@@ -40,11 +40,12 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Environment variables for Enclii/Revenue Shield
+# (Stripe keys removed -- cotiza is a Dhanam billing-API client, not a direct
+# Stripe integrator. See internal-devops/ecosystem/monetization-architecture-2026-04-26.md)
 ENV NEXTAUTH_URL="" \
     NEXTAUTH_SECRET="" \
     DATABASE_URL="" \
     AUTH_PROVIDER_URL="" \
-    STRIPE_SECRET_KEY="" \
     AWS_S3_BUCKET=""
 
 EXPOSE 3000

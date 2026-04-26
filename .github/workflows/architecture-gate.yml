@@ -1,0 +1,32 @@
+name: Architecture Gate
+
+# Enforces ecosystem-wide architectural invariants. Currently:
+#  - Stripe key segregation: cotiza (this repo) is a billing-API client of
+#    Dhanam and must NOT hold Stripe keys. The reusable gate at
+#    madfam-org/internal-devops enforces this on every PR + push to main.
+#
+# Operator directive (2026-04-25):
+#   "One set of Stripe keys, owned by Dhanam. All financial transactions and
+#    billing funnel through Dhanam's API."
+#
+# Canonical doc:
+#   internal-devops/ecosystem/monetization-architecture-2026-04-26.md
+#
+# Runbook:
+#   internal-devops/runbooks/2026-04-26-stripe-key-segregation-ci-gate.md
+#
+# Historical bug pattern: cotiza had STRIPE_SECRET_KEY in env validation that
+# crash-looped the API pod for 1012 restarts. Wave B2 deleted the runtime
+# code; this gate prevents the next agent from re-adding the dependency.
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  stripe-segregation:
+    uses: madfam-org/internal-devops/.github/workflows/stripe-key-segregation.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      is_dhanam: false

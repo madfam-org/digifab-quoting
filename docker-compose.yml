@@ -22,8 +22,6 @@ services:
       MINIO_ENDPOINT: madfam-minio-shared:9000
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
-      STRIPE_SECRET_KEY: sk_test_placeholder_for_dev
-      STRIPE_WEBHOOK_SECRET: whsec_placeholder_for_dev
     volumes:
       - ./apps/api:/app/apps/api
       - ./packages:/app/packages
