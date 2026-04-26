@@ -5,12 +5,7 @@
  * Self-contained - no external npm dependencies.
  */
 
-import {
-  Feedback,
-  ProductFeedbackSummary,
-  RoadmapItem,
-  SubmitFeedbackParams,
-} from './types';
+import { Feedback, ProductFeedbackSummary, RoadmapItem, SubmitFeedbackParams } from './types';
 
 // ============================================================================
 // Configuration

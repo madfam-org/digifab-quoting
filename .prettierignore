@@ -1,0 +1,29 @@
+# Build outputs
+dist/
+.next/
+.turbo/
+coverage/
+node_modules/
+
+# tsc-emit artifacts that occasionally leak when typecheck runs against
+# a tsconfig with noEmit:false (cleanup mistake in dev workflows). The
+# .ts source is the canonical version — these are generated.
+**/*.d.ts
+**/*.d.ts.map
+**/*.js.map
+# .js leaks under src/ (emitted alongside .ts during typecheck mishaps).
+# Negate config files that legitimately ship as .js.
+**/src/**/*.js
+test/utils/*.js
+e2e/*.js
+# tsup.config.js / tailwind.config.js are sometimes leaked from .ts.
+# Negate them: the canonical source is .ts; the .js variants are stale.
+**/tsup.config.js
+apps/web/tailwind.config.js
+**/tests/**/*.js
+
+# Generated
+**/.next/
+**/coverage/
+*.lock
+pnpm-lock.yaml
