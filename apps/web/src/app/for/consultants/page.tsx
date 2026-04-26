@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, Briefcase, Clock, Workflow, Activity, Wrench } from 'lucide-react';
+import { ArrowRight, Briefcase, Clock, Workflow, Activity, Wrench } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'For design consultants & engineering firms — services-mode quoting | Cotiza Studio',

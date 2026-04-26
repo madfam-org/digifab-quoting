@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, Factory, ShieldCheck, Workflow, Activity, Building2 } from 'lucide-react';
+import { ArrowRight, Factory, ShieldCheck, Workflow, Activity, Building2 } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'For Mexican fabricators — CFDI 4.0 + NOM-151 ready quoting | Cotiza Studio',
