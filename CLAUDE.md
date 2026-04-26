@@ -333,6 +333,7 @@ PRAVARA_WEBHOOK_TIMEOUT
 - **Pricing source-of-truth**: `internal-devops/decisions/2026-04-25-tulana-ecosystem-pricing.md`. Cotiza tiers per Tulana intel: Maker $0 / Creator Pro 399 MXN / Business 1,699 MXN / Enterprise 8,499 MXN. **Confidence: low** — landing currently shows USD ($0/$19/$99/$499); operator decision pending whether to flip to Tulana MXN ladder or maintain USD positioning. See decisions log.
 - **PMF measurement**: per RFC 0013 (`internal-devops/rfcs/0013-pmf-via-coforma-and-tulana.md`), NPS + Sean Ellis + retention via `@madfam/pmf-widget` → Tulana `/v1/pmf/*` endpoints. Composite PMF Score informs `recommended_action` (enable_paywall / measure_more / sunset / keep_measuring).
 - **5 audience pages live** (post-overhaul cotiza#32 + #33): `/for/fabricators`, `/for/consultants`, `/for/makerspaces`, `/for/procurement`, plus DIY routed via `/try`. Each page source-tagged via `?source=<persona>` query param for conversion attribution.
+- **Monetization architecture (full ecosystem)**: `internal-devops/ecosystem/monetization-architecture-2026-04-26.md`. Cotiza is a billing-API client of Dhanam — quote acceptance triggers `DhanamRelayService.createCheckout()`, NOT a direct Stripe charge. Legacy `StripeService` is dead code (Wave B will delete it); the live path is `DhanamRelayService` + `JanuaBillingService`. CFDI is fired by Dhanam invoice webhook → Karafiel, NOT cotiza → Karafiel.
 
 ## Known Issues — Audit 2026-04-23
 
