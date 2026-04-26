@@ -115,17 +115,19 @@ export class ApiKeyService {
     });
   }
 
-  async listApiKeys(tenantId: string): Promise<Array<{
-    id: string;
-    name: string;
-    scopes: unknown;
-    keyPrefix: string;
-    isActive: boolean;
-    expiresAt: Date | null;
-    lastUsedAt: Date | null;
-    createdAt: Date;
-    revokedAt: Date | null;
-  }>> {
+  async listApiKeys(tenantId: string): Promise<
+    Array<{
+      id: string;
+      name: string;
+      scopes: unknown;
+      keyPrefix: string;
+      isActive: boolean;
+      expiresAt: Date | null;
+      lastUsedAt: Date | null;
+      createdAt: Date;
+      revokedAt: Date | null;
+    }>
+  > {
     return this.prisma.apiKey.findMany({
       where: { tenantId },
       select: {

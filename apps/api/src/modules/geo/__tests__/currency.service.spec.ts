@@ -129,7 +129,8 @@ describe('CurrencyService', () => {
 
     it('should calculate inverse rate if direct rate not found', async () => {
       jest.spyOn(redisService, 'get').mockResolvedValue(null);
-      jest.spyOn(prismaService.exchangeRate, 'findFirst')
+      jest
+        .spyOn(prismaService.exchangeRate, 'findFirst')
         .mockResolvedValueOnce(null) // Direct rate not found
         .mockResolvedValueOnce({
           ...mockExchangeRate,
@@ -145,7 +146,8 @@ describe('CurrencyService', () => {
 
     it('should calculate cross rate through USD', async () => {
       jest.spyOn(redisService, 'get').mockResolvedValue(null);
-      jest.spyOn(prismaService.exchangeRate, 'findFirst')
+      jest
+        .spyOn(prismaService.exchangeRate, 'findFirst')
         .mockResolvedValueOnce(null) // Direct EUR-MXN not found
         .mockResolvedValueOnce(null) // Inverse MXN-EUR not found
         .mockResolvedValueOnce({
@@ -187,7 +189,7 @@ describe('CurrencyService', () => {
             validFrom: { lte: historicalDate },
             validUntil: { gte: historicalDate },
           }),
-        })
+        }),
       );
       // Should not cache historical rates
       expect(redisService.set).not.toHaveBeenCalled();
@@ -247,7 +249,7 @@ describe('CurrencyService', () => {
       jest.spyOn(service, 'getRate').mockRejectedValue(new Error('Rate fetch failed'));
 
       await expect(service.convert(100, Currency.USD, Currency.EUR)).rejects.toThrow(
-        'Currency conversion failed'
+        'Currency conversion failed',
       );
     });
 
@@ -276,7 +278,7 @@ describe('CurrencyService', () => {
             app_id: 'test-api-key',
             base: 'USD',
           },
-        })
+        }),
       );
 
       expect(prismaService.exchangeRate.create).toHaveBeenCalledTimes(5); // For each rate in mock response
@@ -296,7 +298,7 @@ describe('CurrencyService', () => {
       await service.updateExchangeRates();
 
       expect(loggerWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Large rate change detected')
+        expect.stringContaining('Large rate change detected'),
       );
     });
 
@@ -310,9 +312,7 @@ describe('CurrencyService', () => {
 
     it('should handle API errors gracefully', async () => {
       jest.spyOn(configService, 'get').mockReturnValue('test-api-key');
-      jest.spyOn(httpService, 'get').mockReturnValue(
-        throwError(() => new Error('API Error'))
-      );
+      jest.spyOn(httpService, 'get').mockReturnValue(throwError(() => new Error('API Error')));
 
       await service.updateExchangeRates();
 
@@ -322,9 +322,9 @@ describe('CurrencyService', () => {
     it('should skip duplicate rate entries', async () => {
       jest.spyOn(configService, 'get').mockReturnValue('test-api-key');
       jest.spyOn(httpService, 'get').mockReturnValue(of(mockOpenExchangeResponse));
-      jest.spyOn(prismaService.exchangeRate, 'create').mockRejectedValue(
-        new Error('Unique constraint failed')
-      );
+      jest
+        .spyOn(prismaService.exchangeRate, 'create')
+        .mockRejectedValue(new Error('Unique constraint failed'));
 
       await service.updateExchangeRates();
 

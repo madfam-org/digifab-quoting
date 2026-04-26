@@ -18,11 +18,11 @@
 
 ### Base URLs
 
-| Environment | Base URL | API Docs |
-|------------|----------|----------|
-| Development | `http://localhost:4000` | `http://localhost:4000/api/docs` |
-| Staging | `https://api.staging.cotiza.studio` | `https://api.staging.cotiza.studio/api/docs` |
-| Production | `https://api.cotiza.studio` | `https://api.cotiza.studio/api/docs` |
+| Environment | Base URL                            | API Docs                                     |
+| ----------- | ----------------------------------- | -------------------------------------------- |
+| Development | `http://localhost:4000`             | `http://localhost:4000/api/docs`             |
+| Staging     | `https://api.staging.cotiza.studio` | `https://api.staging.cotiza.studio/api/docs` |
+| Production  | `https://api.cotiza.studio`         | `https://api.cotiza.studio/api/docs`         |
 
 ### Quick Start
 
@@ -91,12 +91,14 @@ GET /quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc
 ```
 
 **Query Parameters:**
+
 - `page` (number): Page number (default: 1)
 - `limit` (number): Items per page (default: 20, max: 100)
 - `sortBy` (string): Field to sort by
 - `sortOrder` (string): 'asc' or 'desc'
 
 **Response:**
+
 ```json
 {
   "data": [...],
@@ -138,6 +140,7 @@ GET /quotes/123?expand=items,customer,payments
 ### Authentication Endpoints
 
 #### Register User
+
 ```http
 POST /auth/register
 Content-Type: application/json
@@ -151,6 +154,7 @@ Content-Type: application/json
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "user": {
@@ -166,6 +170,7 @@ Content-Type: application/json
 ```
 
 #### Login
+
 ```http
 POST /auth/login
 Content-Type: application/json
@@ -177,6 +182,7 @@ Content-Type: application/json
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "accessToken": "eyJhbGc...",
@@ -193,6 +199,7 @@ Content-Type: application/json
 ### Quote Management
 
 #### Create Quote
+
 ```http
 POST /quotes
 Authorization: Bearer {token}
@@ -216,23 +223,26 @@ Content-Type: application/json
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "id": "quote_def456",
   "projectName": "Custom Bracket",
   "status": "processing",
-  "items": [{
-    "id": "item_ghi789",
-    "fileName": "bracket_v2.stl",
-    "technology": "CNC",
-    "material": "ALUMINUM_6061",
-    "quantity": 25,
-    "unitPrice": 45.50,
-    "totalPrice": 1137.50,
-    "leadTime": 7,
-    "status": "analyzing"
-  }],
-  "subtotal": 1137.50,
+  "items": [
+    {
+      "id": "item_ghi789",
+      "fileName": "bracket_v2.stl",
+      "technology": "CNC",
+      "material": "ALUMINUM_6061",
+      "quantity": 25,
+      "unitPrice": 45.5,
+      "totalPrice": 1137.5,
+      "leadTime": 7,
+      "status": "analyzing"
+    }
+  ],
+  "subtotal": 1137.5,
   "tax": 204.75,
   "totalPrice": 1342.25,
   "currency": "USD",
@@ -242,12 +252,14 @@ Content-Type: application/json
 ```
 
 #### Get Quote Details
+
 ```http
 GET /quotes/{quoteId}
 Authorization: Bearer {token}
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "quote_def456",
@@ -258,29 +270,31 @@ Authorization: Bearer {token}
     "name": "John Doe",
     "email": "user@example.com"
   },
-  "items": [{
-    "id": "item_ghi789",
-    "fileName": "bracket_v2.stl",
-    "technology": "CNC",
-    "material": "ALUMINUM_6061",
-    "quantity": 25,
-    "unitPrice": 45.50,
-    "totalPrice": 1137.50,
-    "leadTime": 7,
-    "status": "priced",
-    "manufacturingDetails": {
-      "volume": 125.5,
-      "boundingBox": {
-        "x": 100,
-        "y": 50,
-        "z": 25
-      },
-      "machineTime": 180,
-      "complexity": "medium"
+  "items": [
+    {
+      "id": "item_ghi789",
+      "fileName": "bracket_v2.stl",
+      "technology": "CNC",
+      "material": "ALUMINUM_6061",
+      "quantity": 25,
+      "unitPrice": 45.5,
+      "totalPrice": 1137.5,
+      "leadTime": 7,
+      "status": "priced",
+      "manufacturingDetails": {
+        "volume": 125.5,
+        "boundingBox": {
+          "x": 100,
+          "y": 50,
+          "z": 25
+        },
+        "machineTime": 180,
+        "complexity": "medium"
+      }
     }
-  }],
+  ],
   "pricing": {
-    "subtotal": 1137.50,
+    "subtotal": 1137.5,
     "discount": 0,
     "tax": 204.75,
     "shipping": 0,
@@ -295,6 +309,7 @@ Authorization: Bearer {token}
 ```
 
 #### Update Quote Item
+
 ```http
 PATCH /quotes/{quoteId}/items/{itemId}
 Authorization: Bearer {token}
@@ -308,18 +323,19 @@ Content-Type: application/json
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "item_ghi789",
   "quantity": 50,
   "material": "ALUMINUM_7075",
-  "unitPrice": 52.00,
-  "totalPrice": 2600.00,
+  "unitPrice": 52.0,
+  "totalPrice": 2600.0,
   "leadTime": 10,
   "priceBreakdown": {
-    "materialCost": 1500.00,
-    "machineCost": 800.00,
-    "finishCost": 300.00
+    "materialCost": 1500.0,
+    "machineCost": 800.0,
+    "finishCost": 300.0
   }
 }
 ```
@@ -327,6 +343,7 @@ Content-Type: application/json
 ### File Management
 
 #### Request Upload URL
+
 ```http
 POST /files/presign
 Authorization: Bearer {token}
@@ -340,6 +357,7 @@ Content-Type: application/json
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "fileId": "file_xyz789",
@@ -354,6 +372,7 @@ Content-Type: application/json
 ```
 
 #### Confirm Upload
+
 ```http
 POST /files/{fileId}/confirm
 Authorization: Bearer {token}
@@ -369,28 +388,31 @@ Content-Type: application/json
 ### Currency & Geo
 
 #### Get Exchange Rates
+
 ```http
 GET /api/v1/currency/rates?base=USD
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "base": "USD",
   "timestamp": "2025-01-26T10:00:00Z",
   "rates": {
     "EUR": 0.92,
-    "MXN": 17.50,
+    "MXN": 17.5,
     "GBP": 0.79,
-    "JPY": 149.50,
+    "JPY": 149.5,
     "CAD": 1.37,
-    "BRL": 5.10
+    "BRL": 5.1
   },
   "source": "openexchangerates"
 }
 ```
 
 #### Convert Currency
+
 ```http
 POST /api/v1/currency/convert
 Content-Type: application/json
@@ -404,11 +426,12 @@ Content-Type: application/json
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "originalAmount": 1000,
   "originalCurrency": "USD",
-  "convertedAmount": 918.40,
+  "convertedAmount": 918.4,
   "convertedCurrency": "EUR",
   "rate": 0.92,
   "fees": {
@@ -421,11 +444,13 @@ Content-Type: application/json
 ```
 
 #### Detect Location
+
 ```http
 GET /api/v1/geo/detect
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "country": "US",
@@ -442,6 +467,7 @@ GET /api/v1/geo/detect
 ### Payment Processing
 
 #### Create Checkout Session
+
 ```http
 POST /payments/quotes/{quoteId}/checkout
 Authorization: Bearer {token}
@@ -456,6 +482,7 @@ Content-Type: application/json
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "checkoutUrl": "https://checkout.stripe.com/pay/cs_live_...",
@@ -467,6 +494,7 @@ Content-Type: application/json
 ### Guest Quotes
 
 #### Create Guest Quote
+
 ```http
 POST /api/v1/guest/quotes
 Content-Type: application/json
@@ -485,13 +513,14 @@ X-Guest-Session: guest_session_abc123
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "id": "guest_quote_xyz",
   "accessUrl": "https://app.cotiza.studio/quote/guest_quote_xyz",
   "projectName": "Quick Part",
   "status": "processing",
-  "estimatedPrice": 25.00,
+  "estimatedPrice": 25.0,
   "currency": "USD",
   "expiresAt": "2025-01-27T10:00:00Z"
 }
@@ -520,20 +549,21 @@ All errors follow a consistent format:
 
 ### Common Error Codes
 
-| Code | HTTP Status | Description |
-|------|------------|-------------|
-| `VALIDATION_ERROR` | 400 | Invalid input data |
-| `UNAUTHORIZED` | 401 | Missing or invalid authentication |
-| `FORBIDDEN` | 403 | Insufficient permissions |
-| `NOT_FOUND` | 404 | Resource not found |
-| `CONFLICT` | 409 | Resource conflict (e.g., duplicate) |
-| `RATE_LIMITED` | 429 | Too many requests |
-| `INTERNAL_ERROR` | 500 | Server error |
-| `SERVICE_UNAVAILABLE` | 503 | Service temporarily unavailable |
+| Code                  | HTTP Status | Description                         |
+| --------------------- | ----------- | ----------------------------------- |
+| `VALIDATION_ERROR`    | 400         | Invalid input data                  |
+| `UNAUTHORIZED`        | 401         | Missing or invalid authentication   |
+| `FORBIDDEN`           | 403         | Insufficient permissions            |
+| `NOT_FOUND`           | 404         | Resource not found                  |
+| `CONFLICT`            | 409         | Resource conflict (e.g., duplicate) |
+| `RATE_LIMITED`        | 429         | Too many requests                   |
+| `INTERNAL_ERROR`      | 500         | Server error                        |
+| `SERVICE_UNAVAILABLE` | 503         | Service temporarily unavailable     |
 
 ### Error Examples
 
 #### Validation Error
+
 ```json
 {
   "error": {
@@ -556,6 +586,7 @@ All errors follow a consistent format:
 ```
 
 #### Authentication Error
+
 ```json
 {
   "error": {
@@ -583,25 +614,25 @@ Retry-After: 60
 
 ### Rate Limit Tiers
 
-| Tier | Requests/Minute | Requests/Hour | Requests/Day |
-|------|----------------|---------------|--------------|
-| Guest | 20 | 100 | 500 |
-| Free | 100 | 1,000 | 10,000 |
-| Pro | 500 | 5,000 | 50,000 |
-| Enterprise | Custom | Custom | Custom |
+| Tier       | Requests/Minute | Requests/Hour | Requests/Day |
+| ---------- | --------------- | ------------- | ------------ |
+| Guest      | 20              | 100           | 500          |
+| Free       | 100             | 1,000         | 10,000       |
+| Pro        | 500             | 5,000         | 50,000       |
+| Enterprise | Custom          | Custom        | Custom       |
 
 ### Handling Rate Limits
 
 ```javascript
 async function makeRequest(url, options) {
   const response = await fetch(url, options);
-  
+
   if (response.status === 429) {
     const retryAfter = response.headers.get('Retry-After');
     await sleep(parseInt(retryAfter) * 1000);
     return makeRequest(url, options);
   }
-  
+
   return response;
 }
 ```
@@ -610,14 +641,14 @@ async function makeRequest(url, options) {
 
 ### Webhook Events
 
-| Event | Description | Payload |
-|-------|-------------|---------|
-| `quote.created` | Quote created | Quote object |
-| `quote.updated` | Quote updated | Quote object + changes |
-| `quote.approved` | Quote approved by customer | Quote object |
-| `payment.completed` | Payment successful | Payment object |
-| `order.created` | Order created from quote | Order object |
-| `order.shipped` | Order shipped | Order + tracking |
+| Event               | Description                | Payload                |
+| ------------------- | -------------------------- | ---------------------- |
+| `quote.created`     | Quote created              | Quote object           |
+| `quote.updated`     | Quote updated              | Quote object + changes |
+| `quote.approved`    | Quote approved by customer | Quote object           |
+| `payment.completed` | Payment successful         | Payment object         |
+| `order.created`     | Order created from quote   | Order object           |
+| `order.shipped`     | Order shipped              | Order + tracking       |
 
 ### Webhook Security
 
@@ -633,11 +664,8 @@ Verify webhook signatures:
 const crypto = require('crypto');
 
 function verifyWebhook(payload, signature, secret) {
-  const hash = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
-  
+  const hash = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+
   return `sha256=${hash}` === signature;
 }
 ```
@@ -678,18 +706,20 @@ import { CotizaClient } from '@cotiza-studio/sdk';
 
 const client = new CotizaClient({
   apiKey: 'your-api-key',
-  environment: 'production'
+  environment: 'production',
 });
 
 // Create a quote
 const quote = await client.quotes.create({
   projectName: 'Custom Part',
-  items: [{
-    fileId: 'file_xyz789',
-    technology: 'FFF',
-    material: 'PLA',
-    quantity: 10
-  }]
+  items: [
+    {
+      fileId: 'file_xyz789',
+      technology: 'FFF',
+      material: 'PLA',
+      quantity: 10,
+    },
+  ],
 });
 
 // Get quote details
@@ -771,6 +801,7 @@ Import our Postman collection for easy API testing:
 - Migration guides provided
 
 Example deprecation header:
+
 ```http
 Deprecation: true
 Sunset: Sat, 31 Jul 2025 23:59:59 GMT
@@ -781,10 +812,10 @@ Link: <https://docs.cotiza.studio/migrations/v2>; rel="migration"
 
 ### Test Environment
 
-| Environment | Base URL | Purpose |
-|------------|----------|---------|
-| Sandbox | `https://sandbox.api.cotiza.studio` | Testing with fake data |
-| Staging | `https://staging.api.cotiza.studio` | Pre-production testing |
+| Environment | Base URL                            | Purpose                |
+| ----------- | ----------------------------------- | ---------------------- |
+| Sandbox     | `https://sandbox.api.cotiza.studio` | Testing with fake data |
+| Staging     | `https://staging.api.cotiza.studio` | Pre-production testing |
 
 ### Test Credentials
 
@@ -798,10 +829,10 @@ Link: <https://docs.cotiza.studio/migrations/v2>; rel="migration"
 
 ### Test Card Numbers (Stripe)
 
-| Card Number | Scenario |
-|------------|----------|
+| Card Number         | Scenario           |
+| ------------------- | ------------------ |
 | 4242 4242 4242 4242 | Successful payment |
-| 4000 0000 0000 0002 | Card declined |
+| 4000 0000 0000 0002 | Card declined      |
 | 4000 0000 0000 9995 | Insufficient funds |
 
 ## Support
@@ -821,4 +852,4 @@ Link: <https://docs.cotiza.studio/migrations/v2>; rel="migration"
 
 ---
 
-*API Version: 1.0.0 | Last Updated: 2025-01-26*
+_API Version: 1.0.0 | Last Updated: 2025-01-26_

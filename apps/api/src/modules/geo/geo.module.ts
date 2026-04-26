@@ -9,13 +9,7 @@ import { RedisModule } from '@/modules/redis/redis.module';
 import { PrismaModule } from '@/prisma/prisma.module';
 
 @Module({
-  imports: [
-    HttpModule,
-    ConfigModule,
-    ScheduleModule.forRoot(),
-    RedisModule,
-    PrismaModule,
-  ],
+  imports: [HttpModule, ConfigModule, ScheduleModule.forRoot(), RedisModule, PrismaModule],
   controllers: [GeoController, CurrencyController],
   providers: [GeoService, CurrencyService],
   exports: [GeoService, CurrencyService],

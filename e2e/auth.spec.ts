@@ -62,14 +62,14 @@ test.describe('Authentication Flow', () => {
 
       // Should stay on login page
       await expect(page).toHaveURL('/auth/login');
-      
+
       // Should show error message
       await expect(page.locator('.error-message')).toContainText('Invalid credentials');
     });
 
     test('should show validation errors for invalid input', async ({ page }) => {
       await page.goto('/auth/login');
-      
+
       // Submit empty form
       await page.click('[type="submit"]');
 
@@ -93,14 +93,14 @@ test.describe('Authentication Flow', () => {
 
     test('should remember user with "Remember me" checked', async ({ page, context }) => {
       await page.goto('/auth/login');
-      
+
       // Check remember me
       await page.check('[name="rememberMe"]');
       await fillLoginForm(page, testUser.email, testUser.password);
 
       // Should set persistent cookie
       const cookies = await context.cookies();
-      const authCookie = cookies.find(c => c.name === 'auth-token');
+      const authCookie = cookies.find((c) => c.name === 'auth-token');
       expect(authCookie).toBeDefined();
       expect(authCookie?.expires).toBeGreaterThan(Date.now() / 1000 + 7 * 24 * 60 * 60);
     });
@@ -108,7 +108,7 @@ test.describe('Authentication Flow', () => {
     test('should redirect to requested page after login', async ({ page }) => {
       // Try to access protected page
       await page.goto('/quote/new');
-      
+
       // Should redirect to login with return URL
       await expect(page).toHaveURL('/auth/login?returnUrl=%2Fquote%2Fnew');
 
@@ -133,7 +133,7 @@ test.describe('Authentication Flow', () => {
 
       // Should redirect to dashboard
       await expect(page).toHaveURL('/dashboard');
-      
+
       // Should show welcome message
       await expect(page.locator('.toast')).toContainText('Welcome to Cotiza Studio');
     });
@@ -144,14 +144,14 @@ test.describe('Authentication Flow', () => {
 
       // Should stay on register page
       await expect(page).toHaveURL('/auth/register');
-      
+
       // Should show error
       await expect(page.locator('.error-message')).toContainText('Email already exists');
     });
 
     test('should validate password strength', async ({ page }) => {
       await page.goto('/auth/register');
-      
+
       // Weak password
       await page.fill('[name="password"]', '12345');
       await page.click('[type="submit"]');
@@ -164,18 +164,20 @@ test.describe('Authentication Flow', () => {
 
     test('should validate password confirmation', async ({ page }) => {
       await page.goto('/auth/register');
-      
+
       await page.fill('[name="password"]', 'ValidPassword123!');
       await page.fill('[name="confirmPassword"]', 'DifferentPassword123!');
       await page.click('[type="submit"]');
 
       // Should show mismatch error
-      await expect(page.locator('[data-error="confirmPassword"]')).toContainText('Passwords do not match');
+      await expect(page.locator('[data-error="confirmPassword"]')).toContainText(
+        'Passwords do not match',
+      );
     });
 
     test('should require terms acceptance', async ({ page }) => {
       await page.goto('/auth/register');
-      
+
       // Fill form without accepting terms
       await page.fill('[name="email"]', newUser.email);
       await page.fill('[name="password"]', newUser.password);
@@ -184,7 +186,9 @@ test.describe('Authentication Flow', () => {
       await page.click('[type="submit"]');
 
       // Should show error
-      await expect(page.locator('[data-error="acceptTerms"]')).toContainText('You must accept the terms');
+      await expect(page.locator('[data-error="acceptTerms"]')).toContainText(
+        'You must accept the terms',
+      );
     });
 
     test('should send verification email', async ({ page }) => {
@@ -210,13 +214,13 @@ test.describe('Authentication Flow', () => {
     test('should logout successfully', async ({ page }) => {
       // Click user menu
       await page.click('[data-testid="user-menu"]');
-      
+
       // Click logout
       await page.click('text=Logout');
 
       // Should redirect to home
       await expect(page).toHaveURL('/');
-      
+
       // Should not show user menu
       await expect(page.locator('[data-testid="user-menu"]')).not.toBeVisible();
     });
@@ -227,11 +231,13 @@ test.describe('Authentication Flow', () => {
 
       // Should clear auth cookie
       const cookies = await context.cookies();
-      const authCookie = cookies.find(c => c.name === 'auth-token');
+      const authCookie = cookies.find((c) => c.name === 'auth-token');
       expect(authCookie).toBeUndefined();
     });
 
-    test('should redirect to login when accessing protected page after logout', async ({ page }) => {
+    test('should redirect to login when accessing protected page after logout', async ({
+      page,
+    }) => {
       // Logout
       await page.click('[data-testid="user-menu"]');
       await page.click('text=Logout');
@@ -248,14 +254,14 @@ test.describe('Authentication Flow', () => {
     test('should navigate to password reset page', async ({ page }) => {
       await page.goto('/auth/login');
       await page.click('text=Forgot Password?');
-      
+
       await expect(page).toHaveURL('/auth/reset-password');
       await expect(page.locator('h1')).toContainText('Reset Password');
     });
 
     test('should send password reset email', async ({ page }) => {
       await page.goto('/auth/reset-password');
-      
+
       await page.fill('[name="email"]', testUser.email);
       await page.click('[type="submit"]');
 
@@ -265,7 +271,7 @@ test.describe('Authentication Flow', () => {
 
     test('should handle non-existent email gracefully', async ({ page }) => {
       await page.goto('/auth/reset-password');
-      
+
       await page.fill('[name="email"]', 'nonexistent@example.com');
       await page.click('[type="submit"]');
 
@@ -285,7 +291,7 @@ test.describe('Authentication Flow', () => {
 
       // Should redirect to login
       await expect(page).toHaveURL('/auth/login');
-      
+
       // Should show success message
       await expect(page.locator('.success-message')).toContainText('Password has been reset');
     });
@@ -325,7 +331,7 @@ test.describe('Authentication Flow', () => {
 
       // Should redirect to login
       await expect(page).toHaveURL('/auth/login');
-      
+
       // Should show session expired message
       await expect(page.locator('.info-message')).toContainText('Session expired');
     });
@@ -366,7 +372,7 @@ test.describe('Authentication Flow', () => {
 
     test('should initiate Google OAuth flow', async ({ page }) => {
       await page.goto('/auth/login');
-      
+
       // Click Google button
       const [popup] = await Promise.all([
         page.waitForEvent('popup'),
@@ -375,7 +381,7 @@ test.describe('Authentication Flow', () => {
 
       // Should open Google OAuth page
       await expect(popup).toHaveURL(/accounts\.google\.com/);
-      
+
       await popup.close();
     });
   });
@@ -383,7 +389,7 @@ test.describe('Authentication Flow', () => {
   test.describe('Security', () => {
     test('should prevent XSS in login form', async ({ page }) => {
       await page.goto('/auth/login');
-      
+
       const xssPayload = '<script>alert("XSS")</script>';
       await page.fill('[name="email"]', xssPayload);
       await page.fill('[name="password"]', 'password');
@@ -391,7 +397,7 @@ test.describe('Authentication Flow', () => {
 
       // Should sanitize and show validation error
       await expect(page.locator('.error-message')).toContainText('Invalid email');
-      
+
       // Script should not execute
       await expect(page.locator('script:has-text("alert")')).not.toBeVisible();
     });
@@ -401,7 +407,7 @@ test.describe('Authentication Flow', () => {
       await fillLoginForm(page, testUser.email, testUser.password);
 
       const cookies = await context.cookies();
-      const authCookie = cookies.find(c => c.name === 'auth-token');
+      const authCookie = cookies.find((c) => c.name === 'auth-token');
 
       expect(authCookie?.secure).toBe(true);
       expect(authCookie?.httpOnly).toBe(true);
@@ -418,9 +424,9 @@ test.describe('Authentication Flow', () => {
       // Verify token is sent with form
       await page.fill('[name="email"]', testUser.email);
       await page.fill('[name="password"]', testUser.password);
-      
+
       const [request] = await Promise.all([
-        page.waitForRequest(req => req.url().includes('/auth/login')),
+        page.waitForRequest((req) => req.url().includes('/auth/login')),
         page.click('[type="submit"]'),
       ]);
 
@@ -436,13 +442,13 @@ test.describe('Authentication Flow', () => {
       // Tab through form fields
       await page.keyboard.press('Tab'); // Focus email
       await page.keyboard.type(testUser.email);
-      
+
       await page.keyboard.press('Tab'); // Focus password
       await page.keyboard.type(testUser.password);
-      
+
       await page.keyboard.press('Tab'); // Focus remember me
       await page.keyboard.press('Space'); // Check it
-      
+
       await page.keyboard.press('Tab'); // Focus submit
       await page.keyboard.press('Enter'); // Submit
 
@@ -454,9 +460,15 @@ test.describe('Authentication Flow', () => {
       await page.goto('/auth/login');
 
       // Check form inputs have labels
-      await expect(page.locator('input[name="email"]')).toHaveAttribute('aria-label', 'Email address');
-      await expect(page.locator('input[name="password"]')).toHaveAttribute('aria-label', 'Password');
-      
+      await expect(page.locator('input[name="email"]')).toHaveAttribute(
+        'aria-label',
+        'Email address',
+      );
+      await expect(page.locator('input[name="password"]')).toHaveAttribute(
+        'aria-label',
+        'Password',
+      );
+
       // Check error messages are announced
       await page.click('[type="submit"]'); // Submit empty form
       await expect(page.locator('[role="alert"]')).toBeVisible();
@@ -466,7 +478,10 @@ test.describe('Authentication Flow', () => {
       await page.goto('/auth/login');
 
       // Check for skip links
-      await expect(page.locator('a:has-text("Skip to main content")')).toHaveAttribute('href', '#main');
+      await expect(page.locator('a:has-text("Skip to main content")')).toHaveAttribute(
+        'href',
+        '#main',
+      );
 
       // Check form has proper structure
       const form = page.locator('form');

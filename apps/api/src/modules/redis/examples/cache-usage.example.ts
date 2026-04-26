@@ -326,7 +326,10 @@ export class CacheMonitoringService {
     };
   }
 
-  private generateRecommendations(health: Record<string, unknown>, quoteStats: Record<string, unknown>) {
+  private generateRecommendations(
+    health: Record<string, unknown>,
+    quoteStats: Record<string, unknown>,
+  ) {
     const recommendations = [];
 
     if (health.statistics.hitRate < 50) {

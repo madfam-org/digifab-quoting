@@ -23,7 +23,9 @@ export class RedisHealthIndicator extends HealthIndicator {
     } catch (error) {
       throw new HealthCheckError(
         'Redis check failed',
-        this.getStatus(key, false, { error: error instanceof Error ? error.message : 'Unknown error' }),
+        this.getStatus(key, false, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
       );
     }
   }

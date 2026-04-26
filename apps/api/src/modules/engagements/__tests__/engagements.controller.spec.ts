@@ -69,9 +69,6 @@ describe('EngagementsController', () => {
   it('isolates across tenants (service receives caller tenantId, not the path id)', async () => {
     const req = { user: { tenantId: 't_caller' } } as any;
     await controller.findOne(req, 'pcrm_belongs_to_other');
-    expect(service.findByPhynecrmId).toHaveBeenCalledWith(
-      't_caller',
-      'pcrm_belongs_to_other',
-    );
+    expect(service.findByPhynecrmId).toHaveBeenCalledWith('t_caller', 'pcrm_belongs_to_other');
   });
 });

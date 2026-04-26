@@ -27,7 +27,7 @@ export function FileUploadZone({
   const onDrop = useCallback(
     (acceptedFiles: File[], fileRejections: FileRejection[]) => {
       setErrors([]);
-      
+
       // Check for rejected files
       if (fileRejections.length > 0) {
         const errorMessages = fileRejections.map((rejection) => {
@@ -50,7 +50,7 @@ export function FileUploadZone({
         onFilesSelected(newFiles);
       }
     },
-    [files, maxFiles, maxSizeMB, onFilesSelected]
+    [files, maxFiles, maxSizeMB, onFilesSelected],
   );
 
   const removeFile = (index: number) => {
@@ -61,10 +61,13 @@ export function FileUploadZone({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: acceptedFileTypes.reduce((acc, type) => {
-      acc[`model/${type.slice(1)}`] = [type];
-      return acc;
-    }, {} as Record<string, string[]>),
+    accept: acceptedFileTypes.reduce(
+      (acc, type) => {
+        acc[`model/${type.slice(1)}`] = [type];
+        return acc;
+      },
+      {} as Record<string, string[]>,
+    ),
     maxSize: maxSizeMB * 1024 * 1024,
     maxFiles: maxFiles - files.length,
   });
@@ -75,10 +78,8 @@ export function FileUploadZone({
         {...getRootProps()}
         className={cn(
           'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
-          isDragActive
-            ? 'border-primary bg-primary/10'
-            : 'border-gray-300 hover:border-gray-400',
-          files.length >= maxFiles && 'opacity-50 cursor-not-allowed'
+          isDragActive ? 'border-primary bg-primary/10' : 'border-gray-300 hover:border-gray-400',
+          files.length >= maxFiles && 'opacity-50 cursor-not-allowed',
         )}
       >
         <input {...getInputProps()} disabled={files.length >= maxFiles} />
@@ -87,9 +88,7 @@ export function FileUploadZone({
           <p className="text-lg font-medium">Drop the files here...</p>
         ) : (
           <>
-            <p className="text-lg font-medium mb-2">
-              Drag & drop files here, or click to select
-            </p>
+            <p className="text-lg font-medium mb-2">Drag & drop files here, or click to select</p>
             <p className="text-sm text-gray-500">
               Supported formats: {acceptedFileTypes.join(', ')}
             </p>
@@ -122,16 +121,9 @@ export function FileUploadZone({
             >
               <div className="flex-1">
                 <p className="text-sm font-medium">{file.name}</p>
-                <p className="text-xs text-gray-500">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
+                <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeFile(index)}
-                className="ml-2"
-              >
+              <Button variant="ghost" size="sm" onClick={() => removeFile(index)} className="ml-2">
                 <X className="w-4 h-4" />
               </Button>
             </div>

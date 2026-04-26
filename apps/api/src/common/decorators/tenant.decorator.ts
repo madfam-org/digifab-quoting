@@ -1,10 +1,8 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-export const TenantContext = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.tenantId || 'default';
-  },
-);
+export const TenantContext = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
+  const request = ctx.switchToHttp().getRequest();
+  return request.tenantId || 'default';
+});
 
 export const Tenant = TenantContext; // Alias for backwards compatibility

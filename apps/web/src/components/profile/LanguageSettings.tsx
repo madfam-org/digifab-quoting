@@ -41,11 +41,11 @@ export function LanguageSettings() {
 
       // Save to localStorage for immediate effect
       localStorage.setItem('preferredLocale', selectedLocale);
-      
+
       // Reload page with new locale
       const currentPath = window.location.pathname;
       const newPath = currentPath.replace(/^\/(es|en|pt-BR)/, `/${selectedLocale}`);
-      
+
       if (newPath !== currentPath) {
         window.location.href = newPath;
       } else {
@@ -92,25 +92,18 @@ export function LanguageSettings() {
                 </option>
               ))}
             </select>
-            <Button
-              onClick={handleSave}
-              disabled={loading || selectedLocale === locale}
-            >
+            <Button onClick={handleSave} disabled={loading || selectedLocale === locale}>
               {loading ? t('common.saving') : t('common.save')}
             </Button>
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            {t('profile.language.description')}
-          </p>
+          <p className="mt-2 text-sm text-gray-500">{t('profile.language.description')}</p>
         </div>
 
         <div className="border-t pt-4">
           <h4 className="text-sm font-medium text-gray-700 mb-2">
             {t('profile.language.detection')}
           </h4>
-          <p className="text-sm text-gray-500">
-            {t('profile.language.detectionDescription')}
-          </p>
+          <p className="text-sm text-gray-500">{t('profile.language.detectionDescription')}</p>
           <ul className="mt-2 text-sm text-gray-500 list-disc list-inside">
             <li>{t('profile.language.detectionBrowser')}</li>
             <li>{t('profile.language.detectionAccount')}</li>

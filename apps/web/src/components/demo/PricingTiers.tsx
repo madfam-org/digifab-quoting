@@ -38,16 +38,16 @@ const PRICING_TIERS: PricingTier[] = [
     targetPersona: 'DIY Makers & Students',
     limits: {
       quotes: '3 quotes/month',
-      storage: '100MB storage'
+      storage: '100MB storage',
     },
     features: [
       'Basic material library',
       '3D printing & laser cutting',
       'Community support',
       'DIY vs buy analysis',
-      'Basic tutorials'
+      'Basic tutorials',
     ],
-    cta: 'Start Free'
+    cta: 'Start Free',
   },
   {
     id: 'pro',
@@ -62,7 +62,7 @@ const PRICING_TIERS: PricingTier[] = [
     limits: {
       quotes: '50 quotes/month',
       storage: '1GB storage',
-      apiCalls: '100 API calls/month'
+      apiCalls: '100 API calls/month',
     },
     features: [
       'All materials & processes',
@@ -71,9 +71,9 @@ const PRICING_TIERS: PricingTier[] = [
       'Priority support',
       'Bulk quote discounts',
       'Export detailed reports',
-      'Basic API access'
+      'Basic API access',
     ],
-    cta: 'Start Free Trial'
+    cta: 'Start Free Trial',
   },
   {
     id: 'business',
@@ -87,7 +87,7 @@ const PRICING_TIERS: PricingTier[] = [
       quotes: 'Unlimited quotes',
       users: '5 team members',
       storage: '10GB storage',
-      apiCalls: '1,000 API calls/month'
+      apiCalls: '1,000 API calls/month',
     },
     features: [
       'Everything in Creator Pro',
@@ -97,9 +97,9 @@ const PRICING_TIERS: PricingTier[] = [
       'Advanced analytics',
       'Custom branding',
       'Integration webhooks',
-      'Phone support'
+      'Phone support',
     ],
-    cta: 'Start Business Trial'
+    cta: 'Start Business Trial',
   },
   {
     id: 'enterprise',
@@ -114,7 +114,7 @@ const PRICING_TIERS: PricingTier[] = [
       quotes: 'Unlimited everything',
       users: 'Unlimited users',
       storage: 'Unlimited storage',
-      apiCalls: 'Unlimited API calls'
+      apiCalls: 'Unlimited API calls',
     },
     features: [
       'Everything in Business',
@@ -124,10 +124,10 @@ const PRICING_TIERS: PricingTier[] = [
       'Dedicated account manager',
       'SLA guarantee',
       'Custom training',
-      'Priority feature requests'
+      'Priority feature requests',
     ],
-    cta: 'Contact Sales'
-  }
+    cta: 'Contact Sales',
+  },
 ];
 
 export function PricingTiers() {
@@ -142,9 +142,7 @@ export function PricingTiers() {
     <div className="space-y-12">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-4xl font-bold mb-4">
-          Simple, Transparent Pricing
-        </h2>
+        <h2 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
         <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
           Choose the perfect plan for your needs. Start free, upgrade anytime, cancel whenever.
         </p>
@@ -198,9 +196,11 @@ export function PricingTiers() {
 
             {/* Icon & Name */}
             <div className="text-center mb-6">
-              <div className={`inline-flex p-3 rounded-xl mb-4 ${
-                tier.popular ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
-              }`}>
+              <div
+                className={`inline-flex p-3 rounded-xl mb-4 ${
+                  tier.popular ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                }`}
+              >
                 {tier.icon}
               </div>
               <h3 className="text-2xl font-bold mb-2">{tier.name}</h3>
@@ -211,27 +211,23 @@ export function PricingTiers() {
             {/* Pricing */}
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center">
-                <span className="text-4xl font-bold">
-                  ${tier.price[billingPeriod]}
-                </span>
+                <span className="text-4xl font-bold">${tier.price[billingPeriod]}</span>
                 {tier.price[billingPeriod] > 0 && (
                   <span className="text-gray-600 ml-2">
                     /{billingPeriod === 'monthly' ? 'mo' : 'yr'}
                   </span>
                 )}
               </div>
-              
+
               {billingPeriod === 'yearly' && tier.price.monthly > 0 && (
                 <div className="text-sm text-green-600 mt-1">
-                  Save ${tier.price.monthly * 12 - tier.price.yearly}/year 
-                  ({yearlyDiscount(tier.price.monthly, tier.price.yearly)}% off)
+                  Save ${tier.price.monthly * 12 - tier.price.yearly}/year (
+                  {yearlyDiscount(tier.price.monthly, tier.price.yearly)}% off)
                 </div>
               )}
-              
+
               {tier.price[billingPeriod] === 0 && (
-                <div className="text-sm text-gray-500 mt-1">
-                  Free forever
-                </div>
+                <div className="text-sm text-gray-500 mt-1">Free forever</div>
               )}
             </div>
 
@@ -279,8 +275,8 @@ export function PricingTiers() {
                 tier.popular
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : tier.id === 'enterprise'
-                  ? 'bg-purple-600 text-white hover:bg-purple-700'
-                  : 'bg-gray-900 text-white hover:bg-gray-800'
+                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    : 'bg-gray-900 text-white hover:bg-gray-800'
               }`}
             >
               {tier.cta}
@@ -293,7 +289,9 @@ export function PricingTiers() {
 
             {tier.id !== 'free' && (
               <p className="text-center text-xs text-gray-500 mt-3">
-                {tier.id === 'enterprise' ? 'Custom quote in 24h' : '14-day free trial • No credit card required'}
+                {tier.id === 'enterprise'
+                  ? 'Custom quote in 24h'
+                  : '14-day free trial • No credit card required'}
               </p>
             )}
           </motion.div>
@@ -302,16 +300,14 @@ export function PricingTiers() {
 
       {/* Feature Comparison */}
       <div className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border">
-        <h3 className="text-2xl font-bold text-center mb-8">
-          Compare All Features
-        </h3>
-        
+        <h3 className="text-2xl font-bold text-center mb-8">Compare All Features</h3>
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b">
                 <th className="text-left py-4 px-6">Features</th>
-                {PRICING_TIERS.map(tier => (
+                {PRICING_TIERS.map((tier) => (
                   <th key={tier.id} className="text-center py-4 px-4 font-semibold">
                     {tier.name}
                   </th>
@@ -327,18 +323,22 @@ export function PricingTiers() {
                 'Team collaboration',
                 'White-label solution',
                 'Priority support',
-                'Market intelligence'
+                'Market intelligence',
               ].map((feature, idx) => (
                 <tr key={idx} className="border-b border-gray-100">
                   <td className="py-4 px-6">{feature}</td>
                   <td className="text-center py-4 px-4">
-                    {(feature === 'Basic materials') ? '✓' : '—'}
+                    {feature === 'Basic materials' ? '✓' : '—'}
                   </td>
                   <td className="text-center py-4 px-4">
-                    {(['Basic materials', 'All materials & processes', 'API access'].includes(feature)) ? '✓' : '—'}
+                    {['Basic materials', 'All materials & processes', 'API access'].includes(
+                      feature,
+                    )
+                      ? '✓'
+                      : '—'}
                   </td>
                   <td className="text-center py-4 px-4">
-                    {(!['Market intelligence'].includes(feature)) ? '✓' : '—'}
+                    {!['Market intelligence'].includes(feature) ? '✓' : '—'}
                   </td>
                   <td className="text-center py-4 px-4">✓</td>
                 </tr>
@@ -354,19 +354,27 @@ export function PricingTiers() {
         <div className="grid md:grid-cols-2 gap-6 text-left max-w-4xl mx-auto">
           <div>
             <h4 className="font-semibold mb-2">Can I change plans anytime?</h4>
-            <p className="text-gray-600 text-sm">Yes, upgrade or downgrade anytime. Changes take effect immediately.</p>
+            <p className="text-gray-600 text-sm">
+              Yes, upgrade or downgrade anytime. Changes take effect immediately.
+            </p>
           </div>
           <div>
             <h4 className="font-semibold mb-2">What payment methods do you accept?</h4>
-            <p className="text-gray-600 text-sm">All major credit cards, PayPal, and bank transfers for Enterprise.</p>
+            <p className="text-gray-600 text-sm">
+              All major credit cards, PayPal, and bank transfers for Enterprise.
+            </p>
           </div>
           <div>
             <h4 className="font-semibold mb-2">Is there a free trial?</h4>
-            <p className="text-gray-600 text-sm">Yes! 14-day free trial for all paid plans. No credit card required.</p>
+            <p className="text-gray-600 text-sm">
+              Yes! 14-day free trial for all paid plans. No credit card required.
+            </p>
           </div>
           <div>
             <h4 className="font-semibold mb-2">Do you offer refunds?</h4>
-            <p className="text-gray-600 text-sm">30-day money-back guarantee if you're not completely satisfied.</p>
+            <p className="text-gray-600 text-sm">
+              30-day money-back guarantee if you're not completely satisfied.
+            </p>
           </div>
         </div>
       </div>

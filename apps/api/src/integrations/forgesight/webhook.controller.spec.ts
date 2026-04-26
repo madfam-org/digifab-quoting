@@ -15,9 +15,7 @@ import { CacheService } from '../../modules/redis/cache.service';
 
 const WEBHOOK_SECRET = 'test-forgesight-webhook-secret-256';
 
-function mockConfigService(
-  overrides: Record<string, unknown> = {},
-): Partial<ConfigService> {
+function mockConfigService(overrides: Record<string, unknown> = {}): Partial<ConfigService> {
   const defaults: Record<string, unknown> = {
     FORGESIGHT_WEBHOOK_SECRET: WEBHOOK_SECRET,
     ...overrides,
@@ -80,9 +78,7 @@ describe('ForgesightWebhookController', () => {
       ],
     }).compile();
 
-    controller = module.get<ForgesightWebhookController>(
-      ForgesightWebhookController,
-    );
+    controller = module.get<ForgesightWebhookController>(ForgesightWebhookController);
   });
 
   afterEach(() => {
@@ -118,9 +114,9 @@ describe('ForgesightWebhookController', () => {
       const req = makeRequest(body);
       const wrongSig = sign(body, 'wrong-secret-entirely');
 
-      await expect(
-        controller.handleForgesightWebhook(req, wrongSig, payload),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(controller.handleForgesightWebhook(req, wrongSig, payload)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should accept requests with valid signature', async () => {
@@ -129,11 +125,7 @@ describe('ForgesightWebhookController', () => {
       const req = makeRequest(body);
       const sig = sign(body);
 
-      const result = await controller.handleForgesightWebhook(
-        req,
-        sig,
-        payload,
-      );
+      const result = await controller.handleForgesightWebhook(req, sig, payload);
 
       expect(result.received).toBe(true);
       expect(result.event).toBe('price.updated');
@@ -178,18 +170,10 @@ describe('ForgesightWebhookController', () => {
 
       // Expect 4 invalidation calls (quote-pricing, material-trends, vendor-comparison, regional-pricing)
       expect(cacheService.invalidate).toHaveBeenCalledTimes(4);
-      expect(cacheService.invalidate).toHaveBeenCalledWith(
-        'forgesight:quote-pricing*',
-      );
-      expect(cacheService.invalidate).toHaveBeenCalledWith(
-        'forgesight:material-trends*',
-      );
-      expect(cacheService.invalidate).toHaveBeenCalledWith(
-        'forgesight:vendor-comparison*',
-      );
-      expect(cacheService.invalidate).toHaveBeenCalledWith(
-        'forgesight:regional-pricing*',
-      );
+      expect(cacheService.invalidate).toHaveBeenCalledWith('forgesight:quote-pricing*');
+      expect(cacheService.invalidate).toHaveBeenCalledWith('forgesight:material-trends*');
+      expect(cacheService.invalidate).toHaveBeenCalledWith('forgesight:vendor-comparison*');
+      expect(cacheService.invalidate).toHaveBeenCalledWith('forgesight:regional-pricing*');
     });
 
     it('should not invalidate cache for non-price events', async () => {
@@ -213,11 +197,7 @@ describe('ForgesightWebhookController', () => {
       const req = makeRequest(body);
       const sig = sign(body);
 
-      const result = await controller.handleForgesightWebhook(
-        req,
-        sig,
-        payload,
-      );
+      const result = await controller.handleForgesightWebhook(req, sig, payload);
       expect(result.event).toBe('price.updated');
     });
 
@@ -227,11 +207,7 @@ describe('ForgesightWebhookController', () => {
       const req = makeRequest(body);
       const sig = sign(body);
 
-      const result = await controller.handleForgesightWebhook(
-        req,
-        sig,
-        payload,
-      );
+      const result = await controller.handleForgesightWebhook(req, sig, payload);
       expect(result.event).toBe('price.updated');
     });
 
@@ -243,11 +219,7 @@ describe('ForgesightWebhookController', () => {
       const req = makeRequest(body);
       const sig = sign(body);
 
-      const result = await controller.handleForgesightWebhook(
-        req,
-        sig,
-        payload,
-      );
+      const result = await controller.handleForgesightWebhook(req, sig, payload);
       expect(result.event).toBe('price.updated');
     });
 
@@ -257,11 +229,7 @@ describe('ForgesightWebhookController', () => {
       const req = makeRequest(body);
       const sig = sign(body);
 
-      const result = await controller.handleForgesightWebhook(
-        req,
-        sig,
-        payload,
-      );
+      const result = await controller.handleForgesightWebhook(req, sig, payload);
       expect(result.event).toBe('unknown');
     });
   });
@@ -270,20 +238,14 @@ describe('ForgesightWebhookController', () => {
 
   describe('error resilience', () => {
     it('should return received: false when cache invalidation throws', async () => {
-      cacheService.invalidate.mockRejectedValueOnce(
-        new Error('Redis connection lost'),
-      );
+      cacheService.invalidate.mockRejectedValueOnce(new Error('Redis connection lost'));
 
       const payload = samplePricePayload();
       const body = JSON.stringify(payload);
       const req = makeRequest(body);
       const sig = sign(body);
 
-      const result = await controller.handleForgesightWebhook(
-        req,
-        sig,
-        payload,
-      );
+      const result = await controller.handleForgesightWebhook(req, sig, payload);
 
       expect(result.received).toBe(false);
       expect(result.error).toContain('Redis connection lost');

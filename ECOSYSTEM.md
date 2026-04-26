@@ -19,11 +19,11 @@ Cotiza Studio is MADFAM's quoting engine. Externally it's positioned as digital-
 
 ### Deployed services
 
-| Service | Public domain | Container port |
-|---|---|---|
-| `digifab-quoting-web` | cotiza.studio | 3000 |
-| `digifab-quoting-api` | api.cotiza.studio | 8000 |
-| `digifab-quoting-worker` | (background pricing jobs) | 8000 |
+| Service                  | Public domain             | Container port |
+| ------------------------ | ------------------------- | -------------- |
+| `digifab-quoting-web`    | cotiza.studio             | 3000           |
+| `digifab-quoting-api`    | api.cotiza.studio         | 8000           |
+| `digifab-quoting-worker` | (background pricing jobs) | 8000           |
 
 **Kubernetes namespace**: `digifab-quoting`
 **Cluster**: bare-metal k3s on Hetzner (see topology section below).
@@ -59,20 +59,20 @@ below is embedded here so this document stands alone.
 
 ### The platforms every repo should know about
 
-| Platform | Repo | Role |
-|---|---|---|
-| **Enclii** | `madfam-org/enclii` | PaaS control plane — all deploys go through this |
-| **Janua** | `madfam-org/janua` | OIDC/OAuth 2.0 provider — RS256 JWKS at `auth.madfam.io/.well-known/jwks.json` |
-| **Dhanam** | `madfam-org/dhanam` | Billing + payment gateways (Stripe, Mercado Pago, SPEI, etc.) |
-| **Selva** | `madfam-org/autoswarm-office` | LLM inference routing + agent orchestration |
-| **Karafiel** | `madfam-org/karafiel` | Operational compliance — CFDI, NOM-151, e.firma, SAT-adjacent. Owns legal-ops / contract templates |
-| **Tezca** | `madfam-org/tezca` | Mexican law oracle (informational only — feeds Karafiel) |
-| **Cotiza** | `madfam-org/digifab-quoting` | MADFAM's quoting engine (fabrication + services) |
-| **Forgesight** | `madfam-org/forgesight` | Digital fabrication industry intelligence (pricing/vendor feed to Cotiza) |
-| **Pravara MES** | `madfam-org/pravara-mes` | Fabrication-node routing and dispatch (physical jobs) |
-| **PhyneCRM** | `madfam-org/phyne-crm` | Client-facing deliverables portal (single pane of glass per engagement) |
-| **Fortuna** | `madfam-org/fortuna` | Problem intelligence / zeitgeist analysis |
-| **Avala** | `madfam-org/avala` | Learning verification platform |
+| Platform        | Repo                          | Role                                                                                               |
+| --------------- | ----------------------------- | -------------------------------------------------------------------------------------------------- |
+| **Enclii**      | `madfam-org/enclii`           | PaaS control plane — all deploys go through this                                                   |
+| **Janua**       | `madfam-org/janua`            | OIDC/OAuth 2.0 provider — RS256 JWKS at `auth.madfam.io/.well-known/jwks.json`                     |
+| **Dhanam**      | `madfam-org/dhanam`           | Billing + payment gateways (Stripe, Mercado Pago, SPEI, etc.)                                      |
+| **Selva**       | `madfam-org/autoswarm-office` | LLM inference routing + agent orchestration                                                        |
+| **Karafiel**    | `madfam-org/karafiel`         | Operational compliance — CFDI, NOM-151, e.firma, SAT-adjacent. Owns legal-ops / contract templates |
+| **Tezca**       | `madfam-org/tezca`            | Mexican law oracle (informational only — feeds Karafiel)                                           |
+| **Cotiza**      | `madfam-org/digifab-quoting`  | MADFAM's quoting engine (fabrication + services)                                                   |
+| **Forgesight**  | `madfam-org/forgesight`       | Digital fabrication industry intelligence (pricing/vendor feed to Cotiza)                          |
+| **Pravara MES** | `madfam-org/pravara-mes`      | Fabrication-node routing and dispatch (physical jobs)                                              |
+| **PhyneCRM**    | `madfam-org/phyne-crm`        | Client-facing deliverables portal (single pane of glass per engagement)                            |
+| **Fortuna**     | `madfam-org/fortuna`          | Problem intelligence / zeitgeist analysis                                                          |
+| **Avala**       | `madfam-org/avala`            | Learning verification platform                                                                     |
 
 ### Cross-repo conventions
 
@@ -227,14 +227,14 @@ On a fresh machine, pull that repo first to get `~/.kube/config-hetzner`.
 
 ### Exit codes (scripting against the CLI)
 
-| Code | Meaning |
-|---|---|
-| 0  | success |
-| 10 | validation error |
-| 20 | build failed |
-| 30 | deploy failed |
-| 40 | timeout |
-| 50 | auth error |
+| Code | Meaning          |
+| ---- | ---------------- |
+| 0    | success          |
+| 10   | validation error |
+| 20   | build failed     |
+| 30   | deploy failed    |
+| 40   | timeout          |
+| 50   | auth error       |
 
 ---
 

@@ -26,5 +26,14 @@
       "@madfam/pricing-engine/*": ["./packages/pricing-engine/src/*"]
     }
   },
-  "exclude": ["node_modules", "dist", ".turbo", "coverage"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".turbo",
+    "coverage",
+    "test",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

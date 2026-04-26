@@ -98,7 +98,9 @@ export class PricingEngine {
           },
         },
         confidence: 0,
-        warnings: [`Calculation error: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        warnings: [
+          `Calculation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ],
       };
     }
   }

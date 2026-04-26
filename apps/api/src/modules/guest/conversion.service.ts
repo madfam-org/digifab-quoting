@@ -18,10 +18,7 @@ export class ConversionService {
 
   async registerWithQuote(dto: RegisterWithQuote) {
     // Validate guest quote exists
-    const guestQuote = await this.guestQuoteService.getQuote(
-      dto.sessionId,
-      dto.sessionQuoteId
-    );
+    const guestQuote = await this.guestQuoteService.getQuote(dto.sessionId, dto.sessionQuoteId);
 
     if (!guestQuote) {
       throw new BadRequestException('Guest quote not found');
@@ -42,7 +39,7 @@ export class ConversionService {
       lastName: dto.name.split(' ').slice(1).join(' ') || '',
       company: dto.company || '',
     });
-    
+
     const { user } = result;
 
     // Convert guest quote to authenticated quote
@@ -50,7 +47,7 @@ export class ConversionService {
       dto.sessionId,
       dto.sessionQuoteId,
       user.id,
-      user.tenantId || 'default'
+      user.tenantId || 'default',
     );
 
     // Track conversion
@@ -85,10 +82,7 @@ export class ConversionService {
     }
 
     // Validate guest quote exists
-    const guestQuote = await this.guestQuoteService.getQuote(
-      dto.sessionId,
-      dto.sessionQuoteId
-    );
+    const guestQuote = await this.guestQuoteService.getQuote(dto.sessionId, dto.sessionQuoteId);
 
     if (!guestQuote) {
       throw new BadRequestException('Guest quote not found');
@@ -107,7 +101,7 @@ export class ConversionService {
       dto.sessionId,
       dto.sessionQuoteId,
       userId,
-      user.tenantId || 'default'
+      user.tenantId || 'default',
     );
 
     // Track conversion
@@ -140,7 +134,7 @@ export class ConversionService {
         } catch (error) {
           return { originalQuoteId: quote.id, success: false, error: (error as Error).message };
         }
-      })
+      }),
     );
 
     return results;
@@ -162,7 +156,7 @@ export class ConversionService {
         convertedQuoteId: data.convertedQuoteId,
         userId: data.userId,
         convertedAt: new Date(),
-      })
+      }),
     );
 
     // Store in database for permanent record
@@ -211,26 +205,27 @@ export class ConversionService {
 
     return {
       totalSessions: sessions.length,
-      convertedSessions: sessions.filter(s => s.convertedAt).length,
-      conversionRate: sessions.length > 0 
-        ? (sessions.filter(s => s.convertedAt).length / sessions.length) * 100 
-        : 0,
+      convertedSessions: sessions.filter((s) => s.convertedAt).length,
+      conversionRate:
+        sessions.length > 0
+          ? (sessions.filter((s) => s.convertedAt).length / sessions.length) * 100
+          : 0,
       conversionsByType: {
-        register_new: conversions.filter(c => c.conversionType === 'register_new').length,
-        login_existing: conversions.filter(c => c.conversionType === 'login_existing').length,
+        register_new: conversions.filter((c) => c.conversionType === 'register_new').length,
+        login_existing: conversions.filter((c) => c.conversionType === 'login_existing').length,
       },
       averageTimeToConvert: this.calculateAverageTimeToConvert(sessions),
     };
   }
 
   private calculateAverageTimeToConvert(sessions: GuestSession[]): number {
-    const convertedSessions = sessions.filter(s => s.convertedAt);
-    
+    const convertedSessions = sessions.filter((s) => s.convertedAt);
+
     if (convertedSessions.length === 0) return 0;
 
     const totalTime = convertedSessions.reduce((sum, session) => {
-      const timeToConvert = new Date(session.convertedAt!).getTime() - 
-                           new Date(session.createdAt).getTime();
+      const timeToConvert =
+        new Date(session.convertedAt!).getTime() - new Date(session.createdAt).getTime();
       return sum + timeToConvert;
     }, 0);
 

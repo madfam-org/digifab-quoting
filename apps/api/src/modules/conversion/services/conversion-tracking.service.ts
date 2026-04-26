@@ -17,34 +17,34 @@ export enum ConversionAction {
   VISITED_LANDING = 'visited_landing',
   VIEWED_PRICING = 'viewed_pricing',
   WATCHED_DEMO = 'watched_demo',
-  
+
   // Interest stage
   STARTED_SIGNUP = 'started_signup',
   CREATED_ACCOUNT = 'created_account',
   VERIFIED_EMAIL = 'verified_email',
-  
+
   // Trial/Free usage
   UPLOADED_FIRST_FILE = 'uploaded_first_file',
   CREATED_FIRST_QUOTE = 'created_first_quote',
   SHARED_QUOTE = 'shared_quote',
   DOWNLOADED_PDF = 'downloaded_pdf',
-  
+
   // Engagement signals
   USED_ADVANCED_FEATURE = 'used_advanced_feature',
   HIT_USAGE_LIMIT = 'hit_usage_limit',
   VIEWED_UPGRADE_PAGE = 'viewed_upgrade_page',
-  
+
   // Conversion
   CLICKED_UPGRADE = 'clicked_upgrade',
   STARTED_CHECKOUT = 'started_checkout',
   COMPLETED_PAYMENT = 'completed_payment',
   UPGRADED_PLAN = 'upgraded_plan',
-  
+
   // Retention signals
   LOGGED_IN_AGAIN = 'logged_in_again',
   INVITED_TEAM_MEMBER = 'invited_team_member',
   INTEGRATED_API = 'integrated_api',
-  
+
   // Churn signals
   CANCELLED_SUBSCRIPTION = 'cancelled_subscription',
   ACCOUNT_INACTIVE = 'account_inactive',
@@ -104,11 +104,14 @@ export class ConversionTrackingService {
     private readonly tenantContext: TenantContextService,
   ) {}
 
-  async trackAction(action: ConversionAction, context: Record<string, unknown> = {}): Promise<void> {
+  async trackAction(
+    action: ConversionAction,
+    context: Record<string, unknown> = {},
+  ): Promise<void> {
     try {
       const tenantId = this.tenantContext.getContext()?.tenantId;
       const userId = this.tenantContext.getContext()?.userId;
-      
+
       if (!userId) return; // Skip tracking for anonymous users
 
       const userAction: UserAction = {
@@ -141,9 +144,13 @@ export class ConversionTrackingService {
     await this.redis.expire(key, 30 * 24 * 60 * 60); // 30 days
   }
 
-  private async updateConversionFunnel(userId: string, action: ConversionAction, context: Record<string, unknown>): Promise<void> {
+  private async updateConversionFunnel(
+    userId: string,
+    action: ConversionAction,
+    context: Record<string, unknown>,
+  ): Promise<void> {
     const funnelKey = `${this.FUNNEL_KEY_PREFIX}:${userId}`;
-    
+
     let funnel = await this.getConversionFunnel(userId);
     if (!funnel) {
       funnel = this.initializeConversionFunnel(userId);
@@ -211,9 +218,13 @@ export class ConversionTrackingService {
     };
 
     const newStage = stageMap[action];
-    
+
     // Only allow forward progression (except to churned)
-    if (newStage && (this.getStageOrder(newStage) > this.getStageOrder(currentStage) || newStage === ConversionStage.CHURNED)) {
+    if (
+      newStage &&
+      (this.getStageOrder(newStage) > this.getStageOrder(currentStage) ||
+        newStage === ConversionStage.CHURNED)
+    ) {
       return newStage;
     }
 
@@ -259,11 +270,13 @@ export class ConversionTrackingService {
     // Calculate cumulative score with decay for older actions
     let score = 0;
     const now = new Date();
-    
-    actions.forEach(action => {
+
+    actions.forEach((action) => {
       const actionScore = actionScores[action.action] || 0;
-      const daysSince = Math.floor((now.getTime() - new Date(action.timestamp).getTime()) / (1000 * 60 * 60 * 24));
-      const decay = Math.max(0.1, 1 - (daysSince / 30)); // Decay over 30 days, minimum 10%
+      const daysSince = Math.floor(
+        (now.getTime() - new Date(action.timestamp).getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const decay = Math.max(0.1, 1 - daysSince / 30); // Decay over 30 days, minimum 10%
       score += actionScore * decay;
     });
 
@@ -291,7 +304,9 @@ export class ConversionTrackingService {
     probability *= stageMultipliers[funnel.stage] || 0.1;
 
     // Adjust based on activity recency
-    const daysSinceLastActivity = Math.floor((new Date().getTime() - funnel.lastActivity.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceLastActivity = Math.floor(
+      (new Date().getTime() - funnel.lastActivity.getTime()) / (1000 * 60 * 60 * 24),
+    );
     if (daysSinceLastActivity > 7) {
       probability *= 0.5; // 50% reduction if inactive for 7+ days
     }
@@ -299,7 +314,11 @@ export class ConversionTrackingService {
     return Math.min(1, Math.max(0, probability));
   }
 
-  private async evaluateUpgradeTriggers(userId: string, action: ConversionAction, context: Record<string, unknown>): Promise<void> {
+  private async evaluateUpgradeTriggers(
+    userId: string,
+    action: ConversionAction,
+    context: Record<string, unknown>,
+  ): Promise<void> {
     const triggers: UpgradeTrigger[] = [];
 
     // Usage limit trigger
@@ -308,7 +327,7 @@ export class ConversionTrackingService {
         type: TriggerType.USAGE_LIMIT,
         priority: 10,
         message: "You've reached your monthly limit! Upgrade to continue creating quotes.",
-        cta: "Upgrade Now",
+        cta: 'Upgrade Now',
         context: { ...context, limitType: context.eventType },
         createdAt: new Date(),
       });
@@ -319,8 +338,8 @@ export class ConversionTrackingService {
       triggers.push({
         type: TriggerType.FEATURE_GATE,
         priority: 8,
-        message: "Unlock advanced features like custom branding and API access.",
-        cta: "See Pro Features",
+        message: 'Unlock advanced features like custom branding and API access.',
+        cta: 'See Pro Features',
         context,
         createdAt: new Date(),
       });
@@ -328,13 +347,13 @@ export class ConversionTrackingService {
 
     // Value demonstration trigger
     if (action === ConversionAction.DOWNLOADED_PDF) {
-      const downloadCount = context.downloadCount as number || 1;
+      const downloadCount = (context.downloadCount as number) || 1;
       if (downloadCount >= 3) {
         triggers.push({
           type: TriggerType.VALUE_DEMONSTRATION,
           priority: 7,
           message: `You've downloaded ${downloadCount} quotes. Save time with unlimited quotes and faster processing.`,
-          cta: "Upgrade to Pro",
+          cta: 'Upgrade to Pro',
           context,
           createdAt: new Date(),
         });
@@ -343,13 +362,14 @@ export class ConversionTrackingService {
 
     // Time-based trigger for engaged users
     if (action === ConversionAction.LOGGED_IN_AGAIN) {
-      const loginCount = context.loginCount as number || 1;
-      if (loginCount === 7) { // After 7 logins
+      const loginCount = (context.loginCount as number) || 1;
+      if (loginCount === 7) {
+        // After 7 logins
         triggers.push({
           type: TriggerType.TIME_BASED,
           priority: 6,
           message: "You're getting great value from Cotiza Studio! Upgrade for unlimited access.",
-          cta: "Upgrade Now",
+          cta: 'Upgrade Now',
           context,
           createdAt: new Date(),
         });
@@ -364,11 +384,11 @@ export class ConversionTrackingService {
 
   private async storeUpgradeTriggers(userId: string, triggers: UpgradeTrigger[]): Promise<void> {
     const key = `${this.TRIGGER_KEY_PREFIX}:${userId}`;
-    
+
     for (const trigger of triggers) {
       await this.redis.lpush(key, JSON.stringify(trigger));
     }
-    
+
     await this.redis.ltrim(key, 0, 9); // Keep last 10 triggers
     await this.redis.expire(key, 7 * 24 * 60 * 60); // 7 days
   }
@@ -376,9 +396,9 @@ export class ConversionTrackingService {
   async getConversionFunnel(userId: string): Promise<ConversionFunnel | null> {
     const key = `${this.FUNNEL_KEY_PREFIX}:${userId}`;
     const data = await this.redis.get(key);
-    
+
     if (!data) return null;
-    
+
     try {
       return JSON.parse(data as string);
     } catch {
@@ -389,8 +409,8 @@ export class ConversionTrackingService {
   async getUpgradeTriggers(userId: string, limit: number = 5): Promise<UpgradeTrigger[]> {
     const key = `${this.TRIGGER_KEY_PREFIX}:${userId}`;
     const triggers = await this.redis.lrange(key, 0, limit - 1);
-    
-    return triggers.map(t => JSON.parse(t)).sort((a, b) => b.priority - a.priority);
+
+    return triggers.map((t) => JSON.parse(t)).sort((a, b) => b.priority - a.priority);
   }
 
   async markTriggerShown(userId: string, triggerType: TriggerType): Promise<void> {

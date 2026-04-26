@@ -827,21 +827,25 @@ curl -X GET https://api.cotiza.studio/v1/quotes/quote_789012 \
 ## Best Practices
 
 1. **Authentication**
+
    - Store tokens securely (never in client-side code)
    - Implement token refresh before expiration
    - Handle 401 errors by refreshing token
 
 2. **Error Handling**
+
    - Always check `success` field in responses
    - Implement exponential backoff for retries
    - Log error details for debugging
 
 3. **File Uploads**
+
    - Validate file type and size before requesting URL
    - Use multipart upload for files > 5MB
    - Handle S3 upload errors separately
 
 4. **Rate Limiting**
+
    - Implement client-side rate limiting
    - Cache responses when appropriate
    - Use pagination for list endpoints

@@ -57,6 +57,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation
@@ -66,6 +67,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `chore`: Maintenance
 
 **Examples:**
+
 ```
 feat(calculator): add SLS process support
 fix(pricing): correct material density calculations

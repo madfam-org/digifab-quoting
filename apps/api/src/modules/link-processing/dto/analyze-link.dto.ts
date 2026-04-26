@@ -9,7 +9,7 @@ export enum SourceType {
   HACKSTER = 'hackster',
   MAKE_MAGAZINE = 'make',
   CUSTOM_BLOG = 'blog',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }
 
 export enum AnalysisStatus {
@@ -19,13 +19,13 @@ export enum AnalysisStatus {
   ANALYZING = 'analyzing',
   PRICING = 'pricing',
   COMPLETED = 'completed',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 export class AnalyzeLinkDto {
   @ApiProperty({
     description: 'URL to analyze for BOM and project information',
-    example: 'https://www.instructables.com/Arduino-Weather-Station/'
+    example: 'https://www.instructables.com/Arduino-Weather-Station/',
   })
   @IsUrl()
   url: string;
@@ -33,7 +33,7 @@ export class AnalyzeLinkDto {
   @ApiPropertyOptional({
     description: 'Target user persona for quote customization',
     enum: UserPersona,
-    example: UserPersona.DIY_MAKER
+    example: UserPersona.DIY_MAKER,
   })
   @IsOptional()
   @IsEnum(UserPersona)
@@ -44,8 +44,8 @@ export class AnalyzeLinkDto {
     example: {
       budget_range: 'low',
       time_priority: 'speed',
-      quality_level: 'prototype'
-    }
+      quality_level: 'prototype',
+    },
   })
   @IsOptional()
   @IsObject()
@@ -79,7 +79,7 @@ export class BOMItemDto {
   @ApiPropertyOptional({
     description: 'Recommended manufacturing method',
     enum: ProcessType,
-    example: ProcessType.PRINTING_3D_FFF
+    example: ProcessType.PRINTING_3D_FFF,
   })
   manufacturingMethod?: ProcessType;
 
@@ -121,7 +121,7 @@ export class ProjectContentDto {
 
   @ApiProperty({
     description: 'Project difficulty level',
-    enum: ['beginner', 'intermediate', 'advanced', 'expert']
+    enum: ['beginner', 'intermediate', 'advanced', 'expert'],
   })
   difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
 

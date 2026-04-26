@@ -24,7 +24,7 @@ export function useGuestSession() {
     try {
       // Check for existing session cookie
       let sessionToken = Cookies.get(COOKIE_NAME);
-      
+
       if (!sessionToken) {
         // Create new session
         sessionToken = uuidv4();

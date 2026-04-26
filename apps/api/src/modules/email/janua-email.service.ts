@@ -120,10 +120,7 @@ export class JanuaEmailService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
   ) {
-    this.baseUrl = this.configService.get<string>(
-      'JANUA_API_URL',
-      'https://api.janua.dev',
-    );
+    this.baseUrl = this.configService.get<string>('JANUA_API_URL', 'https://api.janua.dev');
     this.apiKey = this.configService.get<string>('JANUA_INTERNAL_API_KEY', '');
   }
 
@@ -150,9 +147,7 @@ export class JanuaEmailService implements OnModuleInit {
       );
 
       this.isAvailable = response.data?.status === 'healthy';
-      this.logger.log(
-        `Janua email service: ${this.isAvailable ? 'available' : 'unavailable'}`,
-      );
+      this.logger.log(`Janua email service: ${this.isAvailable ? 'available' : 'unavailable'}`);
       return this.isAvailable;
     } catch (error) {
       this.logger.warn('Janua email service health check failed, will use fallback');
@@ -202,26 +197,21 @@ export class JanuaEmailService implements OnModuleInit {
       };
 
       const response = await firstValueFrom(
-        this.httpService.post(
-          `${this.baseUrl}/api/v1/internal/email/send`,
-          payload,
-          { headers: this.getHeaders(), timeout: 30000 },
-        ),
+        this.httpService.post(`${this.baseUrl}/api/v1/internal/email/send`, payload, {
+          headers: this.getHeaders(),
+          timeout: 30000,
+        }),
       );
 
       if (response.data.success) {
-        this.logger.log(
-          `Email sent via Janua: to=${recipients.join(',')}, type=${sourceType}`,
-        );
+        this.logger.log(`Email sent via Janua: to=${recipients.join(',')}, type=${sourceType}`);
       }
 
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
       const errorMessage =
-        axiosError.response?.data?.['detail'] ||
-        axiosError.message ||
-        'Unknown error';
+        axiosError.response?.data?.['detail'] || axiosError.message || 'Unknown error';
 
       this.logger.error(`Failed to send email via Janua: ${errorMessage}`);
       return { success: false, error: errorMessage };
@@ -252,11 +242,10 @@ export class JanuaEmailService implements OnModuleInit {
       };
 
       const response = await firstValueFrom(
-        this.httpService.post(
-          `${this.baseUrl}/api/v1/internal/email/send-template`,
-          payload,
-          { headers: this.getHeaders(), timeout: 30000 },
-        ),
+        this.httpService.post(`${this.baseUrl}/api/v1/internal/email/send-template`, payload, {
+          headers: this.getHeaders(),
+          timeout: 30000,
+        }),
       );
 
       if (response.data.success) {
@@ -269,13 +258,9 @@ export class JanuaEmailService implements OnModuleInit {
     } catch (error) {
       const axiosError = error as AxiosError;
       const errorMessage =
-        axiosError.response?.data?.['detail'] ||
-        axiosError.message ||
-        'Unknown error';
+        axiosError.response?.data?.['detail'] || axiosError.message || 'Unknown error';
 
-      this.logger.error(
-        `Failed to send template email via Janua: ${errorMessage}`,
-      );
+      this.logger.error(`Failed to send template email via Janua: ${errorMessage}`);
       return { success: false, error: errorMessage };
     }
   }
@@ -295,11 +280,10 @@ export class JanuaEmailService implements OnModuleInit {
       };
 
       const response = await firstValueFrom(
-        this.httpService.post(
-          `${this.baseUrl}/api/v1/internal/email/send-batch`,
-          payload,
-          { headers: this.getHeaders(), timeout: 60000 },
-        ),
+        this.httpService.post(`${this.baseUrl}/api/v1/internal/email/send-batch`, payload, {
+          headers: this.getHeaders(),
+          timeout: 60000,
+        }),
       );
 
       this.logger.log(
@@ -310,9 +294,7 @@ export class JanuaEmailService implements OnModuleInit {
     } catch (error) {
       const axiosError = error as AxiosError;
       const errorMessage =
-        axiosError.response?.data?.['detail'] ||
-        axiosError.message ||
-        'Unknown error';
+        axiosError.response?.data?.['detail'] || axiosError.message || 'Unknown error';
 
       this.logger.error(`Failed to send batch emails via Janua: ${errorMessage}`);
       return {
@@ -402,7 +384,8 @@ export class JanuaEmailService implements OnModuleInit {
           invoice_number: invoiceNumber,
           amount: `${currency} ${amount.toFixed(2)}`,
           due_date: dueDate,
-          invoice_url: invoiceUrl || `${this.configService.get('WEB_URL')}/invoices/${invoiceNumber}`,
+          invoice_url:
+            invoiceUrl || `${this.configService.get('WEB_URL')}/invoices/${invoiceNumber}`,
           company_name: 'Digifab',
         },
       },
@@ -489,10 +472,7 @@ export class JanuaEmailService implements OnModuleInit {
   /**
    * Send welcome email
    */
-  async sendWelcomeEmail(
-    email: string,
-    userName: string,
-  ): Promise<JanuaEmailResponse> {
+  async sendWelcomeEmail(email: string, userName: string): Promise<JanuaEmailResponse> {
     return this.sendTemplateEmail(
       {
         to: email,

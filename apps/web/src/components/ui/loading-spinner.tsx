@@ -17,7 +17,7 @@ export function LoadingSpinner({ className, size = 'md' }: LoadingSpinnerProps) 
       className={cn(
         'animate-spin rounded-full border-gray-300 border-t-primary',
         sizeClasses[size],
-        className
+        className,
       )}
     />
   );

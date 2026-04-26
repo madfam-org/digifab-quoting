@@ -33,7 +33,9 @@ export class ValidationMiddleware implements NestMiddleware {
 
     // Validate file uploads if present
     if ('files' in req && req.files) {
-      this.validateFiles(req.files as MulterFile[] | MulterFile | { [fieldname: string]: MulterFile[] });
+      this.validateFiles(
+        req.files as MulterFile[] | MulterFile | { [fieldname: string]: MulterFile[] },
+      );
     }
 
     // Add security headers
@@ -53,7 +55,7 @@ export class ValidationMiddleware implements NestMiddleware {
         const strValue = obj[key] as string;
         // Basic sanitization
         obj[key] = strValue.trim();
-        
+
         // HTML sanitization for fields that might contain HTML
         if (this.isHtmlField(key)) {
           obj[key] = DOMPurify.sanitize(strValue, {
@@ -61,10 +63,10 @@ export class ValidationMiddleware implements NestMiddleware {
             ALLOWED_ATTR: ['href', 'target'],
           });
         }
-        
+
         // Remove any potential SQL injection attempts
         obj[key] = this.sanitizeSql(obj[key]);
-        
+
         // Remove any potential NoSQL injection attempts
         obj[key] = this.sanitizeNoSql(obj[key]);
       } else if (typeof obj[key] === 'object') {
@@ -75,12 +77,12 @@ export class ValidationMiddleware implements NestMiddleware {
 
   private isHtmlField(fieldName: string): boolean {
     const htmlFields = ['description', 'notes', 'comments', 'message'];
-    return htmlFields.some(field => fieldName.toLowerCase().includes(field));
+    return htmlFields.some((field) => fieldName.toLowerCase().includes(field));
   }
 
   private sanitizeSql(input: unknown): string {
     if (typeof input !== 'string') return String(input);
-    
+
     // Remove common SQL injection patterns
     const sqlPatterns = [
       /(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE)?|INSERT|SELECT|UNION|UPDATE)\b)/gi,
@@ -91,7 +93,7 @@ export class ValidationMiddleware implements NestMiddleware {
     ];
 
     let sanitized = input;
-    sqlPatterns.forEach(pattern => {
+    sqlPatterns.forEach((pattern) => {
       sanitized = sanitized.replace(pattern, '');
     });
 
@@ -100,7 +102,7 @@ export class ValidationMiddleware implements NestMiddleware {
 
   private sanitizeNoSql(input: unknown): string {
     if (typeof input !== 'string') return String(input);
-    
+
     // Remove MongoDB injection patterns
     const noSqlPatterns = [
       /(\$[a-zA-Z]+)/g, // $ne, $gt, etc.
@@ -109,14 +111,16 @@ export class ValidationMiddleware implements NestMiddleware {
     ];
 
     let sanitized = input;
-    noSqlPatterns.forEach(pattern => {
+    noSqlPatterns.forEach((pattern) => {
       sanitized = sanitized.replace(pattern, '');
     });
 
     return sanitized;
   }
 
-  private validateFiles(files: MulterFile[] | MulterFile | { [fieldname: string]: MulterFile[] }): void {
+  private validateFiles(
+    files: MulterFile[] | MulterFile | { [fieldname: string]: MulterFile[] },
+  ): void {
     const maxFileSize = 50 * 1024 * 1024; // 50MB
     const allowedExtensions = ['.stl', '.step', '.stp', '.iges', '.igs', '.dxf'];
 
@@ -129,13 +133,21 @@ export class ValidationMiddleware implements NestMiddleware {
       }
 
       // Check file extension
-      const extension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+      const extension = file.originalname
+        .toLowerCase()
+        .substring(file.originalname.lastIndexOf('.'));
       if (!allowedExtensions.includes(extension)) {
         throw new BadRequestException(`File type ${extension} is not allowed`);
       }
 
       // Check MIME type
-      const validMimeTypes = ['model/stl', 'model/step', 'model/iges', 'application/dxf', 'application/octet-stream'];
+      const validMimeTypes = [
+        'model/stl',
+        'model/step',
+        'model/iges',
+        'application/dxf',
+        'application/octet-stream',
+      ];
       if (!validMimeTypes.includes(file.mimetype)) {
         throw new BadRequestException(`MIME type ${file.mimetype} is not allowed`);
       }
@@ -161,7 +173,7 @@ export class ValidationMiddleware implements NestMiddleware {
         const asciiSTL = buffer.subarray(0, 5).toString('ascii');
         // Binary STL files have 80-byte header (can be anything) + uint32 for triangle count
         const isBinarySTL = buffer.length > 84;
-        
+
         if (!asciiSTL.startsWith('solid') && !isBinarySTL) {
           throw new BadRequestException(`Invalid STL file format`);
         }

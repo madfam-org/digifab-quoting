@@ -7,11 +7,7 @@ import {
   JobResult,
   JobProgress,
 } from '../interfaces/job.interface';
-import {
-  QuoteOrderData,
-  InvoiceData,
-  AnalyticsData,
-} from '../interfaces/report.interface';
+import { QuoteOrderData, InvoiceData, AnalyticsData } from '../interfaces/report.interface';
 import { LoggerService } from '@/common/logger/logger.service';
 import { PrismaService } from '@/prisma/prisma.service';
 
@@ -66,13 +62,7 @@ export class ReportGenerationProcessor {
 
       // Step 2: Generate report based on format
       await this.updateProgress(job, 30, 'Generating report');
-      const { filePath } = await this.generateReport(
-        reportType,
-        reportData,
-        format,
-        options,
-        job,
-      );
+      const { filePath } = await this.generateReport(reportType, reportData, format, options, job);
 
       // Step 3: Upload to S3
       await this.updateProgress(job, 70, 'Uploading report');
@@ -124,7 +114,7 @@ export class ReportGenerationProcessor {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : String(error);
-      
+
       this.logger.error(`Report generation failed: ${errorMessage}`, errorStack);
 
       throw new Error(errorMessage);
@@ -155,11 +145,23 @@ export class ReportGenerationProcessor {
   ): Promise<{ filePath: string; fileName: string }> {
     switch (format) {
       case 'pdf':
-        return this.pdfGenerator.generateReport(reportType, data as unknown as QuoteOrderData | InvoiceData | AnalyticsData, options);
+        return this.pdfGenerator.generateReport(
+          reportType,
+          data as unknown as QuoteOrderData | InvoiceData | AnalyticsData,
+          options,
+        );
       case 'excel':
-        return this.excelGenerator.generateReport(reportType, data as unknown as QuoteOrderData | InvoiceData | AnalyticsData, options);
+        return this.excelGenerator.generateReport(
+          reportType,
+          data as unknown as QuoteOrderData | InvoiceData | AnalyticsData,
+          options,
+        );
       case 'csv':
-        return this.csvGenerator.generateReport(reportType, data as unknown as QuoteOrderData | InvoiceData | AnalyticsData, options);
+        return this.csvGenerator.generateReport(
+          reportType,
+          data as unknown as QuoteOrderData | InvoiceData | AnalyticsData,
+          options,
+        );
       default:
         throw new Error(`Unsupported report format: ${format}`);
     }

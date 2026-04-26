@@ -29,10 +29,7 @@ describe('EngagementsService', () => {
   beforeEach(async () => {
     prisma = mkPrisma();
     const module = await Test.createTestingModule({
-      providers: [
-        EngagementsService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [EngagementsService, { provide: PrismaService, useValue: prisma }],
     }).compile();
     service = module.get(EngagementsService);
   });
@@ -133,16 +130,16 @@ describe('EngagementsService', () => {
 
     it('404s when missing', async () => {
       prisma.engagement.findFirst.mockResolvedValue(null);
-      await expect(
-        service.findByPhynecrmId('t1', 'pcrm_missing'),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.findByPhynecrmId('t1', 'pcrm_missing')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it('excludes soft-deleted engagements', async () => {
       prisma.engagement.findFirst.mockResolvedValue(null);
-      await expect(
-        service.findByPhynecrmId('t1', 'pcrm_deleted'),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.findByPhynecrmId('t1', 'pcrm_deleted')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
       const where = prisma.engagement.findFirst.mock.calls[0][0].where;
       expect(where.deletedAt).toBeNull();
     });
@@ -163,9 +160,9 @@ describe('EngagementsService', () => {
 
     it('404s when engagement missing', async () => {
       prisma.engagement.findFirst.mockResolvedValue(null);
-      await expect(
-        service.listQuotesForEngagement('t1', 'pcrm_missing'),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.listQuotesForEngagement('t1', 'pcrm_missing')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it('orders quotes by createdAt asc + scopes to caller tenant', async () => {
@@ -195,9 +192,7 @@ describe('EngagementsService', () => {
       // null) → also upserts. Because phynecrmEngagementId is UNIQUE and
       // we use upsert (not create), the DB-level race resolves to the
       // same canonical row on both sides.
-      prisma.engagement.findUnique
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(null);
+      prisma.engagement.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
       prisma.engagement.upsert
         .mockResolvedValueOnce({ id: 'eng_race_winner' })
         .mockResolvedValueOnce({ id: 'eng_race_winner' });

@@ -8,17 +8,7 @@ import { PerformanceService } from './performance.service';
 @Global()
 @Module({
   imports: [ConfigModule],
-  providers: [
-    SentryService,
-    MetricsService,
-    HealthService,
-    PerformanceService,
-  ],
-  exports: [
-    SentryService,
-    MetricsService,
-    HealthService,
-    PerformanceService,
-  ],
+  providers: [SentryService, MetricsService, HealthService, PerformanceService],
+  exports: [SentryService, MetricsService, HealthService, PerformanceService],
 })
 export class MonitoringModule {}

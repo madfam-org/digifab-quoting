@@ -142,7 +142,7 @@ export class QuotePdfService {
   }
 
   private addHeader(doc: PDFKit.PDFDocument, quote: any): void {
-    const branding = quote.tenant?.branding || {};
+    const _branding = quote.tenant?.branding || {};
 
     doc
       .fontSize(24)

@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Request } from 'express';
@@ -25,7 +19,7 @@ export class UsageTrackingInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<Request>();
     const handler = context.getHandler();
     const controller = context.getClass();
-    
+
     const endpoint = `${controller.name}.${handler.name}`;
     const method = request.method;
     const path = request.route?.path || request.url;
@@ -49,10 +43,10 @@ export class UsageTrackingInterceptor implements NestInterceptor {
   }
 
   private async trackApiCall(
-    endpoint: string, 
-    method: string, 
-    responseTime: number, 
-    error?: any
+    endpoint: string,
+    method: string,
+    responseTime: number,
+    error?: any,
   ): Promise<void> {
     try {
       // Skip tracking if no tenant context
@@ -81,15 +75,9 @@ export class UsageTrackingInterceptor implements NestInterceptor {
   }
 
   private shouldSkipTracking(path: string): boolean {
-    const skipPaths = [
-      '/health',
-      '/metrics',
-      '/favicon.ico',
-      '/.well-known',
-      '/api/docs',
-    ];
+    const skipPaths = ['/health', '/metrics', '/favicon.ico', '/.well-known', '/api/docs'];
 
-    return skipPaths.some(skipPath => path.includes(skipPath));
+    return skipPaths.some((skipPath) => path.includes(skipPath));
   }
 
   private isPremiumEndpoint(endpoint: string): boolean {

@@ -1,21 +1,25 @@
 # Multicurrency & Geo-Detection Implementation Roadmap
 
 ## Overview
+
 This roadmap outlines the 6-week implementation plan for adding comprehensive multicurrency support and geo-detection to Cotiza Studio.
 
 ## Phase 1: Foundation & Infrastructure (Week 1-2)
 
 ### Week 1: Core Infrastructure
+
 - [x] **Design System Architecture** - Completed
+
   - [x] Created comprehensive design document
   - [x] Defined data models and API contracts
   - [x] Designed multi-layer geo-detection strategy
 
 - [ ] **Database Schema Updates**
+
   ```sql
   -- Add new models to schema.prisma
   - ExchangeRate model
-  - UserPreferences model  
+  - UserPreferences model
   - GeoSession model
   - MaterialPricing model
   - ProcessPricing model
@@ -31,7 +35,9 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
   ```
 
 ### Week 2: Exchange Rate Integration
+
 - [ ] **Currency Service Setup**
+
   - [ ] Integrate OpenExchangeRates API
   - [ ] Implement rate caching with Redis (1 hour TTL)
   - [ ] Add rate validation and change detection
@@ -46,7 +52,9 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 ## Phase 2: Core Features (Week 2-3)
 
 ### Quote System Integration
+
 - [ ] **Multi-Currency Quote Creation**
+
   ```typescript
   // Update quote creation flow:
   - Currency selection at quote start
@@ -65,6 +73,7 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
   ```
 
 ### User Experience
+
 - [ ] **Automatic Currency Detection**
   - [ ] Detect user location on first visit
   - [ ] Show appropriate currency by default
@@ -74,7 +83,9 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 ## Phase 3: Advanced Features (Week 3-4)
 
 ### Frontend Components
+
 - [ ] **Currency Selector Component**
+
   ```tsx
   <CurrencySelector
     value={currency}
@@ -87,22 +98,20 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 
 - [ ] **Price Display Components**
   ```tsx
-  <Price
-    amount={100}
-    currency={currency}
-    showAlternatives={true}
-    convertFrom={baseCurrency}
-  />
+  <Price amount={100} currency={currency} showAlternatives={true} convertFrom={baseCurrency} />
   ```
 
 ### API Endpoints
+
 - [ ] **Geo Detection API** - `/api/v1/geo/detect`
 - [ ] **Currency Rates API** - `/api/v1/currency/rates`
 - [ ] **Currency Conversion API** - `/api/v1/currency/convert`
 - [ ] **User Preferences API** - `/api/v1/geo/preferences`
 
 ### Enhanced Features
+
 - [ ] **Smart Currency Recommendations**
+
   - Based on user location
   - Based on browsing behavior
   - Based on payment methods
@@ -115,7 +124,9 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 ## Phase 4: Integration & Polish (Week 4-5)
 
 ### Quote System Complete Integration
+
 - [ ] **Multi-Currency Quote Display**
+
   - Show all prices in selected currency
   - Display exchange rate used
   - Show original currency if converted
@@ -130,7 +141,9 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
   ```
 
 ### Performance Optimization
+
 - [ ] **Caching Strategy**
+
   ```typescript
   // Multi-layer caching:
   - Edge cache for geo data (24h)
@@ -146,7 +159,9 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 ## Phase 5: Testing & Quality Assurance (Week 5-6)
 
 ### Testing Strategy
+
 - [ ] **Unit Tests**
+
   ```typescript
   // Coverage areas:
   - Currency conversion accuracy
@@ -156,6 +171,7 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
   ```
 
 - [ ] **Integration Tests**
+
   ```typescript
   // Test scenarios:
   - End-to-end quote creation with currency
@@ -174,7 +190,9 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
   ```
 
 ### Edge Case Testing
+
 - [ ] **Geo-Detection Edge Cases**
+
   - VPN users
   - Proxy servers
   - Mobile networks
@@ -187,6 +205,7 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
   - Network connectivity issues
 
 ### Performance Testing
+
 - [ ] **Load Testing**
   - Concurrent currency conversions
   - High-volume rate updates
@@ -196,13 +215,15 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 ## Phase 6: Launch & Monitoring (Week 6)
 
 ### Production Deployment
+
 - [ ] **Feature Flags**
+
   ```typescript
   const flags = {
     enableGeoDetection: true,
     enableMultiCurrency: true,
     supportedCurrencies: ['MXN', 'USD', 'EUR', 'BRL'],
-    defaultCurrency: 'MXN'
+    defaultCurrency: 'MXN',
   };
   ```
 
@@ -212,7 +233,9 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
   - Gradually increase to 100%
 
 ### Monitoring & Analytics
+
 - [ ] **Key Metrics**
+
   ```typescript
   // Track these metrics:
   - Geo-detection accuracy rate
@@ -229,7 +252,9 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
   - Performance degradation
 
 ### Documentation
+
 - [ ] **API Documentation**
+
   - OpenAPI 3.0 specification
   - Postman collection
   - Integration examples
@@ -242,12 +267,14 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 ## Technical Implementation Checklist
 
 ### Backend Services
+
 - [ ] `GeoService` - Location detection and mapping
 - [ ] `CurrencyService` - Exchange rates and conversion
 - [ ] `ExchangeRateProvider` - Third-party API integration
 - [ ] `UserPreferencesService` - Preference storage and sync
 
 ### Frontend Components
+
 - [x] `useGeoDetection` hook - **Completed**
 - [x] `useCurrency` hook - **Completed**
 - [ ] `CurrencySelector` component
@@ -255,12 +282,14 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 - [ ] `CurrencyConverter` utility
 
 ### Database Updates
+
 - [ ] Migration scripts for new models
 - [ ] Seed data for exchange rates
 - [ ] Index optimization
 - [ ] Backup strategy updates
 
 ### Configuration
+
 - [ ] Environment variables setup
 - [ ] Feature flags configuration
 - [ ] Rate provider API keys
@@ -269,6 +298,7 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 ## Success Criteria
 
 ### Functional Requirements
+
 - ✅ Automatic geo-detection with 95%+ accuracy
 - ✅ Support for 8+ major currencies
 - ✅ Real-time exchange rate conversion
@@ -276,12 +306,14 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 - ✅ Graceful fallbacks for all failure modes
 
 ### Performance Requirements
+
 - ✅ Geo-detection response time < 200ms
 - ✅ Currency conversion response time < 100ms
 - ✅ Cache hit rate > 90%
 - ✅ Page load impact < 50ms
 
 ### Business Requirements
+
 - ✅ Increased international user conversion (+15%)
 - ✅ Reduced support tickets for pricing (-30%)
 - ✅ Improved user satisfaction scores
@@ -290,12 +322,14 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 ## Risk Mitigation
 
 ### Technical Risks
+
 - **Exchange rate API failures** → Multiple provider fallbacks + cached rates
 - **Geo-detection inaccuracy** → Multi-source detection + manual override
 - **Performance impact** → Aggressive caching + async loading
 - **Currency rounding errors** → Standardized rounding rules + validation
 
 ### Business Risks
+
 - **User confusion** → Clear UI/UX + comprehensive documentation
 - **Legal compliance** → GDPR compliance + privacy controls
 - **Rate volatility** → Rate change alerts + rate locking options
@@ -313,6 +347,6 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 
 ---
 
-*Implementation Timeline: 6 weeks*  
-*Estimated Effort: 2-3 developers*  
-*Dependencies: Exchange rate API access, Vercel/CloudFlare edge functions*
+_Implementation Timeline: 6 weeks_  
+_Estimated Effort: 2-3 developers_  
+_Dependencies: Exchange rate API access, Vercel/CloudFlare edge functions_

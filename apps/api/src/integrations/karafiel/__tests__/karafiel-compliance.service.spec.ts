@@ -1,9 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import {
-  KarafielComplianceService,
-  KarafielIssueContext,
-} from '../karafiel-compliance.service';
+import { KarafielComplianceService, KarafielIssueContext } from '../karafiel-compliance.service';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -14,9 +11,7 @@ const SERVICE_TOKEN = 'test.janua.jwt.token';
 const EMISOR_RFC = 'MAD010101ABC';
 const CREDENTIAL_ID = 'cred-test-001';
 
-function mockConfigService(
-  overrides: Record<string, unknown> = {},
-): Partial<ConfigService> {
+function mockConfigService(overrides: Record<string, unknown> = {}): Partial<ConfigService> {
   const defaults: Record<string, unknown> = {
     KARAFIEL_API_URL: API_URL,
     KARAFIEL_SERVICE_TOKEN: SERVICE_TOKEN,
@@ -32,9 +27,7 @@ function mockConfigService(
   };
 }
 
-function sampleContext(
-  overrides: Partial<KarafielIssueContext> = {},
-): KarafielIssueContext {
+function sampleContext(overrides: Partial<KarafielIssueContext> = {}): KarafielIssueContext {
   return {
     quoteId: 'quote-abc',
     quoteNumber: 'Q-2026-04-0001',
@@ -50,9 +43,7 @@ function sampleContext(
         importe: 1000,
       },
     ],
-    impuestos: [
-      { tipo: 'traslado', impuesto: '002', tasa: 0.16, importe: 160 },
-    ],
+    impuestos: [{ tipo: 'traslado', impuesto: '002', tasa: 0.16, importe: 160 }],
     ...overrides,
   };
 }
@@ -83,9 +74,7 @@ describe('KarafielComplianceService', () => {
       ok: true,
       status: 200,
       text: jest.fn().mockResolvedValue('OK'),
-      json: jest
-        .fn()
-        .mockResolvedValue({ uuid: 'pac-uuid-1234', status: 'stamped' }),
+      json: jest.fn().mockResolvedValue({ uuid: 'pac-uuid-1234', status: 'stamped' }),
     } as unknown as Response);
   });
 
@@ -98,27 +87,20 @@ describe('KarafielComplianceService', () => {
 
   describe('resolveReceptorRfc', () => {
     it('prefers quote metadata receptorRfc when present', () => {
-      expect(
-        service.resolveReceptorRfc({ receptorRfc: 'ABC010101XYZ' }, null),
-      ).toBe('ABC010101XYZ');
+      expect(service.resolveReceptorRfc({ receptorRfc: 'ABC010101XYZ' }, null)).toBe(
+        'ABC010101XYZ',
+      );
     });
 
     it('falls back to tenant settings when quote metadata lacks the field', () => {
-      expect(service.resolveReceptorRfc({}, { receptorRfc: 'TEN010101XYZ' })).toBe(
-        'TEN010101XYZ',
-      );
+      expect(service.resolveReceptorRfc({}, { receptorRfc: 'TEN010101XYZ' })).toBe('TEN010101XYZ');
     });
 
     it('returns null when neither source has a non-empty string', () => {
       expect(service.resolveReceptorRfc(null, null)).toBeNull();
       expect(service.resolveReceptorRfc(undefined, undefined)).toBeNull();
       expect(service.resolveReceptorRfc({ receptorRfc: '' }, {})).toBeNull();
-      expect(
-        service.resolveReceptorRfc(
-          { receptorRfc: 42 as unknown as string },
-          null,
-        ),
-      ).toBeNull();
+      expect(service.resolveReceptorRfc({ receptorRfc: 42 as unknown as string }, null)).toBeNull();
     });
   });
 
@@ -185,9 +167,7 @@ describe('KarafielComplianceService', () => {
     });
 
     it('skips when receptor_rfc is missing (without throwing)', async () => {
-      await expect(
-        service.issueCfdi(sampleContext({ receptorRfc: '' })),
-      ).resolves.toBeUndefined();
+      await expect(service.issueCfdi(sampleContext({ receptorRfc: '' }))).resolves.toBeUndefined();
       expect(fetchSpy).not.toHaveBeenCalled();
     });
 

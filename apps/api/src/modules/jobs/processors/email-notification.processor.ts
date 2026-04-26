@@ -34,7 +34,10 @@ interface EmailResult {
   response: string;
 }
 
-type HandlebarsTemplateDelegate = (context: Record<string, unknown>, options?: Record<string, unknown>) => string;
+type HandlebarsTemplateDelegate = (
+  context: Record<string, unknown>,
+  options?: Record<string, unknown>,
+) => string;
 
 @Processor(JobType.EMAIL_NOTIFICATION)
 @Injectable()
@@ -394,7 +397,10 @@ export class EmailNotificationProcessor {
     }
   }
 
-  private getEmailSubject(type: EmailNotificationJobData['type'], data: EmailNotificationJobData['templateData']): string {
+  private getEmailSubject(
+    type: EmailNotificationJobData['type'],
+    data: EmailNotificationJobData['templateData'],
+  ): string {
     const subjects = {
       'quote-ready': `Your Quote #${data.quoteNumber} is Ready!`,
       'quote-accepted': `Order Confirmed - #${data.orderNumber}`,

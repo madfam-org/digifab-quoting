@@ -2,18 +2,18 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Link as LinkIcon, 
-  Search, 
-  CheckCircle, 
-  AlertCircle, 
-  Zap, 
+import {
+  Link as LinkIcon,
+  Search,
+  CheckCircle,
+  AlertCircle,
+  Zap,
   Eye,
   ShoppingCart,
   ExternalLink,
   Copy,
   Clock,
-  DollarSign
+  DollarSign,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,22 +68,22 @@ const DEMO_LINKS = [
     url: 'https://www.instructables.com/Arduino-Weather-Station-DHT22/',
     description: 'Complete IoT weather monitoring system',
     expectedItems: 8,
-    estimatedCost: '$67'
+    estimatedCost: '$67',
   },
   {
     name: 'Raspberry Pi Camera Mount',
     url: 'https://www.thingiverse.com/thing:3532690',
     description: '3D printable adjustable camera mount',
     expectedItems: 3,
-    estimatedCost: '$12'
+    estimatedCost: '$12',
   },
   {
     name: 'CNC Router Build',
     url: 'https://www.hackster.io/diylab/diy-cnc-router-build-guide-8a5c34',
     description: 'Complete CNC router construction guide',
     expectedItems: 45,
-    estimatedCost: '$890'
-  }
+    estimatedCost: '$890',
+  },
 ];
 
 export function LinkQuoteDemo() {
@@ -95,7 +95,7 @@ export function LinkQuoteDemo() {
   const handleAnalyzeLink = useCallback(async (linkUrl: string) => {
     setIsAnalyzing(true);
     setUrl(linkUrl);
-    
+
     // Create initial analysis object
     const newAnalysis: LinkAnalysis = {
       id: Date.now().toString(),
@@ -104,21 +104,31 @@ export function LinkQuoteDemo() {
       progress: 0,
       message: 'Initializing analysis...',
     };
-    
+
     setAnalysis(newAnalysis);
 
     // Simulate the analysis process
     const stages = [
       { status: 'fetching', progress: 15, message: 'Fetching content from URL...', delay: 1000 },
       { status: 'parsing', progress: 35, message: 'Parsing project information...', delay: 1500 },
-      { status: 'analyzing', progress: 65, message: 'Analyzing BOM and components...', delay: 2000 },
-      { status: 'pricing', progress: 85, message: 'Generating personalized quotes...', delay: 1500 },
+      {
+        status: 'analyzing',
+        progress: 65,
+        message: 'Analyzing BOM and components...',
+        delay: 2000,
+      },
+      {
+        status: 'pricing',
+        progress: 85,
+        message: 'Generating personalized quotes...',
+        delay: 1500,
+      },
       { status: 'completed', progress: 100, message: 'Analysis completed!', delay: 1000 },
     ];
 
     for (const stage of stages) {
-      await new Promise(resolve => setTimeout(resolve, stage.delay));
-      
+      await new Promise((resolve) => setTimeout(resolve, stage.delay));
+
       let updatedAnalysis = {
         ...newAnalysis,
         status: stage.status as LinkAnalysis['status'],
@@ -151,50 +161,63 @@ export function LinkQuoteDemo() {
       return {
         project: {
           title: 'Arduino Weather Station',
-          description: 'A complete IoT weather monitoring system with DHT22 sensor, LCD display, and WiFi connectivity.',
+          description:
+            'A complete IoT weather monitoring system with DHT22 sensor, LCD display, and WiFi connectivity.',
           difficulty: 'intermediate',
           estimatedTime: 4,
-          images: ['/api/placeholder/300/200']
+          images: ['/api/placeholder/300/200'],
         },
         bom: {
           totalItems: 8,
-          estimatedCost: 67.50,
+          estimatedCost: 67.5,
           categories: ['electronics', '3d_printed', 'wiring'],
           items: [
             { name: 'Arduino Uno R3', quantity: 1, category: 'electronics', unitCost: 25.99 },
-            { name: 'DHT22 Temperature Sensor', quantity: 1, category: 'electronics', unitCost: 12.50 },
+            {
+              name: 'DHT22 Temperature Sensor',
+              quantity: 1,
+              category: 'electronics',
+              unitCost: 12.5,
+            },
             { name: '16x2 LCD Display', quantity: 1, category: 'electronics', unitCost: 8.99 },
             { name: 'ESP8266 WiFi Module', quantity: 1, category: 'electronics', unitCost: 6.75 },
-            { name: 'Enclosure Housing', quantity: 1, category: '3d_printed', unitCost: 8.50, manufacturingMethod: '3D Printing FFF', material: 'PETG' },
+            {
+              name: 'Enclosure Housing',
+              quantity: 1,
+              category: '3d_printed',
+              unitCost: 8.5,
+              manufacturingMethod: '3D Printing FFF',
+              material: 'PETG',
+            },
             { name: 'Jumper Wires', quantity: 20, category: 'wiring', unitCost: 0.15 },
             { name: 'Breadboard', quantity: 1, category: 'electronics', unitCost: 3.99 },
-            { name: 'Power Supply 9V', quantity: 1, category: 'electronics', unitCost: 7.99 }
-          ]
+            { name: 'Power Supply 9V', quantity: 1, category: 'electronics', unitCost: 7.99 },
+          ],
         },
         quotes: [
           {
             persona: 'diy_maker',
-            totalCost: 89.20,
+            totalCost: 89.2,
             leadTime: 5,
             recommendations: [
               {
                 component: { name: 'Enclosure Housing', quantity: 1 },
-                costBreakdown: { total: 12.50 }
-              }
-            ]
+                costBreakdown: { total: 12.5 },
+              },
+            ],
           },
           {
             persona: 'professional_shop',
-            totalCost: 124.80,
+            totalCost: 124.8,
             leadTime: 3,
             recommendations: [
               {
                 component: { name: 'Enclosure Housing', quantity: 1 },
-                costBreakdown: { total: 28.50 }
-              }
-            ]
-          }
-        ]
+                costBreakdown: { total: 28.5 },
+              },
+            ],
+          },
+        ],
       };
     }
 
@@ -205,31 +228,45 @@ export function LinkQuoteDemo() {
           description: 'Adjustable 3D printable camera mount with pan/tilt functionality.',
           difficulty: 'beginner',
           estimatedTime: 2,
-          images: ['/api/placeholder/300/200']
+          images: ['/api/placeholder/300/200'],
         },
         bom: {
           totalItems: 3,
-          estimatedCost: 12.50,
+          estimatedCost: 12.5,
           categories: ['3d_printed', 'hardware'],
           items: [
-            { name: 'Main Mount Body', quantity: 1, category: '3d_printed', unitCost: 8.50, manufacturingMethod: '3D Printing FFF', material: 'PLA' },
-            { name: 'Pan/Tilt Mechanism', quantity: 1, category: '3d_printed', unitCost: 6.20, manufacturingMethod: '3D Printing FFF', material: 'PLA' },
-            { name: 'M3x12mm Screws', quantity: 4, category: 'hardware', unitCost: 0.25 }
-          ]
+            {
+              name: 'Main Mount Body',
+              quantity: 1,
+              category: '3d_printed',
+              unitCost: 8.5,
+              manufacturingMethod: '3D Printing FFF',
+              material: 'PLA',
+            },
+            {
+              name: 'Pan/Tilt Mechanism',
+              quantity: 1,
+              category: '3d_printed',
+              unitCost: 6.2,
+              manufacturingMethod: '3D Printing FFF',
+              material: 'PLA',
+            },
+            { name: 'M3x12mm Screws', quantity: 4, category: 'hardware', unitCost: 0.25 },
+          ],
         },
         quotes: [
           {
             persona: 'diy_maker',
-            totalCost: 18.90,
+            totalCost: 18.9,
             leadTime: 2,
             recommendations: [
               {
                 component: { name: 'Main Mount Body', quantity: 1 },
-                costBreakdown: { total: 12.50 }
-              }
-            ]
-          }
-        ]
+                costBreakdown: { total: 12.5 },
+              },
+            ],
+          },
+        ],
       };
     }
 
@@ -240,33 +277,33 @@ export function LinkQuoteDemo() {
         description: 'Complete guide for building a desktop CNC router with 300x300mm work area.',
         difficulty: 'advanced',
         estimatedTime: 40,
-        images: ['/api/placeholder/300/200']
+        images: ['/api/placeholder/300/200'],
       },
       bom: {
         totalItems: 45,
-        estimatedCost: 890.00,
+        estimatedCost: 890.0,
         categories: ['cnc_parts', '3d_printed', 'electronics', 'hardware'],
         items: [
-          { name: 'Aluminum Extrusion 2020', quantity: 8, category: 'cnc_parts', unitCost: 12.50 },
+          { name: 'Aluminum Extrusion 2020', quantity: 8, category: 'cnc_parts', unitCost: 12.5 },
           { name: 'Linear Rails', quantity: 6, category: 'cnc_parts', unitCost: 25.99 },
-          { name: 'Stepper Motors NEMA23', quantity: 3, category: 'electronics', unitCost: 45.00 },
+          { name: 'Stepper Motors NEMA23', quantity: 3, category: 'electronics', unitCost: 45.0 },
           { name: 'Spindle Motor', quantity: 1, category: 'electronics', unitCost: 189.99 },
-          { name: 'Control Board', quantity: 1, category: 'electronics', unitCost: 89.99 }
-        ]
+          { name: 'Control Board', quantity: 1, category: 'electronics', unitCost: 89.99 },
+        ],
       },
       quotes: [
         {
           persona: 'professional_shop',
-          totalCost: 1247.50,
+          totalCost: 1247.5,
           leadTime: 14,
           recommendations: [
             {
               component: { name: 'Custom Brackets', quantity: 8 },
-              costBreakdown: { total: 156.00 }
-            }
-          ]
-        }
-      ]
+              costBreakdown: { total: 156.0 },
+            },
+          ],
+        },
+      ],
     };
   };
 
@@ -276,18 +313,25 @@ export function LinkQuoteDemo() {
 
   const getStatusColor = (status: LinkAnalysis['status']) => {
     switch (status) {
-      case 'completed': return 'text-green-600';
-      case 'failed': return 'text-red-600';
-      case 'pending': return 'text-gray-600';
-      default: return 'text-blue-600';
+      case 'completed':
+        return 'text-green-600';
+      case 'failed':
+        return 'text-red-600';
+      case 'pending':
+        return 'text-gray-600';
+      default:
+        return 'text-blue-600';
     }
   };
 
   const getStatusIcon = (status: LinkAnalysis['status']) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'failed': return <AlertCircle className="w-5 h-5 text-red-500" />;
-      default: return <Clock className="w-5 h-5 text-blue-500" />;
+      case 'completed':
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'failed':
+        return <AlertCircle className="w-5 h-5 text-red-500" />;
+      default:
+        return <Clock className="w-5 h-5 text-blue-500" />;
     }
   };
 
@@ -302,7 +346,8 @@ export function LinkQuoteDemo() {
               Analyze Maker Project Link
             </h3>
             <p className="text-gray-600">
-              Paste a link from Instructables, Thingiverse, GitHub, or other maker platforms to automatically extract the bill of materials and get instant quotes.
+              Paste a link from Instructables, Thingiverse, GitHub, or other maker platforms to
+              automatically extract the bill of materials and get instant quotes.
             </p>
           </div>
 
@@ -360,7 +405,7 @@ export function LinkQuoteDemo() {
                   <h5 className="font-semibold">{link.name}</h5>
                   <p className="text-sm text-gray-600">{link.description}</p>
                 </div>
-                
+
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>{link.expectedItems} components</span>
                   <span className="font-medium text-green-600">{link.estimatedCost}</span>
@@ -377,11 +422,7 @@ export function LinkQuoteDemo() {
                     <Zap className="w-3 h-3 mr-1" />
                     Analyze
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleCopyUrl(link.url)}
-                  >
+                  <Button size="sm" variant="ghost" onClick={() => handleCopyUrl(link.url)}>
                     <Copy className="w-3 h-3" />
                   </Button>
                 </div>
@@ -443,18 +484,16 @@ export function LinkQuoteDemo() {
                   <div className="md:col-span-2 space-y-3">
                     <h4 className="text-xl font-bold">{analysis.project.title}</h4>
                     <p className="text-gray-600">{analysis.project.description}</p>
-                    
+
                     <div className="flex items-center space-x-4">
-                      <Badge variant="outline">
-                        {analysis.project.difficulty}
-                      </Badge>
+                      <Badge variant="outline">{analysis.project.difficulty}</Badge>
                       <div className="flex items-center text-sm text-gray-600">
                         <Clock className="w-4 h-4 mr-1" />
                         {analysis.project.estimatedTime}h build time
                       </div>
                     </div>
                   </div>
-                  
+
                   {analysis.project.images && analysis.project.images[0] && (
                     <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
                       <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
@@ -488,13 +527,13 @@ export function LinkQuoteDemo() {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">
-                      {analysis.bom.items.filter(item => item.manufacturingMethod).length}
+                      {analysis.bom.items.filter((item) => item.manufacturingMethod).length}
                     </div>
                     <div className="text-sm text-gray-600">Custom Parts</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">
-                      {analysis.bom.items.filter(item => !item.manufacturingMethod).length}
+                      {analysis.bom.items.filter((item) => !item.manufacturingMethod).length}
                     </div>
                     <div className="text-sm text-gray-600">Standard Parts</div>
                   </div>
@@ -502,7 +541,10 @@ export function LinkQuoteDemo() {
 
                 <div className="space-y-3">
                   {analysis.bom.items.slice(0, 5).map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         <div>
@@ -510,7 +552,9 @@ export function LinkQuoteDemo() {
                           <div className="text-sm text-gray-600">
                             {item.quantity}x • {item.category}
                             {item.manufacturingMethod && (
-                              <span className="ml-2 text-blue-600">• {item.manufacturingMethod}</span>
+                              <span className="ml-2 text-blue-600">
+                                • {item.manufacturingMethod}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -523,7 +567,7 @@ export function LinkQuoteDemo() {
                       )}
                     </div>
                   ))}
-                  
+
                   {analysis.bom.items.length > 5 && (
                     <div className="text-center py-2">
                       <Button variant="outline" size="sm">
@@ -546,17 +590,15 @@ export function LinkQuoteDemo() {
                         <h4 className="font-semibold capitalize">
                           {quote.persona.replace('_', ' ')}
                         </h4>
-                        <Badge variant="outline">
-                          {quote.leadTime} days
-                        </Badge>
+                        <Badge variant="outline">{quote.leadTime} days</Badge>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-gray-600">Total Cost:</span>
                           <span className="font-bold text-lg">${quote.totalCost.toFixed(2)}</span>
                         </div>
-                        
+
                         <Button className="w-full" variant="outline">
                           <ShoppingCart className="w-4 h-4 mr-2" />
                           Convert to Quote

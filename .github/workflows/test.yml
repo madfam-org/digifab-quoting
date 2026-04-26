@@ -1,10 +1,11 @@
 name: Test Suite
 
+# Manual-only until the suite is rewritten against vitest + the current
+# calculator API. The push/pull_request triggers were active when this
+# workflow was scaffolded against jest's --selectProjects flag and a
+# `format:check` script that never shipped. ci.yml is the active
+# workflow that gates PRs.
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
   workflow_dispatch:
 
 env:

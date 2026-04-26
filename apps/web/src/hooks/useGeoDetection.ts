@@ -46,10 +46,10 @@ export function useGeoDetection(): UseGeoDetectionReturn {
     try {
       const browserLang = navigator.language || 'en';
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      
+
       let locale: Locale = 'en';
       let currency: Currency = Currency.USD;
-      
+
       // Map browser language to our supported locales
       if (browserLang.startsWith('es')) {
         locale = 'es';
@@ -80,7 +80,7 @@ export function useGeoDetection(): UseGeoDetectionReturn {
 
       const parsed = JSON.parse(cached);
       const now = Date.now();
-      
+
       if (now - parsed.timestamp > CACHE_DURATION) {
         localStorage.removeItem(GEO_CACHE_KEY);
         return null;
@@ -97,10 +97,13 @@ export function useGeoDetection(): UseGeoDetectionReturn {
     if (typeof window === 'undefined') return;
 
     try {
-      localStorage.setItem(GEO_CACHE_KEY, JSON.stringify({
-        data,
-        timestamp: Date.now(),
-      }));
+      localStorage.setItem(
+        GEO_CACHE_KEY,
+        JSON.stringify({
+          data,
+          timestamp: Date.now(),
+        }),
+      );
     } catch (error) {
       console.warn('Failed to cache geo data:', error);
     }
@@ -144,11 +147,11 @@ export function useGeoDetection(): UseGeoDetectionReturn {
       return data;
     } catch (fetchError) {
       console.warn('API geo-detection failed, using fallback:', fetchError);
-      
+
       // Fallback to browser detection + defaults
       const browserData = detectFromBrowser();
       const defaultData = getDefaultGeoData();
-      
+
       return {
         ...defaultData,
         detected: {
@@ -174,7 +177,7 @@ export function useGeoDetection(): UseGeoDetectionReturn {
         if (userPrefs) {
           cached.userPreferences = userPrefs;
         }
-        
+
         setGeoData(cached);
         setLoading(false);
         return;
@@ -182,7 +185,7 @@ export function useGeoDetection(): UseGeoDetectionReturn {
 
       // 2. Fetch from API or fallback
       const data = await fetchGeoDetection();
-      
+
       // 3. Load user preferences
       const userPrefs = loadUserPreferences();
       if (userPrefs) {
@@ -192,63 +195,68 @@ export function useGeoDetection(): UseGeoDetectionReturn {
       // 4. Cache and set state
       saveToCache(data);
       setGeoData(data);
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to detect location';
       setError(errorMessage);
-      
+
       // Use defaults on error
       const defaultData = getDefaultGeoData();
       const userPrefs = loadUserPreferences();
       if (userPrefs) {
         defaultData.userPreferences = userPrefs;
       }
-      
+
       setGeoData(defaultData);
     } finally {
       setLoading(false);
     }
   };
 
-  const updatePreferences = useCallback(async (prefs: Partial<UserPreferences>): Promise<void> => {
-    try {
-      // Update user preferences locally
-      const currentPrefs = geoData?.userPreferences || {
-        locale: geoData?.recommended.locale || 'es',
-        currency: geoData?.recommended.currency || Currency.MXN,
-        autoDetect: true,
-      };
-
-      const newPrefs = { ...currentPrefs, ...prefs };
-      
-      // Save locally
-      saveUserPreferences(newPrefs);
-      
-      // Update state
-      setGeoData(prev => prev ? {
-        ...prev,
-        userPreferences: newPrefs,
-      } : null);
-
-      // Try to save to API (fire and forget for now)
+  const updatePreferences = useCallback(
+    async (prefs: Partial<UserPreferences>): Promise<void> => {
       try {
-        await fetch('/api/v1/geo/preferences', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(prefs),
-        });
-      } catch (apiError) {
-        console.warn('Failed to sync preferences to server:', apiError);
-        // Continue anyway, local storage is our source of truth for now
-      }
+        // Update user preferences locally
+        const currentPrefs = geoData?.userPreferences || {
+          locale: geoData?.recommended.locale || 'es',
+          currency: geoData?.recommended.currency || Currency.MXN,
+          autoDetect: true,
+        };
 
-    } catch (err) {
-      console.error('Failed to update preferences:', err);
-      throw new Error('Failed to update preferences');
-    }
-  }, [geoData]);
+        const newPrefs = { ...currentPrefs, ...prefs };
+
+        // Save locally
+        saveUserPreferences(newPrefs);
+
+        // Update state
+        setGeoData((prev) =>
+          prev
+            ? {
+                ...prev,
+                userPreferences: newPrefs,
+              }
+            : null,
+        );
+
+        // Try to save to API (fire and forget for now)
+        try {
+          await fetch('/api/v1/geo/preferences', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(prefs),
+          });
+        } catch (apiError) {
+          console.warn('Failed to sync preferences to server:', apiError);
+          // Continue anyway, local storage is our source of truth for now
+        }
+      } catch (err) {
+        console.error('Failed to update preferences:', err);
+        throw new Error('Failed to update preferences');
+      }
+    },
+    [geoData],
+  );
 
   const refresh = useCallback(async (): Promise<void> => {
     // Clear cache and re-detect
@@ -264,13 +272,12 @@ export function useGeoDetection(): UseGeoDetectionReturn {
   }, []);
 
   // Derived values
-  const currency = geoData?.userPreferences?.currency || 
-                   geoData?.recommended.currency || 
-                   Currency.MXN;
-                   
-  const locale = (geoData?.userPreferences?.locale || 
-                  geoData?.recommended.locale || 
-                  'es') as Locale;
+  const currency =
+    geoData?.userPreferences?.currency || geoData?.recommended.currency || Currency.MXN;
+
+  const locale = (geoData?.userPreferences?.locale ||
+    geoData?.recommended.locale ||
+    'es') as Locale;
 
   return {
     geoData,

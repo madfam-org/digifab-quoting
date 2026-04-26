@@ -93,7 +93,10 @@ export function LocalizedHomePage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* HERO — pain-first headline, no inflated stats */}
       <section className="relative overflow-hidden border-b border-border/40">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" aria-hidden />
+        <div
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"
+          aria-hidden
+        />
         <div className="container mx-auto px-6 py-20 lg:py-28 relative">
           <div className="max-w-4xl mx-auto text-center">
             <p className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground mb-6 px-3 py-1.5 rounded-full border border-border/60 bg-card/50">
@@ -138,10 +141,7 @@ export function LocalizedHomePage() {
           </div>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm">
             {TRUST_KEYS.map((key) => (
-              <span
-                key={key}
-                className="inline-flex items-center gap-2 text-muted-foreground"
-              >
+              <span key={key} className="inline-flex items-center gap-2 text-muted-foreground">
                 <CheckCircle2 className="w-4 h-4 text-primary/70" aria-hidden />
                 {t(`trustBar.items.${key}`)}
               </span>
@@ -166,15 +166,11 @@ export function LocalizedHomePage() {
                 <p className="text-sm font-mono uppercase tracking-wider text-destructive/80 mb-2">
                   Pain
                 </p>
-                <p className="text-base font-medium mb-4">
-                  {t(`pains.items.${key}.pain`)}
-                </p>
+                <p className="text-base font-medium mb-4">{t(`pains.items.${key}.pain`)}</p>
                 <p className="text-sm font-mono uppercase tracking-wider text-primary/80 mb-2">
                   Fix
                 </p>
-                <p className="text-base text-muted-foreground">
-                  {t(`pains.items.${key}.fix`)}
-                </p>
+                <p className="text-base text-muted-foreground">{t(`pains.items.${key}.fix`)}</p>
               </article>
             ))}
           </div>
@@ -190,10 +186,7 @@ export function LocalizedHomePage() {
           </header>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto mb-6">
             {STATS_KEYS.map((key) => (
-              <div
-                key={key}
-                className="rounded-lg border border-border/60 bg-card p-5"
-              >
+              <div key={key} className="rounded-lg border border-border/60 bg-card p-5">
                 <div className="flex items-center gap-2 text-primary mb-2">
                   {STATS_ICONS[key]}
                   <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
@@ -203,9 +196,7 @@ export function LocalizedHomePage() {
                 <div className="text-3xl font-bold tabular-nums mb-2">
                   {t(`stats.items.${key}.value`)}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {t(`stats.items.${key}.context`)}
-                </p>
+                <p className="text-xs text-muted-foreground">{t(`stats.items.${key}.context`)}</p>
               </div>
             ))}
           </div>
@@ -219,12 +210,8 @@ export function LocalizedHomePage() {
       <section className="py-20 lg:py-24">
         <div className="container mx-auto px-6">
           <header className="max-w-3xl mx-auto text-center mb-14">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-3">
-              {t('personas.title')}
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              {t('personas.subtitle')}
-            </p>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-3">{t('personas.title')}</h2>
+            <p className="text-lg text-muted-foreground">{t('personas.subtitle')}</p>
           </header>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
             {PERSONA_KEYS.map((key) => (
@@ -237,9 +224,7 @@ export function LocalizedHomePage() {
                     {PERSONA_ICONS[key]}
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold">
-                      {t(`personas.${key}.title`)}
-                    </h3>
+                    <h3 className="text-xl font-semibold">{t(`personas.${key}.title`)}</h3>
                     <p className="text-sm text-muted-foreground mt-1">
                       {t(`personas.${key}.tagline`)}
                     </p>
@@ -277,16 +262,10 @@ export function LocalizedHomePage() {
       <section className="py-20 lg:py-24 bg-muted/20 border-y border-border/40">
         <div className="container mx-auto px-6">
           <header className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-3">
-              {t('linkQuote.title')}
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              {t('linkQuote.description')}
-            </p>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-3">{t('linkQuote.title')}</h2>
+            <p className="text-lg text-muted-foreground">{t('linkQuote.description')}</p>
           </header>
-          <Suspense
-            fallback={<div className="h-96 bg-muted/40 animate-pulse rounded-lg" />}
-          >
+          <Suspense fallback={<div className="h-96 bg-muted/40 animate-pulse rounded-lg" />}>
             <LinkQuoteDemo />
           </Suspense>
         </div>
@@ -296,28 +275,19 @@ export function LocalizedHomePage() {
       <section className="py-20 lg:py-24">
         <div className="container mx-auto px-6">
           <header className="max-w-3xl mx-auto text-center mb-14">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-3">
-              {t('features.title')}
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              {t('features.subtitle')}
-            </p>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-3">{t('features.title')}</h2>
+            <p className="text-lg text-muted-foreground">{t('features.subtitle')}</p>
           </header>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
             {FEATURE_KEYS.map((key) => (
-              <article
-                key={key}
-                className="rounded-lg border border-border/60 bg-card p-5"
-              >
+              <article key={key} className="rounded-lg border border-border/60 bg-card p-5">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="rounded-md bg-primary/10 p-2 text-primary">
                     {FEATURE_ICONS[key]}
                   </div>
                   <h3 className="font-semibold">{t(`features.${key}.title`)}</h3>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {t(`features.${key}.description`)}
-                </p>
+                <p className="text-sm text-muted-foreground">{t(`features.${key}.description`)}</p>
               </article>
             ))}
           </div>
@@ -334,12 +304,8 @@ export function LocalizedHomePage() {
       {/* FINAL CTA */}
       <section className="py-20 lg:py-24">
         <div className="container mx-auto px-6 text-center max-w-3xl">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-            {t('cta.ready')}
-          </h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            {t('cta.description')}
-          </p>
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4">{t('cta.ready')}</h2>
+          <p className="text-lg text-muted-foreground mb-8">{t('cta.description')}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
             <Link
               href="/auth/register"
@@ -365,12 +331,8 @@ export function LocalizedHomePage() {
       <section className="py-10 bg-muted/40 border-t border-border/40">
         <div className="container mx-auto px-6 text-center">
           <p className="text-sm font-medium mb-1">{t('footer.tagline')}</p>
-          <p className="text-xs text-muted-foreground mb-1">
-            {t('footer.ecosystem')}
-          </p>
-          <p className="text-xs text-muted-foreground/70 italic">
-            {t('footer.joinCommunity')}
-          </p>
+          <p className="text-xs text-muted-foreground mb-1">{t('footer.ecosystem')}</p>
+          <p className="text-xs text-muted-foreground/70 italic">{t('footer.joinCommunity')}</p>
         </div>
       </section>
     </div>

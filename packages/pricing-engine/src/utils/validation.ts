@@ -18,7 +18,7 @@ export class MarginValidator {
   static validateMarginPercent(marginPercent: Decimal, context?: string): void {
     if (marginPercent.isNegative()) {
       throw new PricingValidationError(
-        `${context ? context + ': ' : ''}Margin percentage cannot be negative (${marginPercent.toFixed(2)}%)`
+        `${context ? context + ': ' : ''}Margin percentage cannot be negative (${marginPercent.toFixed(2)}%)`,
       );
     }
   }
@@ -30,10 +30,10 @@ export class MarginValidator {
     totalCost: Decimal,
     finalPrice: Decimal,
     minimumMarginPercent: Decimal,
-    context?: string
+    context?: string,
   ): { isValid: boolean; warnings: string[]; effectiveMarginPercent: Decimal } {
     const warnings: string[] = [];
-    
+
     if (totalCost.isZero()) {
       throw new PricingValidationError('Total cost cannot be zero');
     }
@@ -44,35 +44,35 @@ export class MarginValidator {
     // Never allow selling below cost
     if (finalPrice.lessThan(totalCost)) {
       throw new PricingValidationError(
-        `${context ? context + ': ' : ''}Final price (${finalPrice.toFixed(2)}) cannot be below total cost (${totalCost.toFixed(2)})`
+        `${context ? context + ': ' : ''}Final price (${finalPrice.toFixed(2)}) cannot be below total cost (${totalCost.toFixed(2)})`,
       );
     }
 
     // Check absolute minimum margin
     if (effectiveMarginPercent.lessThan(this.ABSOLUTE_MINIMUM_MARGIN_PERCENT)) {
       throw new PricingValidationError(
-        `${context ? context + ': ' : ''}Margin (${effectiveMarginPercent.toFixed(2)}%) is below absolute minimum (${this.ABSOLUTE_MINIMUM_MARGIN_PERCENT}%)`
+        `${context ? context + ': ' : ''}Margin (${effectiveMarginPercent.toFixed(2)}%) is below absolute minimum (${this.ABSOLUTE_MINIMUM_MARGIN_PERCENT}%)`,
       );
     }
 
     // Check against configured minimum margin
     if (effectiveMarginPercent.lessThan(minimumMarginPercent)) {
       warnings.push(
-        `Effective margin (${effectiveMarginPercent.toFixed(2)}%) is below configured minimum (${minimumMarginPercent.toFixed(2)}%)`
+        `Effective margin (${effectiveMarginPercent.toFixed(2)}%) is below configured minimum (${minimumMarginPercent.toFixed(2)}%)`,
       );
     }
 
     // Warning if margin is low
     if (effectiveMarginPercent.lessThan(this.WARNING_MARGIN_PERCENT)) {
       warnings.push(
-        `Low margin warning: ${effectiveMarginPercent.toFixed(2)}% is below recommended ${this.WARNING_MARGIN_PERCENT}%`
+        `Low margin warning: ${effectiveMarginPercent.toFixed(2)}% is below recommended ${this.WARNING_MARGIN_PERCENT}%`,
       );
     }
 
     return {
       isValid: effectiveMarginPercent.greaterThanOrEqualTo(minimumMarginPercent),
       warnings,
-      effectiveMarginPercent
+      effectiveMarginPercent,
     };
   }
 
@@ -81,20 +81,22 @@ export class MarginValidator {
    */
   static validateVolumeDiscounts(
     volumeDiscounts: VolumeDiscount[],
-    minimumMarginPercent: Decimal
+    minimumMarginPercent: Decimal,
   ): void {
-    const maxAllowableDiscount = new Decimal(100).minus(minimumMarginPercent).minus(this.ABSOLUTE_MINIMUM_MARGIN_PERCENT);
+    const maxAllowableDiscount = new Decimal(100)
+      .minus(minimumMarginPercent)
+      .minus(this.ABSOLUTE_MINIMUM_MARGIN_PERCENT);
 
     volumeDiscounts.forEach((discount) => {
       if (discount.discountPercent.isNegative()) {
         throw new PricingValidationError(
-          `Volume discount cannot be negative for quantity ${discount.minQuantity}`
+          `Volume discount cannot be negative for quantity ${discount.minQuantity}`,
         );
       }
 
       if (discount.discountPercent.greaterThan(maxAllowableDiscount)) {
         throw new PricingValidationError(
-          `Volume discount ${discount.discountPercent.toFixed(2)}% for quantity ${discount.minQuantity} would violate minimum margin requirements (max allowed: ${maxAllowableDiscount.toFixed(2)}%)`
+          `Volume discount ${discount.discountPercent.toFixed(2)}% for quantity ${discount.minQuantity} would violate minimum margin requirements (max allowed: ${maxAllowableDiscount.toFixed(2)}%)`,
         );
       }
     });
@@ -103,9 +105,7 @@ export class MarginValidator {
     const sortedDiscounts = [...volumeDiscounts].sort((a, b) => a.minQuantity - b.minQuantity);
     for (let i = 1; i < sortedDiscounts.length; i++) {
       if (sortedDiscounts[i].discountPercent.lessThan(sortedDiscounts[i - 1].discountPercent)) {
-        throw new PricingValidationError(
-          'Volume discounts must increase with quantity'
-        );
+        throw new PricingValidationError('Volume discounts must increase with quantity');
       }
     }
   }
@@ -125,7 +125,7 @@ export class MarginValidator {
     basePrice: Decimal,
     totalCost: Decimal,
     requestedDiscount: Decimal,
-    minimumMarginPercent: Decimal
+    minimumMarginPercent: Decimal,
   ): { adjustedDiscount: Decimal; warning?: string } {
     const minimumPrice = this.calculateMinimumPrice(totalCost, minimumMarginPercent);
     const priceAfterDiscount = basePrice.minus(requestedDiscount);
@@ -134,7 +134,7 @@ export class MarginValidator {
       const maxAllowableDiscount = basePrice.minus(minimumPrice);
       return {
         adjustedDiscount: maxAllowableDiscount.isNegative() ? new Decimal(0) : maxAllowableDiscount,
-        warning: `Discount reduced from ${requestedDiscount.toFixed(2)} to ${maxAllowableDiscount.toFixed(2)} to maintain minimum margin`
+        warning: `Discount reduced from ${requestedDiscount.toFixed(2)} to ${maxAllowableDiscount.toFixed(2)} to maintain minimum margin`,
       };
     }
 
@@ -214,14 +214,14 @@ export class CostValidator {
     machineCost: Decimal,
     energyCost: Decimal,
     laborCost: Decimal,
-    overheadCost: Decimal
+    overheadCost: Decimal,
   ): void {
     const components = {
-      'Material': materialCost,
-      'Machine': machineCost,
-      'Energy': energyCost,
-      'Labor': laborCost,
-      'Overhead': overheadCost
+      Material: materialCost,
+      Machine: machineCost,
+      Energy: energyCost,
+      Labor: laborCost,
+      Overhead: overheadCost,
     };
 
     Object.entries(components).forEach(([name, value]) => {
@@ -230,7 +230,7 @@ export class CostValidator {
 
     const totalCost = Object.values(components).reduce(
       (sum, cost) => sum.plus(cost),
-      new Decimal(0)
+      new Decimal(0),
     );
 
     if (totalCost.isZero()) {

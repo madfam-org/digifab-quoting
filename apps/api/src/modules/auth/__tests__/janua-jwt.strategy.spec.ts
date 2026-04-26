@@ -19,11 +19,7 @@ jest.mock('jwks-rsa', () => ({
 // --------------------------------------------------------------------------
 // Import the strategy and its types
 // --------------------------------------------------------------------------
-import {
-  JanuaJwtStrategy,
-  JanuaJWTPayload,
-  JanuaUser,
-} from '../strategies/janua-jwt.strategy';
+import { JanuaJwtStrategy, JanuaJWTPayload, JanuaUser } from '../strategies/janua-jwt.strategy';
 
 // --------------------------------------------------------------------------
 // Helpers

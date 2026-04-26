@@ -5,14 +5,7 @@
  * Self-contained - no external npm dependencies.
  */
 
-import {
-  Feedback,
-  FeedbackStatus,
-  FeedbackType,
-  ProductFeedbackSummary,
-  RoadmapItem,
-  SubmitFeedbackParams,
-} from './types';
+import { Feedback, ProductFeedbackSummary, RoadmapItem, SubmitFeedbackParams } from './types';
 
 // ============================================================================
 // Configuration
@@ -53,7 +46,11 @@ export class CoformaClient {
   private timeout: number;
 
   constructor(config: CoformaConfig = {}) {
-    this.baseUrl = (config.baseUrl || process.env.COFORMA_API_URL || 'http://coforma-api:8300').replace(/\/$/, '');
+    this.baseUrl = (
+      config.baseUrl ||
+      process.env.COFORMA_API_URL ||
+      'http://coforma-api:8300'
+    ).replace(/\/$/, '');
     this.apiKey = config.apiKey || process.env.COFORMA_API_KEY;
     this.tenantId = config.tenantId || process.env.COFORMA_TENANT_ID;
     this.productId = config.productId || process.env.COFORMA_PRODUCT_ID || 'cotiza';
@@ -68,7 +65,7 @@ export class CoformaClient {
     const url = `${this.baseUrl}${endpoint}`;
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      ...(this.apiKey && { 'Authorization': `Bearer ${this.apiKey}` }),
+      ...(this.apiKey && { Authorization: `Bearer ${this.apiKey}` }),
       ...(this.tenantId && { 'X-Tenant-ID': this.tenantId }),
       'X-Product-ID': this.productId,
       ...options.headers,

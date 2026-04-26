@@ -169,11 +169,13 @@ Create custom dashboards for:
 ### Common Issues
 
 1. **Terraform Init Fails**
+
    - Check AWS credentials
    - Verify S3 bucket exists
    - Ensure DynamoDB table is created
 
 2. **ECS Tasks Not Starting**
+
    - Check CloudWatch logs
    - Verify security groups
    - Ensure secrets are properly configured

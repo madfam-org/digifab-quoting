@@ -39,16 +39,16 @@ export interface CacheMetrics {
 @Injectable()
 export class MultiLayerCacheService extends EventEmitter implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(MultiLayerCacheService.name);
-  
+
   // L1: In-memory LRU cache (microseconds)
   private l1Cache: LRUCache<string, any>;
-  
+
   // L2: Local Redis instance (milliseconds)
   private l2Cache: Redis | null = null;
-  
+
   // L3: Redis cluster/sentinel (tens of milliseconds)
   private l3Cache: Redis | null = null;
-  
+
   // Metrics for each layer
   private metrics: CacheMetrics = {
     l1: this.initLayerStats(),
@@ -64,13 +64,13 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
 
   // Cache warming registry
   private warmingRegistry = new Map<string, () => Promise<any>>();
-  
+
   // Predictive prefetch patterns
   private accessPatterns = new Map<string, string[]>();
 
   constructor() {
     super();
-    
+
     // Initialize L1 cache
     this.l1Cache = new LRUCache({
       max: 1000, // Maximum number of items
@@ -82,7 +82,7 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
         return JSON.stringify(value).length;
       },
       maxSize: 50 * 1024 * 1024, // 50MB max size
-      dispose: (value, key) => {
+      dispose: (_value, key) => {
         this.logger.debug(`L1 cache evicted: ${key}`);
       },
     });
@@ -114,7 +114,7 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
 
       await this.l2Cache.connect();
       this.logger.log('L2 cache (local Redis) connected');
-      
+
       this.l2Cache.on('error', (error) => {
         this.logger.warn('L2 cache error', error);
         this.metrics.l2.errors++;
@@ -128,7 +128,7 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
     try {
       if (process.env.REDIS_SENTINELS) {
         // Sentinel configuration
-        const sentinels = process.env.REDIS_SENTINELS.split(',').map(s => {
+        const sentinels = process.env.REDIS_SENTINELS.split(',').map((s) => {
           const [host, port] = s.split(':');
           return { host, port: parseInt(port) };
         });
@@ -155,7 +155,7 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
 
       await this.l3Cache.connect();
       this.logger.log('L3 cache (Redis cluster/sentinel) connected');
-      
+
       this.l3Cache.on('error', (error) => {
         this.logger.error('L3 cache error', error);
         this.metrics.l3.errors++;
@@ -168,7 +168,7 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
 
   async get<T>(key: string, options: CacheOptions = {}): Promise<T | null> {
     const startTime = Date.now();
-    
+
     // L1: In-memory cache (unless skipped)
     if (!options.skipL1) {
       const l1Value = this.l1Cache.get(key);
@@ -185,15 +185,15 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
       try {
         const l2StartTime = Date.now();
         const l2Value = await this.l2Cache.get(key);
-        
+
         if (l2Value) {
           const parsed = JSON.parse(l2Value);
-          
+
           // Populate L1
           if (!options.skipL1) {
             this.l1Cache.set(key, parsed);
           }
-          
+
           this.recordHit('l2', Date.now() - l2StartTime);
           this.emit('cache.hit', { layer: 'l2', key });
           this.trackAccessPattern(key);
@@ -210,13 +210,13 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
       try {
         const l3StartTime = Date.now();
         const l3Value = await this.l3Cache.get(key);
-        
+
         if (l3Value) {
           const parsed = JSON.parse(l3Value);
-          
+
           // Populate lower layers asynchronously
           this.populateLowerLayers(key, parsed, options);
-          
+
           this.recordHit('l3', Date.now() - l3StartTime);
           this.emit('cache.hit', { layer: 'l3', key });
           this.trackAccessPattern(key);
@@ -231,10 +231,10 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
     // Cache miss
     this.recordMiss();
     this.emit('cache.miss', { key });
-    
+
     // Trigger predictive prefetch for related keys
     this.prefetchRelated(key);
-    
+
     return null;
   }
 
@@ -253,20 +253,20 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
     // Write to L2 (unless skipped)
     if (!options.skipL2 && this.l2Cache) {
       promises.push(
-        this.l2Cache.setex(key, ttl, serialized).catch(error => {
+        this.l2Cache.setex(key, ttl, serialized).catch((error) => {
           this.logger.debug(`L2 cache set failed for ${key}`, error);
           this.metrics.l2.errors++;
-        })
+        }),
       );
     }
 
     // Write to L3 (unless skipped)
     if (!options.skipL3 && this.l3Cache) {
       promises.push(
-        this.l3Cache.setex(key, ttl, serialized).catch(error => {
+        this.l3Cache.setex(key, ttl, serialized).catch((error) => {
           this.logger.error(`L3 cache set failed for ${key}`, error);
           this.metrics.l3.errors++;
-        })
+        }),
       );
     }
 
@@ -283,10 +283,10 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
     let deletedCount = 0;
 
     // Delete from L1
-    const l1Keys = Array.from(this.l1Cache.keys()).filter(k => 
-      pattern.includes('*') ? this.matchPattern(k, pattern) : k === pattern
+    const l1Keys = Array.from(this.l1Cache.keys()).filter((k) =>
+      pattern.includes('*') ? this.matchPattern(k, pattern) : k === pattern,
     );
-    
+
     for (const key of l1Keys) {
       this.l1Cache.delete(key);
       deletedCount++;
@@ -348,7 +348,7 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
 
   async warmCache(keys?: string[]): Promise<void> {
     const keysToWarm = keys || Array.from(this.warmingRegistry.keys());
-    
+
     for (const key of keysToWarm) {
       const loader = this.warmingRegistry.get(key);
       if (loader) {
@@ -381,7 +381,7 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
     // Simple pattern tracking - in production, use ML models
     const prefix = key.split(':')[0];
     const related = this.accessPatterns.get(prefix) || [];
-    
+
     if (!related.includes(key)) {
       related.push(key);
       if (related.length > 10) {
@@ -401,8 +401,7 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
 
     if (!options.skipL2 && this.l2Cache) {
       promises.push(
-        this.l2Cache.setex(key, options.ttl || 3600, JSON.stringify(value))
-          .catch(() => {}) // Ignore errors for async population
+        this.l2Cache.setex(key, options.ttl || 3600, JSON.stringify(value)).catch(() => {}), // Ignore errors for async population
       );
     }
 
@@ -412,10 +411,10 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
   private async tagKeys(key: string, tags: string[]): Promise<void> {
     if (!this.l3Cache) return;
 
-    const promises = tags.map(tag =>
-      this.l3Cache!.sadd(`tag:${tag}`, key).catch(error => {
+    const promises = tags.map((tag) =>
+      this.l3Cache!.sadd(`tag:${tag}`, key).catch((error) => {
         this.logger.debug(`Failed to tag key ${key} with ${tag}`, error);
-      })
+      }),
     );
 
     await Promise.allSettled(promises);
@@ -431,7 +430,7 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
     stats.hits++;
     stats.avgLatency = (stats.avgLatency * (stats.hits - 1) + latency) / stats.hits;
     stats.hitRate = stats.hits / (stats.hits + stats.misses);
-    
+
     this.metrics.overall.totalHits++;
     this.updateOverallMetrics();
   }
@@ -446,10 +445,8 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
 
   private updateOverallMetrics(): void {
     const total = this.metrics.overall.totalHits + this.metrics.overall.totalMisses;
-    this.metrics.overall.overallHitRate = total > 0 
-      ? this.metrics.overall.totalHits / total 
-      : 0;
-    
+    this.metrics.overall.overallHitRate = total > 0 ? this.metrics.overall.totalHits / total : 0;
+
     this.metrics.overall.cacheSize = this.l1Cache.size;
   }
 
@@ -469,10 +466,12 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
     // Export metrics every 60 seconds
     setInterval(() => {
       this.emit('metrics', this.getMetrics());
-      
+
       // Log if hit rate drops below threshold
       if (this.metrics.overall.overallHitRate < 0.7 && this.metrics.overall.totalHits > 100) {
-        this.logger.warn(`Cache hit rate below threshold: ${(this.metrics.overall.overallHitRate * 100).toFixed(2)}%`);
+        this.logger.warn(
+          `Cache hit rate below threshold: ${(this.metrics.overall.overallHitRate * 100).toFixed(2)}%`,
+        );
       }
     }, 60000);
   }
@@ -480,14 +479,14 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
   private setupCacheWarming(): void {
     // Warm critical caches on startup
     setTimeout(() => {
-      this.warmCache(['pricing:matrix', 'materials:catalog', 'processes:config'])
-        .catch(error => this.logger.error('Cache warming failed', error));
+      this.warmCache(['pricing:matrix', 'materials:catalog', 'processes:config']).catch((error) =>
+        this.logger.error('Cache warming failed', error),
+      );
     }, 5000);
 
     // Schedule periodic cache warming
     setInterval(() => {
-      this.warmCache()
-        .catch(error => this.logger.error('Periodic cache warming failed', error));
+      this.warmCache().catch((error) => this.logger.error('Periodic cache warming failed', error));
     }, 3600000); // Every hour
   }
 
@@ -524,25 +523,30 @@ export class MultiLayerCacheService extends EventEmitter implements OnModuleInit
       healthy: false,
     };
 
-    // Test L2
+    // Test L2 — ping failures leave health.l2 = false (default).
     if (this.l2Cache) {
       try {
         await this.l2Cache.ping();
         health.l2 = true;
-      } catch {}
+      } catch {
+        // Intentional: a failed ping means unhealthy, which is the
+        // initialised default. No state change, no log noise.
+      }
     }
 
-    // Test L3
+    // Test L3 — same fail-quiet semantics as L2.
     if (this.l3Cache) {
       try {
         await this.l3Cache.ping();
         health.l3 = true;
-      } catch {}
+      } catch {
+        // Intentional: see L2 comment above.
+      }
     }
 
     // Consider healthy if at least L1 and one Redis layer work
     health.healthy = health.l1 && (health.l2 || health.l3);
-    
+
     return health;
   }
 }

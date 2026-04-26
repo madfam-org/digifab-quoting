@@ -5,7 +5,12 @@ import { SSOService } from './services/sso.service';
 import { WhiteLabelService } from './services/white-label.service';
 import { ComplianceService } from './services/compliance.service';
 import { DedicatedSupportService } from './services/dedicated-support.service';
-import { EnterpriseAnalyticsService, EnterpriseAnalytics, UserAnalytics, UsageAnalytics } from './services/enterprise-analytics.service';
+import {
+  EnterpriseAnalyticsService,
+  EnterpriseAnalytics,
+  UserAnalytics,
+  UsageAnalytics,
+} from './services/enterprise-analytics.service';
 import { AuditTrailService, AuditAction } from './services/audit-trail.service';
 
 export interface EnterpriseFeatures {
@@ -206,7 +211,7 @@ export class EnterpriseService {
     if (!tenant?.billing?.plan) return null;
 
     const plans = await this.getEnterprisePlans();
-    return plans.find(p => p.id === tenant.billing.plan.id) || null;
+    return plans.find((p) => p.id === tenant.billing.plan.id) || null;
   }
 
   async getEnterpriseAnalytics(tenantId: string): Promise<EnterpriseAnalytics> {
@@ -215,31 +220,37 @@ export class EnterpriseService {
       AuditAction.SYSTEM_MAINTENANCE,
       'analytics',
       'enterprise_overview',
-      { action: 'view_analytics' }
+      { action: 'view_analytics' },
     );
 
     return this.analyticsService.getEnterpriseAnalytics(tenantId);
   }
 
-  async getUserAnalytics(tenantId: string, period: 'week' | 'month' | 'quarter'): Promise<UserAnalytics> {
+  async getUserAnalytics(
+    tenantId: string,
+    period: 'week' | 'month' | 'quarter',
+  ): Promise<UserAnalytics> {
     await this.auditTrail.logSystemEvent(
       tenantId,
       AuditAction.SYSTEM_MAINTENANCE,
       'analytics',
       'user_analytics',
-      { period }
+      { period },
     );
 
     return this.analyticsService.getUserAnalytics(tenantId, period);
   }
 
-  async getUsageAnalytics(tenantId: string, period: 'week' | 'month' | 'quarter'): Promise<UsageAnalytics> {
+  async getUsageAnalytics(
+    tenantId: string,
+    period: 'week' | 'month' | 'quarter',
+  ): Promise<UsageAnalytics> {
     await this.auditTrail.logSystemEvent(
       tenantId,
       AuditAction.SYSTEM_MAINTENANCE,
       'analytics',
       'usage_analytics',
-      { period }
+      { period },
     );
 
     return this.analyticsService.getUsageAnalytics(tenantId, period);
@@ -254,10 +265,10 @@ export class EnterpriseService {
       customIntegrations: string[];
       trainingRequired: boolean;
       migrationRequired: boolean;
-    }
+    },
   ): Promise<TenantOnboardingStatus> {
     const csmId = await this.assignCustomerSuccessManager(tenantId, plan);
-    
+
     const onboarding: TenantOnboardingStatus = {
       tenantId,
       steps: {
@@ -278,7 +289,7 @@ export class EnterpriseService {
     await this.redis.set(
       `enterprise_onboarding:${tenantId}`,
       JSON.stringify(onboarding),
-      86400 * 30 // 30 days
+      86400 * 30, // 30 days
     );
 
     // Schedule onboarding checkpoints
@@ -290,7 +301,7 @@ export class EnterpriseService {
       AuditAction.SYSTEM_MAINTENANCE,
       'onboarding',
       'enterprise_onboarding',
-      { plan: plan.id, requirements }
+      { plan: plan.id, requirements },
     );
 
     this.logger.log(`Initiated enterprise onboarding for tenant ${tenantId} with plan ${plan.id}`);
@@ -298,7 +309,11 @@ export class EnterpriseService {
     return onboarding;
   }
 
-  async updateOnboardingStatus(tenantId: string, step: keyof TenantOnboardingStatus['steps'], completed: boolean): Promise<TenantOnboardingStatus> {
+  async updateOnboardingStatus(
+    tenantId: string,
+    step: keyof TenantOnboardingStatus['steps'],
+    completed: boolean,
+  ): Promise<TenantOnboardingStatus> {
     const cached = await this.redis.get(`enterprise_onboarding:${tenantId}`);
     if (!cached) {
       throw new Error('Onboarding status not found');
@@ -306,10 +321,10 @@ export class EnterpriseService {
 
     const onboarding: TenantOnboardingStatus = JSON.parse(cached);
     onboarding.steps[step] = completed;
-    
+
     // Recalculate progress
     const totalSteps = Object.keys(onboarding.steps).length;
-    const completedSteps = Object.values(onboarding.steps).filter(s => s).length;
+    const completedSteps = Object.values(onboarding.steps).filter((s) => s).length;
     onboarding.progress = (completedSteps / totalSteps) * 100;
 
     // Update next actions
@@ -319,7 +334,7 @@ export class EnterpriseService {
     await this.redis.set(
       `enterprise_onboarding:${tenantId}`,
       JSON.stringify(onboarding),
-      86400 * 30 // 30 days
+      86400 * 30, // 30 days
     );
 
     // Log audit trail
@@ -328,7 +343,7 @@ export class EnterpriseService {
       AuditAction.SYSTEM_MAINTENANCE,
       'onboarding',
       'step_completed',
-      { step, completed, progress: onboarding.progress }
+      { step, completed, progress: onboarding.progress },
     );
 
     // Notify CSM of progress
@@ -346,11 +361,14 @@ export class EnterpriseService {
 
   async generateEnterpriseHealthCheck(tenantId: string): Promise<{
     score: number;
-    categories: Record<string, {
-      score: number;
-      issues: string[];
-      recommendations: string[];
-    }>;
+    categories: Record<
+      string,
+      {
+        score: number;
+        issues: string[];
+        recommendations: string[];
+      }
+    >;
     overallRecommendations: string[];
   }> {
     const [ssoHealth, complianceHealth, usageHealth, supportHealth] = await Promise.all([
@@ -367,7 +385,9 @@ export class EnterpriseService {
       support: supportHealth,
     };
 
-    const overallScore = Object.values(categories).reduce((sum, cat) => sum + cat.score, 0) / Object.keys(categories).length;
+    const overallScore =
+      Object.values(categories).reduce((sum, cat) => sum + cat.score, 0) /
+      Object.keys(categories).length;
 
     const overallRecommendations: string[] = [];
     if (overallScore < 80) {
@@ -386,7 +406,10 @@ export class EnterpriseService {
     };
   }
 
-  private async assignCustomerSuccessManager(tenantId: string, plan: EnterprisePlan): Promise<string> {
+  private async assignCustomerSuccessManager(
+    tenantId: string,
+    plan: EnterprisePlan,
+  ): Promise<string> {
     // Mock implementation - would integrate with CRM/staffing system
     const csms = [
       { id: 'csm-1', name: 'Alice Johnson', maxAccounts: 15, currentAccounts: 8 },
@@ -395,7 +418,7 @@ export class EnterpriseService {
     ];
 
     // Assign to CSM with lowest utilization
-    const availableCSMs = csms.filter(csm => csm.currentAccounts < csm.maxAccounts);
+    const availableCSMs = csms.filter((csm) => csm.currentAccounts < csm.maxAccounts);
     const assignedCSM = availableCSMs.sort((a, b) => a.currentAccounts - b.currentAccounts)[0];
 
     return assignedCSM?.id || 'csm-1';
@@ -406,7 +429,8 @@ export class EnterpriseService {
 
     if (requirements.ssoRequired) days += 7;
     if (requirements.whiteLabelRequired) days += 10;
-    if (requirements.customIntegrations.length > 0) days += requirements.customIntegrations.length * 3;
+    if (requirements.customIntegrations.length > 0)
+      days += requirements.customIntegrations.length * 3;
     if (requirements.trainingRequired) days += 5;
     if (requirements.migrationRequired) days += 14;
 
@@ -446,9 +470,11 @@ export class EnterpriseService {
     return tasks;
   }
 
-  private updateNextActions(onboarding: TenantOnboardingStatus): TenantOnboardingStatus['nextActions'] {
+  private updateNextActions(
+    onboarding: TenantOnboardingStatus,
+  ): TenantOnboardingStatus['nextActions'] {
     // Filter out completed tasks and add new ones based on progress
-    return onboarding.nextActions.filter(action => {
+    return onboarding.nextActions.filter((action) => {
       const now = new Date();
       return action.dueDate > now;
     });
@@ -464,7 +490,9 @@ export class EnterpriseService {
     this.logger.log(`Onboarding completed for tenant ${tenantId}, CSM: ${csmId}`);
   }
 
-  private async assessSSOHealth(tenantId: string): Promise<{ score: number; issues: string[]; recommendations: string[] }> {
+  private async assessSSOHealth(
+    tenantId: string,
+  ): Promise<{ score: number; issues: string[]; recommendations: string[] }> {
     const providers = await this.ssoService.getSSOProviders(tenantId);
     const issues: string[] = [];
     const recommendations: string[] = [];
@@ -474,18 +502,20 @@ export class EnterpriseService {
       recommendations.push('Configure at least one SSO provider');
     }
 
-    const activeProviders = providers.filter(p => p.enabled);
+    const activeProviders = providers.filter((p) => p.enabled);
     if (activeProviders.length === 0 && providers.length > 0) {
       issues.push('All SSO providers are disabled');
       recommendations.push('Enable at least one SSO provider');
     }
 
     const score = providers.length > 0 && activeProviders.length > 0 ? 100 : 50;
-    
+
     return { score, issues, recommendations };
   }
 
-  private async assessComplianceHealth(tenantId: string): Promise<{ score: number; issues: string[]; recommendations: string[] }> {
+  private async assessComplianceHealth(
+    tenantId: string,
+  ): Promise<{ score: number; issues: string[]; recommendations: string[] }> {
     const policy = await this.complianceService.getDataRetentionPolicy(tenantId);
     const issues: string[] = [];
     const recommendations: string[] = [];
@@ -501,11 +531,13 @@ export class EnterpriseService {
     }
 
     const score = policy && policy.autoDeleteEnabled ? 100 : policy ? 75 : 25;
-    
+
     return { score, issues, recommendations };
   }
 
-  private async assessUsageHealth(tenantId: string): Promise<{ score: number; issues: string[]; recommendations: string[] }> {
+  private async assessUsageHealth(
+    tenantId: string,
+  ): Promise<{ score: number; issues: string[]; recommendations: string[] }> {
     const analytics = await this.analyticsService.getUsageAnalytics(tenantId, 'month');
     const issues: string[] = [];
     const recommendations: string[] = [];
@@ -519,13 +551,19 @@ export class EnterpriseService {
       recommendations.push('Monitor usage closely as you approach limits');
     }
 
-    const score = analytics.limits.exceeded.length === 0 ? 
-      (analytics.limits.approaching.length === 0 ? 100 : 80) : 50;
-    
+    const score =
+      analytics.limits.exceeded.length === 0
+        ? analytics.limits.approaching.length === 0
+          ? 100
+          : 80
+        : 50;
+
     return { score, issues, recommendations };
   }
 
-  private async assessSupportHealth(tenantId: string): Promise<{ score: number; issues: string[]; recommendations: string[] }> {
+  private async assessSupportHealth(
+    tenantId: string,
+  ): Promise<{ score: number; issues: string[]; recommendations: string[] }> {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - 1);
     const metrics = await this.supportService.getSupportMetrics(tenantId, startDate, new Date());
@@ -543,9 +581,13 @@ export class EnterpriseService {
       recommendations.push('Review common issues and improve documentation');
     }
 
-    const score = metrics.metrics.averageResponseTime <= 4 && metrics.metrics.escalationRate <= 0.1 ? 100 :
-                 metrics.metrics.averageResponseTime <= 8 && metrics.metrics.escalationRate <= 0.2 ? 80 : 60;
-    
+    const score =
+      metrics.metrics.averageResponseTime <= 4 && metrics.metrics.escalationRate <= 0.1
+        ? 100
+        : metrics.metrics.averageResponseTime <= 8 && metrics.metrics.escalationRate <= 0.2
+          ? 80
+          : 60;
+
     return { score, issues, recommendations };
   }
 }

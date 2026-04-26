@@ -14,9 +14,7 @@ import {
 const API_URL = 'https://phyne-crm.madfam.io';
 const SECRET = 'test-phynecrm-engagement-secret-256';
 
-function mockConfigService(
-  overrides: Record<string, unknown> = {},
-): Partial<ConfigService> {
+function mockConfigService(overrides: Record<string, unknown> = {}): Partial<ConfigService> {
   const defaults: Record<string, unknown> = {
     PHYNECRM_API_URL: API_URL,
     PHYNECRM_ENGAGEMENT_SECRET: SECRET,
@@ -30,9 +28,7 @@ function mockConfigService(
   };
 }
 
-function sampleEvent(
-  overrides: Partial<EngagementEventPayload> = {},
-): EngagementEventPayload {
+function sampleEvent(overrides: Partial<EngagementEventPayload> = {}): EngagementEventPayload {
   return {
     engagement_id: 'eng-tablaco-001',
     source: 'cotiza',

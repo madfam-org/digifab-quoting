@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 
 /**
  * Janua Billing Service for Digifab-Quoting
@@ -437,13 +438,15 @@ export class JanuaBillingService {
       return false;
     }
 
-    const crypto = require('crypto');
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
       .update(payload)
       .digest('hex');
 
-    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
+    return crypto.timingSafeEqual(
+      new Uint8Array(Buffer.from(signature)),
+      new Uint8Array(Buffer.from(expectedSignature)),
+    );
   }
 
   /**

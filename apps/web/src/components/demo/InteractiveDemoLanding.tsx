@@ -26,29 +26,29 @@ const MATERIALS: MaterialOption[] = [
     name: 'PLA',
     cost: 25,
     properties: ['Biodegradable', 'Easy to print', 'Low temp'],
-    color: 'bg-green-500'
+    color: 'bg-green-500',
   },
   {
     id: 'petg',
     name: 'PETG',
     cost: 35,
     properties: ['Chemical resistant', 'Clear', 'Strong'],
-    color: 'bg-blue-500'
+    color: 'bg-blue-500',
   },
   {
     id: 'aluminum',
     name: 'Aluminum 6061',
     cost: 120,
     properties: ['Lightweight', 'Corrosion resistant', 'Machinable'],
-    color: 'bg-gray-500'
+    color: 'bg-gray-500',
   },
   {
     id: 'carbon',
     name: 'Carbon Fiber',
     cost: 250,
     properties: ['Ultra light', 'High strength', 'Premium'],
-    color: 'bg-black'
-  }
+    color: 'bg-black',
+  },
 ];
 
 const PROCESSES: ProcessOption[] = [
@@ -57,22 +57,22 @@ const PROCESSES: ProcessOption[] = [
     name: '3D Printing',
     multiplier: 1,
     leadTime: 2,
-    description: 'Perfect for prototypes and complex geometries'
+    description: 'Perfect for prototypes and complex geometries',
   },
   {
     id: 'cnc',
     name: 'CNC Machining',
     multiplier: 2.5,
     leadTime: 5,
-    description: 'High precision, great surface finish'
+    description: 'High precision, great surface finish',
   },
   {
     id: 'injection',
     name: 'Injection Molding',
     multiplier: 0.3,
     leadTime: 14,
-    description: 'Best for high volumes (1000+ parts)'
-  }
+    description: 'Best for high volumes (1000+ parts)',
+  },
 ];
 
 const QUANTITIES = [1, 10, 100, 1000];
@@ -101,11 +101,10 @@ export function InteractiveDemoLanding() {
     <div className="py-20 bg-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">
-            Experience the Magic
-          </h2>
+          <h2 className="text-4xl font-bold mb-4">Experience the Magic</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Watch costs update in real-time as you experiment with different materials, processes, and quantities
+            Watch costs update in real-time as you experiment with different materials, processes,
+            and quantities
           </p>
         </div>
 
@@ -167,9 +166,7 @@ export function InteractiveDemoLanding() {
                     >
                       <div className="flex justify-between items-start mb-2">
                         <span className="font-semibold">{process.name}</span>
-                        <span className="text-sm text-gray-500">
-                          {process.leadTime}d lead time
-                        </span>
+                        <span className="text-sm text-gray-500">{process.leadTime}d lead time</span>
                       </div>
                       <p className="text-sm text-gray-600">{process.description}</p>
                     </motion.button>
@@ -205,7 +202,9 @@ export function InteractiveDemoLanding() {
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold">Live Quote</h3>
                 <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${isCalculating ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`} />
+                  <div
+                    className={`w-3 h-3 rounded-full ${isCalculating ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}
+                  />
                   <span className="text-sm text-gray-600">
                     {isCalculating ? 'Calculating...' : 'Up to date'}
                   </span>
@@ -224,24 +223,16 @@ export function InteractiveDemoLanding() {
                   <div className="grid grid-cols-2 gap-6 mb-8">
                     <div className="text-center p-6 bg-white rounded-xl shadow-sm">
                       <DollarSign className="mx-auto mb-2 text-green-600" size={32} />
-                      <div className="text-3xl font-bold text-green-600">
-                        ${totalCost}
-                      </div>
+                      <div className="text-3xl font-bold text-green-600">${totalCost}</div>
                       <div className="text-sm text-gray-600">Total Cost</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        ${unitCost} per unit
-                      </div>
+                      <div className="text-xs text-gray-500 mt-1">${unitCost} per unit</div>
                     </div>
 
                     <div className="text-center p-6 bg-white rounded-xl shadow-sm">
                       <Clock className="mx-auto mb-2 text-blue-600" size={32} />
-                      <div className="text-3xl font-bold text-blue-600">
-                        {leadTime}
-                      </div>
+                      <div className="text-3xl font-bold text-blue-600">{leadTime}</div>
                       <div className="text-sm text-gray-600">Days</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        Lead Time
-                      </div>
+                      <div className="text-xs text-gray-500 mt-1">Lead Time</div>
                     </div>
                   </div>
 
@@ -322,7 +313,7 @@ export function InteractiveDemoLanding() {
               Get quotes in seconds, not days. See costs update in real-time as you make changes.
             </p>
           </div>
-          
+
           <div className="text-center">
             <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <TrendingDown className="text-green-600" size={32} />
@@ -332,7 +323,7 @@ export function InteractiveDemoLanding() {
               Smart suggestions to reduce costs while maintaining quality and functionality.
             </p>
           </div>
-          
+
           <div className="text-center">
             <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <Settings className="text-purple-600" size={32} />

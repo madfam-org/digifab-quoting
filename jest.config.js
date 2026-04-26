@@ -39,9 +39,12 @@ module.exports = {
       },
       setupFilesAfterEnv: ['<rootDir>/apps/web/test/setup.ts'],
       transform: {
-        '^.+\\.(ts|tsx)$': ['ts-jest', {
-          tsconfig: '<rootDir>/apps/web/tsconfig.json',
-        }],
+        '^.+\\.(ts|tsx)$': [
+          'ts-jest',
+          {
+            tsconfig: '<rootDir>/apps/web/tsconfig.json',
+          },
+        ],
       },
       collectCoverageFrom: [
         'apps/web/src/**/*.{ts,tsx}',
@@ -93,37 +96,29 @@ module.exports = {
   rootDir: '.',
   testTimeout: 30000,
   verbose: true,
-  
+
   // Coverage settings
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
-  
+
   // Watch settings
-  watchPlugins: [
-    'jest-watch-typeahead/filename',
-    'jest-watch-typeahead/testname',
-  ],
-  
+  watchPlugins: ['jest-watch-typeahead/filename', 'jest-watch-typeahead/testname'],
+
   // Performance
   maxWorkers: '50%',
-  
+
   // Ignore patterns
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/dist/',
-    '/build/',
-    '/.next/',
-  ],
-  
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/build/', '/.next/'],
+
   // Module paths
   modulePaths: ['<rootDir>'],
-  
+
   // Clear mocks between tests
   clearMocks: true,
-  
+
   // Restore mocks after each test
   restoreMocks: true,
-  
+
   // Global test setup
   globalSetup: '<rootDir>/test/global-setup.ts',
   globalTeardown: '<rootDir>/test/global-teardown.ts',

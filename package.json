@@ -18,6 +18,8 @@
     "test:cov": "turbo run test:cov",
     "test:e2e": "turbo run test:e2e",
     "lint": "turbo run lint",
+    "type-check": "turbo run typecheck",
+    "typecheck": "turbo run typecheck",
     "clean": "turbo run clean",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "db:generate": "turbo run db:generate",

@@ -68,8 +68,6 @@ export class SessionValidationService {
       select: { id: true },
     });
 
-    await Promise.all(
-      sessions.map(session => this.revokeSession(session.id))
-    );
+    await Promise.all(sessions.map((session) => this.revokeSession(session.id)));
   }
 }

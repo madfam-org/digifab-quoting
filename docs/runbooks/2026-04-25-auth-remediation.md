@@ -4,15 +4,15 @@
 
 Loading https://cotiza.studio/ produces the following console errors:
 
-| Endpoint | Status | Source of failure |
-|----------|--------|-------------------|
-| `/api/auth/session` | 500 | next-auth `CLIENT_FETCH_ERROR` ("There is a problem with the server configuration") |
-| `/api/auth/_log` | 500 | Same root cause as above |
-| `/api/v1/geo/detect` | 500 | api-pod side issue (under investigation; see "API pod CrashLoop" below) |
-| `/api/v1/currency/rates?base=MXN` | 500 | Same as above |
-| `/auth/error?error=Configuration` | 404 | No `/auth/error` page exists; next-auth's default redirect target is undefined |
-| `/pricing?_rsc=…` | 404 | Pages don't exist yet (low priority) |
-| `/features?_rsc=…` | 404 | Pages don't exist yet (low priority) |
+| Endpoint                          | Status | Source of failure                                                                   |
+| --------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| `/api/auth/session`               | 500    | next-auth `CLIENT_FETCH_ERROR` ("There is a problem with the server configuration") |
+| `/api/auth/_log`                  | 500    | Same root cause as above                                                            |
+| `/api/v1/geo/detect`              | 500    | api-pod side issue (under investigation; see "API pod CrashLoop" below)             |
+| `/api/v1/currency/rates?base=MXN` | 500    | Same as above                                                                       |
+| `/auth/error?error=Configuration` | 404    | No `/auth/error` page exists; next-auth's default redirect target is undefined      |
+| `/pricing?_rsc=…`                 | 404    | Pages don't exist yet (low priority)                                                |
+| `/features?_rsc=…`                | 404    | Pages don't exist yet (low priority)                                                |
 
 User flow: landing page → "Sign In" → "Sign in with Janua" → redirected to `/auth/error?error=Configuration` → 404. **Login is impossible.**
 
@@ -33,6 +33,7 @@ REDIS_URL:              72 bytes
 ```
 
 Missing:
+
 - `NEXTAUTH_SECRET` — without this, every next-auth API call returns 500 + `CLIENT_FETCH_ERROR`.
 - `JANUA_CLIENT_ID` — the OIDC client ID for cotiza's Janua registration. Without this, the OAuth handshake fails before redirecting to Janua.
 - `JANUA_CLIENT_SECRET` — pairs with `JANUA_CLIENT_ID`.
@@ -129,6 +130,7 @@ exists in this repo — confirm path) hits openexchangerates.org directly
 when `OPENEXCHANGERATES_APP_ID` is set.
 
 Migration target (Phase 2 of RFC 0011 consumer migration):
+
 1. Replace direct openexchangerates calls with calls to
    `${DHANAM_API_URL}/v1/fx/spot?base=…&quote=…`.
 2. Remove `OPENEXCHANGERATES_APP_ID` from the secrets-template once

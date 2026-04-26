@@ -162,14 +162,18 @@ export class InvoiceService {
 
       // Cache invoice data for quick access
       const cacheKey = `invoice:${tenantId}:${period}`;
-      await this.redis.set(cacheKey, JSON.stringify({
-        invoiceId,
-        baseFee,
-        usageCharges,
-        subtotal,
-        tax,
-        total,
-      }), 30 * 24 * 60 * 60); // 30 days
+      await this.redis.set(
+        cacheKey,
+        JSON.stringify({
+          invoiceId,
+          baseFee,
+          usageCharges,
+          subtotal,
+          tax,
+          total,
+        }),
+        30 * 24 * 60 * 60,
+      ); // 30 days
 
       this.logger.log(`Generated invoice ${invoiceId} for tenant ${tenantId}, period ${period}`);
 
@@ -187,9 +191,11 @@ export class InvoiceService {
         ],
         totals: { subtotal, tax, total },
       };
-
     } catch (error) {
-      this.logger.error(`Failed to generate invoice for tenant ${tenantId}: ${error.message}`, error);
+      this.logger.error(
+        `Failed to generate invoice for tenant ${tenantId}: ${error.message}`,
+        error,
+      );
       return {
         success: false,
         errors: [error.message],
@@ -231,7 +237,7 @@ export class InvoiceService {
       take: limit,
     });
 
-    return invoices.map(invoice => ({
+    return invoices.map((invoice) => ({
       id: invoice.id,
       period: invoice.period,
       total: Number(invoice.totalAmount || 0),
@@ -305,7 +311,7 @@ export class InvoiceService {
       },
     });
 
-    return invoices.map(invoice => ({
+    return invoices.map((invoice) => ({
       id: invoice.id,
       tenantId: invoice.tenantId,
       tenantName: invoice.tenant?.name,
@@ -348,14 +354,23 @@ export class InvoiceService {
     ]);
 
     // Calculate current month revenue
-    const thisMonthRevenue = thisMonthInvoices.reduce((sum, inv) => sum + Number(inv.totalAmount || 0), 0);
+    const thisMonthRevenue = thisMonthInvoices.reduce(
+      (sum, inv) => sum + Number(inv.totalAmount || 0),
+      0,
+    );
 
     // Estimate next month (assumes similar usage patterns)
-    const recurringRevenue = thisMonthInvoices.reduce((sum, inv) => sum + Number(inv.baseFee || 0), 0);
-    const usageRevenue = thisMonthInvoices.reduce((sum, inv) => sum + Number(inv.usageCost || 0), 0);
+    const recurringRevenue = thisMonthInvoices.reduce(
+      (sum, inv) => sum + Number(inv.baseFee || 0),
+      0,
+    );
+    const usageRevenue = thisMonthInvoices.reduce(
+      (sum, inv) => sum + Number(inv.usageCost || 0),
+      0,
+    );
 
     // Project based on growth
-    const projectedNextMonth = recurringRevenue + (usageRevenue * 1.1); // 10% usage growth
+    const projectedNextMonth = recurringRevenue + usageRevenue * 1.1; // 10% usage growth
 
     return {
       thisMonth: thisMonthRevenue,

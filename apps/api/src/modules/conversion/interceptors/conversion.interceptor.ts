@@ -1,13 +1,10 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { ConversionTrackingService, ConversionAction } from '../services/conversion-tracking.service';
+import {
+  ConversionTrackingService,
+  ConversionAction,
+} from '../services/conversion-tracking.service';
 import { TenantContextService } from '@/modules/tenant/tenant-context.service';
 
 @Injectable()
@@ -23,7 +20,7 @@ export class ConversionInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     const handler = context.getHandler();
     const controller = context.getClass();
-    
+
     const endpoint = `${controller.name}.${handler.name}`;
     const method = request.method;
     const path = request.route?.path || request.url;
@@ -40,7 +37,13 @@ export class ConversionInterceptor implements NestInterceptor {
     );
   }
 
-  private async trackConversionEvents(endpoint: string, method: string, path: string, request: any, response: any): Promise<void> {
+  private async trackConversionEvents(
+    endpoint: string,
+    method: string,
+    path: string,
+    request: any,
+    response: any,
+  ): Promise<void> {
     try {
       const action = this.mapEndpointToAction(endpoint, method, response);
       if (!action) return;
@@ -60,7 +63,11 @@ export class ConversionInterceptor implements NestInterceptor {
     }
   }
 
-  private mapEndpointToAction(endpoint: string, method: string, response: any): ConversionAction | null {
+  private mapEndpointToAction(
+    endpoint: string,
+    method: string,
+    response: any,
+  ): ConversionAction | null {
     const mappings: Record<string, ConversionAction> = {
       // Auth endpoints
       'AuthController.register': ConversionAction.CREATED_ACCOUNT,

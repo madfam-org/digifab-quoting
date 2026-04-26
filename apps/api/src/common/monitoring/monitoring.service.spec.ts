@@ -134,7 +134,7 @@ describe('MonitoringService', () => {
 
     it('should record histogram values', () => {
       const values = [100, 200, 150, 300, 250];
-      values.forEach(value => {
+      values.forEach((value) => {
         metricsService.recordHistogram('test.histogram', value, { source: 'test' });
       });
 
@@ -146,24 +146,32 @@ describe('MonitoringService', () => {
     });
 
     it('should time synchronous functions', () => {
-      const result = metricsService.time('test.sync', () => {
-        // Simulate some work
-        let sum = 0;
-        for (let i = 0; i < 1000; i++) {
-          sum += i;
-        }
-        return sum;
-      }, { source: 'test' });
+      const result = metricsService.time(
+        'test.sync',
+        () => {
+          // Simulate some work
+          let sum = 0;
+          for (let i = 0; i < 1000; i++) {
+            sum += i;
+          }
+          return sum;
+        },
+        { source: 'test' },
+      );
 
       expect(result).toBe(499500);
       expect(metricsService.getCounter('test.sync.success', { source: 'test' })).toBe(1);
     });
 
     it('should time asynchronous functions', async () => {
-      const result = await metricsService.timeAsync('test.async', async () => {
-        await new Promise(resolve => setTimeout(resolve, 10));
-        return 'completed';
-      }, { source: 'test' });
+      const result = await metricsService.timeAsync(
+        'test.async',
+        async () => {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          return 'completed';
+        },
+        { source: 'test' },
+      );
 
       expect(result).toBe('completed');
       expect(metricsService.getCounter('test.async.success', { source: 'test' })).toBe(1);
@@ -171,41 +179,52 @@ describe('MonitoringService', () => {
 
     it('should record API request metrics', () => {
       metricsService.recordApiRequest('GET', '/api/quotes', 200, 150, 'tenant-123');
-      
-      expect(metricsService.getCounter('api.requests.total', {
-        method: 'GET',
-        path: '/api/quotes',
-        status_code: '200',
-        status_class: '2xx',
-        tenant_id: 'tenant-123',
-      })).toBe(1);
+
+      expect(
+        metricsService.getCounter('api.requests.total', {
+          method: 'GET',
+          path: '/api/quotes',
+          status_code: '200',
+          status_class: '2xx',
+          tenant_id: 'tenant-123',
+        }),
+      ).toBe(1);
     });
 
     it('should sanitize paths in API metrics', () => {
-      metricsService.recordApiRequest('GET', '/api/quotes/123e4567-e89b-12d3-a456-426614174000', 200, 150);
-      
-      expect(metricsService.getCounter('api.requests.total', {
-        method: 'GET',
-        path: '/api/quotes/:id',
-        status_code: '200',
-        status_class: '2xx',
-      })).toBe(1);
+      metricsService.recordApiRequest(
+        'GET',
+        '/api/quotes/123e4567-e89b-12d3-a456-426614174000',
+        200,
+        150,
+      );
+
+      expect(
+        metricsService.getCounter('api.requests.total', {
+          method: 'GET',
+          path: '/api/quotes/:id',
+          status_code: '200',
+          status_class: '2xx',
+        }),
+      ).toBe(1);
     });
 
     it('should record database query metrics', () => {
       metricsService.recordDatabaseQuery('findMany', 'User', 50, true);
-      
-      expect(metricsService.getCounter('database.queries.total', {
-        operation: 'findmany',
-        model: 'user',
-        status: 'success',
-      })).toBe(1);
+
+      expect(
+        metricsService.getCounter('database.queries.total', {
+          operation: 'findmany',
+          model: 'user',
+          status: 'success',
+        }),
+      ).toBe(1);
     });
 
     it('should record cache operation metrics', () => {
       metricsService.recordCacheOperation('get', true, 5);
       metricsService.recordCacheOperation('get', false, 3);
-      
+
       expect(metricsService.getCounter('cache.hits')).toBe(1);
       expect(metricsService.getCounter('cache.misses')).toBe(1);
     });
@@ -221,7 +240,7 @@ describe('MonitoringService', () => {
       mockRedisService.ping.mockResolvedValue('PONG');
 
       const status = await healthService.getHealthStatus();
-      
+
       expect(status).toHaveProperty('status');
       expect(status).toHaveProperty('checks');
       expect(status).toHaveProperty('uptime');
@@ -232,8 +251,8 @@ describe('MonitoringService', () => {
       mockPrismaService.$queryRaw.mockRejectedValue(new Error('Connection failed'));
 
       const status = await healthService.getHealthStatus();
-      const dbCheck = status.checks.find(check => check.name === 'database');
-      
+      const dbCheck = status.checks.find((check) => check.name === 'database');
+
       expect(dbCheck?.status).toBe('unhealthy');
       expect(dbCheck?.message).toContain('Connection failed');
     });
@@ -242,8 +261,8 @@ describe('MonitoringService', () => {
       mockRedisService.ping.mockRejectedValue(new Error('Redis unavailable'));
 
       const status = await healthService.getHealthStatus();
-      const redisCheck = status.checks.find(check => check.name === 'redis');
-      
+      const redisCheck = status.checks.find((check) => check.name === 'redis');
+
       expect(redisCheck?.status).toBe('unhealthy');
       expect(redisCheck?.message).toContain('Redis unavailable');
     });
@@ -256,9 +275,9 @@ describe('MonitoringService', () => {
 
     it('should track transaction duration', () => {
       const transactionId = 'test-transaction-123';
-      
+
       performanceService.startTransaction(transactionId, 'test-operation');
-      
+
       // Simulate some work
       setTimeout(() => {
         const duration = performanceService.endTransaction(transactionId, { source: 'test' });
@@ -267,18 +286,26 @@ describe('MonitoringService', () => {
     });
 
     it('should measure async functions', async () => {
-      const result = await performanceService.measureAsync('test-async', async () => {
-        await new Promise(resolve => setTimeout(resolve, 10));
-        return 'success';
-      }, { source: 'test' });
+      const result = await performanceService.measureAsync(
+        'test-async',
+        async () => {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          return 'success';
+        },
+        { source: 'test' },
+      );
 
       expect(result).toBe('success');
     });
 
     it('should measure sync functions', () => {
-      const result = performanceService.measure('test-sync', () => {
-        return 42;
-      }, { source: 'test' });
+      const result = performanceService.measure(
+        'test-sync',
+        () => {
+          return 42;
+        },
+        { source: 'test' },
+      );
 
       expect(result).toBe(42);
     });
@@ -298,7 +325,7 @@ describe('MonitoringService', () => {
 
     it('should generate performance reports', async () => {
       const report = await performanceService.generatePerformanceReport();
-      
+
       expect(report).toHaveProperty('timestamp');
       expect(report).toHaveProperty('summary');
       expect(report).toHaveProperty('systemMetrics');
@@ -307,7 +334,7 @@ describe('MonitoringService', () => {
 
     it('should check health status', () => {
       const health = performanceService.getHealthStatus();
-      
+
       expect(health).toHaveProperty('status');
       expect(health).toHaveProperty('issues');
       expect(['healthy', 'degraded', 'unhealthy']).toContain(health.status);
@@ -315,7 +342,7 @@ describe('MonitoringService', () => {
 
     it('should set custom thresholds', () => {
       performanceService.setThreshold('custom.metric', 100, 200, 'ms');
-      
+
       const threshold = performanceService.getThreshold('custom.metric');
       expect(threshold).toBeDefined();
       expect(threshold?.warning).toBe(100);
@@ -340,7 +367,7 @@ describe('MonitoringService', () => {
       // Check health
       mockPrismaService.$queryRaw.mockResolvedValue([]);
       mockRedisService.ping.mockResolvedValue('PONG');
-      
+
       const health = await healthService.getHealthStatus();
       expect(health.status).toBe('healthy');
 
@@ -354,7 +381,7 @@ describe('MonitoringService', () => {
       await expect(
         performanceService.measureAsync('error-test', async () => {
           throw new Error('Test error');
-        })
+        }),
       ).rejects.toThrow('Test error');
 
       // Verify error was still tracked

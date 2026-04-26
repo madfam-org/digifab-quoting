@@ -52,8 +52,8 @@ export class AuditService {
           entity: entry.entity,
           entityId: entry.entityId,
           action: entry.action,
-          before: entry.before as Prisma.InputJsonValue ?? Prisma.JsonNull,
-          after: entry.after as Prisma.InputJsonValue ?? Prisma.JsonNull,
+          before: (entry.before as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+          after: (entry.after as Prisma.InputJsonValue) ?? Prisma.JsonNull,
           metadata: {
             ...entry.metadata,
             requestId: context.requestId,

@@ -27,9 +27,7 @@ function mkRequest(body: object): any {
 
 describe('PhynecrmEngagementsWebhookController', () => {
   let controller: PhynecrmEngagementsWebhookController;
-  let service: jest.Mocked<
-    Pick<EngagementsService, 'upsert' | 'softDelete'>
-  >;
+  let service: jest.Mocked<Pick<EngagementsService, 'upsert' | 'softDelete'>>;
 
   beforeEach(async () => {
     service = {
@@ -41,7 +39,9 @@ describe('PhynecrmEngagementsWebhookController', () => {
       providers: [
         {
           provide: ConfigService,
-          useValue: { get: (k: string, def: unknown) => (k === 'PHYNECRM_INBOUND_SECRET' ? SECRET : def) },
+          useValue: {
+            get: (k: string, def: unknown) => (k === 'PHYNECRM_INBOUND_SECRET' ? SECRET : def),
+          },
         },
         { provide: EngagementsService, useValue: service },
       ],
@@ -60,11 +60,7 @@ describe('PhynecrmEngagementsWebhookController', () => {
   it('rejects a forged signature', async () => {
     const payload = { engagement_id: 'pcrm_1', tenant_id: 't1', event_type: 'engagement.created' };
     await expect(
-      controller.handle(
-        mkRequest(payload),
-        'deadbeef'.repeat(8),
-        payload as any,
-      ),
+      controller.handle(mkRequest(payload), 'deadbeef'.repeat(8), payload as any),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
@@ -72,11 +68,7 @@ describe('PhynecrmEngagementsWebhookController', () => {
     const payload = { engagement_id: '', tenant_id: 't1', event_type: 'engagement.created' };
     const req = mkRequest(payload);
     await expect(
-      controller.handle(
-        req,
-        sign(req.rawBody.toString()),
-        payload as any,
-      ),
+      controller.handle(req, sign(req.rawBody.toString()), payload as any),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 

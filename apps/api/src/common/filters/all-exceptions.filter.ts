@@ -129,7 +129,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   private sanitizeErrorDetails(details: Record<string, unknown>): Record<string, unknown> {
     const sanitized = { ...details };
-    
+
     // Remove sensitive keys
     const sensitiveKeys = ['password', 'token', 'secret', 'apiKey', 'authorization'];
     for (const key of sensitiveKeys) {
@@ -137,14 +137,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
         delete sanitized[key];
       }
     }
-    
+
     // Recursively sanitize nested objects
     for (const [key, value] of Object.entries(sanitized)) {
       if (typeof value === 'object' && value !== null) {
         sanitized[key] = this.sanitizeErrorDetails(value as Record<string, unknown>);
       }
     }
-    
+
     return sanitized;
   }
 }

@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import CircuitBreaker from 'opossum';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const CircuitBreaker = require('opossum');
+type CircuitBreaker = any;
 import { EventEmitter } from 'events';
 
 export interface CircuitBreakerOptions {
@@ -30,7 +32,10 @@ export class CircuitBreakerService extends EventEmitter {
   private readonly logger = new Logger(CircuitBreakerService.name);
   private readonly breakers = new Map<string, CircuitBreaker>();
   private readonly metrics = new Map<string, CircuitBreakerMetrics>();
-  private readonly adaptiveSettings = new Map<string, { successRate: number; avgResponseTime: number }>();
+  private readonly adaptiveSettings = new Map<
+    string,
+    { successRate: number; avgResponseTime: number }
+  >();
 
   create(
     name: string,
@@ -98,7 +103,7 @@ export class CircuitBreakerService extends EventEmitter {
 
   async healthCheck(): Promise<{ [key: string]: string }> {
     const status: { [key: string]: string } = {};
-    
+
     for (const [name, breaker] of this.breakers) {
       if (breaker.opened) {
         status[name] = 'open';
@@ -108,7 +113,7 @@ export class CircuitBreakerService extends EventEmitter {
         status[name] = 'closed';
       }
     }
-    
+
     return status;
   }
 
@@ -121,7 +126,7 @@ export class CircuitBreakerService extends EventEmitter {
   }
 
   resetAll(): void {
-    for (const [name, breaker] of this.breakers) {
+    for (const breaker of this.breakers.values()) {
       breaker.close();
     }
     this.logger.log('All circuit breakers reset');
@@ -130,7 +135,7 @@ export class CircuitBreakerService extends EventEmitter {
   private setupEventHandlers(name: string, breaker: CircuitBreaker): void {
     const metrics = this.metrics.get(name)!;
 
-    breaker.on('success', (result: any, latency: number) => {
+    breaker.on('success', (_result: any, latency: number) => {
       metrics.requests++;
       metrics.success++;
       this.updateResponseTimeMetrics(name, latency);
@@ -144,7 +149,7 @@ export class CircuitBreakerService extends EventEmitter {
       this.emit('breaker.failure', { name, error, latency });
     });
 
-    breaker.on('timeout', (error: Error, latency: number) => {
+    breaker.on('timeout', (_error: Error, latency: number) => {
       metrics.requests++;
       metrics.timeout++;
       this.logger.warn(`Circuit breaker timeout: ${name}`);
@@ -216,13 +221,21 @@ export class CircuitBreakerService extends EventEmitter {
     // Adaptive error threshold
     if (successRate > 0.98) {
       // Very stable, be more sensitive to errors
-      breaker.options.errorThresholdPercentage = Math.max(30, breaker.options.errorThresholdPercentage - 5);
+      breaker.options.errorThresholdPercentage = Math.max(
+        30,
+        breaker.options.errorThresholdPercentage - 5,
+      );
     } else if (successRate < 0.7) {
       // Unstable, be more tolerant
-      breaker.options.errorThresholdPercentage = Math.min(70, breaker.options.errorThresholdPercentage + 5);
+      breaker.options.errorThresholdPercentage = Math.min(
+        70,
+        breaker.options.errorThresholdPercentage + 5,
+      );
     }
 
-    this.logger.debug(`Adapted circuit breaker ${name}: timeout=${breaker.options.timeout}, threshold=${breaker.options.errorThresholdPercentage}%`);
+    this.logger.debug(
+      `Adapted circuit breaker ${name}: timeout=${breaker.options.timeout}, threshold=${breaker.options.errorThresholdPercentage}%`,
+    );
   }
 
   private updateResponseTimeMetrics(name: string, latency: number): void {
@@ -264,7 +277,10 @@ export class CircuitBreakerService extends EventEmitter {
   }
 
   // Get recommendation for circuit breaker configuration
-  getRecommendedSettings(serviceName: string, sla: { latencyP99: number; errorRate: number }): CircuitBreakerOptions {
+  getRecommendedSettings(
+    _serviceName: string,
+    sla: { latencyP99: number; errorRate: number },
+  ): CircuitBreakerOptions {
     return {
       timeout: sla.latencyP99 * 1.5, // 50% buffer over P99
       errorThresholdPercentage: Math.min(50, (1 - sla.errorRate) * 100), // Based on SLA error rate

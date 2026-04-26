@@ -73,18 +73,12 @@ export function AuthModal({
 
         {mode === 'guest-conversion' && (
           <Alert className="mt-4">
-            <AlertDescription>
-              {t('auth.guest.benefits')}
-            </AlertDescription>
+            <AlertDescription>{t('auth.guest.benefits')}</AlertDescription>
           </Alert>
         )}
 
         <div className="mt-6 space-y-4">
-          <Button
-            onClick={handleSignIn}
-            className="w-full"
-            disabled={isLoading}
-          >
+          <Button onClick={handleSignIn} className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>
                 <LoadingSpinner className="mr-2" />
@@ -100,7 +94,7 @@ export function AuthModal({
 
           <p className="text-xs text-muted-foreground text-center">
             {t('auth.janua_note') ||
-              'You will be redirected to Janua, MADFAM\'s secure identity platform.'}
+              "You will be redirected to Janua, MADFAM's secure identity platform."}
           </p>
         </div>
 

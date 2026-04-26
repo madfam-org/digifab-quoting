@@ -23,10 +23,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { LinkProcessingService } from './link-processing.service';
-import {
-  AnalyzeLinkDto,
-  LinkAnalysisResponseDto,
-} from './dto/analyze-link.dto';
+import { AnalyzeLinkDto, LinkAnalysisResponseDto } from './dto/analyze-link.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
 import { AuthenticatedRequest } from '../../types/auth-request';
@@ -52,7 +49,8 @@ export class LinkProcessingController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Analyze project link for BOM and quotes',
-    description: 'Starts analysis of a maker project URL to extract BOM and generate personalized quotes',
+    description:
+      'Starts analysis of a maker project URL to extract BOM and generate personalized quotes',
   })
   @ApiResponse({
     status: 202,
@@ -71,11 +69,7 @@ export class LinkProcessingController {
     @Request() req: AuthenticatedRequest,
     @Body() analyzeLinkDto: AnalyzeLinkDto,
   ): Promise<LinkAnalysisResponseDto> {
-    return this.linkProcessingService.startAnalysis(
-      req.user.tenantId,
-      req.user.id,
-      analyzeLinkDto,
-    );
+    return this.linkProcessingService.startAnalysis(req.user.tenantId, req.user.id, analyzeLinkDto);
   }
 
   @Post('analyze/guest')
@@ -94,15 +88,9 @@ export class LinkProcessingController {
     description: 'Invalid URL or unsupported source',
     type: ValidationErrorResponseDto,
   })
-  async analyzeAsGuest(
-    @Body() analyzeLinkDto: AnalyzeLinkDto,
-  ): Promise<LinkAnalysisResponseDto> {
+  async analyzeAsGuest(@Body() analyzeLinkDto: AnalyzeLinkDto): Promise<LinkAnalysisResponseDto> {
     // For guest users, we'll use a default tenant or guest context
-    return this.linkProcessingService.startAnalysis(
-      'guest',
-      'guest-user',
-      analyzeLinkDto,
-    );
+    return this.linkProcessingService.startAnalysis('guest', 'guest-user', analyzeLinkDto);
   }
 
   @Get(':id')

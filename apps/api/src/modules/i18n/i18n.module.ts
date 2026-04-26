@@ -1,6 +1,5 @@
 import { Module, Global } from '@nestjs/common';
 import { I18nService } from './i18n.service';
-import { LocaleMiddleware } from './locale.middleware';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { RedisModule } from '@/modules/redis/redis.module';
 

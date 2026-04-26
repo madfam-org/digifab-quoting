@@ -189,10 +189,12 @@ python -m uvicorn main:app --reload
 ### Root Causes of 404 on Vercel
 
 1. **Missing Environment Variables**
+
    - Ensure all required env vars are set in Vercel dashboard
    - Especially `NEXT_PUBLIC_API_URL`
 
 2. **API Not Deployed**
+
    - The API needs to be deployed separately
    - Vercel only deploys the Next.js frontend
 

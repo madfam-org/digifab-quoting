@@ -27,13 +27,13 @@ export class SentryService {
       dsn,
       environment,
       release,
-      
+
       // Performance monitoring
       tracesSampleRate: isProduction ? 0.1 : 1.0,
-      
+
       // Profiling
       profilesSampleRate: isProduction ? 0.01 : 0.1,
-      
+
       // Integrations
       integrations: [
         Sentry.httpIntegration(),
@@ -42,7 +42,7 @@ export class SentryService {
         Sentry.redisIntegration(),
         nodeProfilingIntegration(),
       ],
-      
+
       // Initial scope
       initialScope: {
         tags: {
@@ -51,33 +51,35 @@ export class SentryService {
           service: 'api',
         },
       },
-      
+
       // Error filtering
       beforeSend: (event, _hint) => {
         // Filter out expected errors
         if (event.exception?.values?.[0]?.type === 'ValidationException') {
           return null;
         }
-        
+
         // Sanitize sensitive data
         if (event.request) {
-          this.sanitizeRequestData(event.request as {
-            headers?: Record<string, string>;
-            query_string?: string;
-            data?: unknown;
-          });
+          this.sanitizeRequestData(
+            event.request as {
+              headers?: Record<string, string>;
+              query_string?: string;
+              data?: unknown;
+            },
+          );
         }
-        
+
         return event;
       },
-      
+
       // Breadcrumb filtering
       beforeBreadcrumb: (breadcrumb) => {
         // Filter out sensitive HTTP data
         if (breadcrumb.category === 'http' && breadcrumb.data?.url?.includes('/auth/')) {
           breadcrumb.data.url = '[Sanitized Auth URL]';
         }
-        
+
         return breadcrumb;
       },
     });
@@ -94,7 +96,7 @@ export class SentryService {
     // Remove sensitive headers
     if (request.headers) {
       const sensitiveHeaders = ['authorization', 'cookie', 'x-api-key', 'x-auth-token'];
-      sensitiveHeaders.forEach(header => {
+      sensitiveHeaders.forEach((header) => {
         if (request.headers && request.headers[header]) {
           request.headers[header] = '[Sanitized]';
         }
@@ -104,11 +106,15 @@ export class SentryService {
     // Remove sensitive query parameters
     if (request.query_string && typeof request.query_string === 'string') {
       const sensitiveParams = ['token', 'api_key', 'password', 'secret'];
-      sensitiveParams.forEach(param => {
-        if (request.query_string && typeof request.query_string === 'string' && request.query_string.includes(param)) {
+      sensitiveParams.forEach((param) => {
+        if (
+          request.query_string &&
+          typeof request.query_string === 'string' &&
+          request.query_string.includes(param)
+        ) {
           request.query_string = request.query_string.replace(
             new RegExp(`${param}=[^&]*`, 'gi'),
-            `${param}=[Sanitized]`
+            `${param}=[Sanitized]`,
           );
         }
       });
@@ -123,11 +129,11 @@ export class SentryService {
 
   private sanitizeObject(obj: unknown, sensitiveFields: string[]) {
     if (typeof obj !== 'object' || obj === null) return;
-    
+
     const objRecord = obj as Record<string, unknown>;
     for (const key in objRecord) {
       if (Object.prototype.hasOwnProperty.call(objRecord, key)) {
-        if (sensitiveFields.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
+        if (sensitiveFields.some((field) => key.toLowerCase().includes(field.toLowerCase()))) {
           objRecord[key] = '[Sanitized]';
         } else if (typeof objRecord[key] === 'object' && objRecord[key] !== null) {
           this.sanitizeObject(objRecord[key], sensitiveFields);
@@ -149,7 +155,11 @@ export class SentryService {
     });
   }
 
-  captureMessage(message: string, level: Sentry.SeverityLevel = 'info', context?: Record<string, unknown>) {
+  captureMessage(
+    message: string,
+    level: Sentry.SeverityLevel = 'info',
+    context?: Record<string, unknown>,
+  ) {
     if (!this.initialized) return;
 
     Sentry.withScope((scope) => {
@@ -163,7 +173,12 @@ export class SentryService {
     });
   }
 
-  addBreadcrumb(message: string, category?: string, level?: Sentry.SeverityLevel, data?: Record<string, unknown>) {
+  addBreadcrumb(
+    message: string,
+    category?: string,
+    level?: Sentry.SeverityLevel,
+    data?: Record<string, unknown>,
+  ) {
     if (!this.initialized) return;
 
     Sentry.addBreadcrumb({
@@ -229,7 +244,8 @@ export class SentryService {
 
   getErrorHandler() {
     if (!this.initialized) {
-      return (error: unknown, _req: unknown, _res: unknown, next: (error: unknown) => void) => next(error);
+      return (error: unknown, _req: unknown, _res: unknown, next: (error: unknown) => void) =>
+        next(error);
     }
 
     return (error: unknown, __req: unknown, __res: unknown, next: (error: unknown) => void) => {
@@ -248,7 +264,7 @@ export class SentryService {
   measureAsyncFunction<T extends (...args: unknown[]) => Promise<unknown>>(
     fn: T,
     name: string,
-    operation: string = 'function'
+    operation: string = 'function',
   ): T {
     return (async (...args: unknown[]) => {
       if (!this.initialized) {
@@ -256,7 +272,7 @@ export class SentryService {
       }
 
       const transaction = this.startTransaction(name, operation);
-      
+
       try {
         const result = await fn(...args);
         transaction?.setStatus('ok');
@@ -274,7 +290,7 @@ export class SentryService {
   measureFunction<T extends (...args: unknown[]) => unknown>(
     fn: T,
     name: string,
-    operation: string = 'function'
+    operation: string = 'function',
   ): T {
     return ((...args: unknown[]) => {
       if (!this.initialized) {
@@ -282,7 +298,7 @@ export class SentryService {
       }
 
       const transaction = this.startTransaction(name, operation);
-      
+
       try {
         const result = fn(...args);
         transaction?.setStatus('ok');
@@ -305,7 +321,7 @@ export class SentryService {
   // Flush all pending events
   async flush(timeout: number = 2000): Promise<boolean> {
     if (!this.initialized) return true;
-    
+
     try {
       return await Sentry.flush(timeout);
     } catch (error) {

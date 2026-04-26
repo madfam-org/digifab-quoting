@@ -283,18 +283,21 @@ sequenceDiagram
 ### Security Layers
 
 1. **Network Security:**
+
    - AWS VPC with private subnets
    - Security groups per service
    - WAF rules for common attacks
    - DDoS protection via CloudFront
 
 2. **Application Security:**
+
    - Input validation with Zod
    - SQL injection prevention (Prisma)
    - XSS protection headers
    - CORS whitelisting
 
 3. **Data Security:**
+
    - Encryption at rest (RDS, S3)
    - Encryption in transit (TLS 1.2+)
    - Key rotation via KMS
@@ -369,11 +372,13 @@ graph LR
 ### Scaling Strategy
 
 1. **Horizontal Scaling:**
+
    - ECS auto-scaling based on CPU/memory
    - Read replicas for database
    - Queue workers scale with depth
 
 2. **Vertical Scaling:**
+
    - RDS instance upgrades
    - Redis cluster mode
    - Larger ECS task definitions
@@ -461,11 +466,13 @@ Client → API → Database
 ### Backup Strategy
 
 1. **Database:**
+
    - Automated daily backups (7-day retention)
    - Point-in-time recovery (35 days)
    - Cross-region backup replication
 
 2. **Files:**
+
    - S3 versioning enabled
    - Lifecycle policies for archival
    - Cross-region replication
@@ -481,10 +488,12 @@ Client → API → Database
 **RPO (Recovery Point Objective): 1 hour**
 
 1. **Database Failure:**
+
    - Automatic failover to standby (2 min)
    - Manual restore from backup (2 hours)
 
 2. **Region Failure:**
+
    - DNS failover to DR region (5 min)
    - Restore from cross-region backups (4 hours)
 
@@ -514,11 +523,13 @@ npm run dev
 ### Testing Strategy
 
 1. **Unit Tests:**
+
    - Business logic isolation
    - Mock external dependencies
    - 80% coverage target
 
 2. **Integration Tests:**
+
    - API endpoint testing
    - Database operations
    - Queue processing
@@ -537,6 +548,7 @@ npm run dev
    ```
 
 2. **Release Process:**
+
    - Automated tests on PR
    - Manual QA on staging
    - Blue-green deployment
@@ -552,16 +564,19 @@ npm run dev
 ### Planned Features
 
 1. **Real-time Collaboration:**
+
    - WebSocket quote updates
    - Live pricing adjustments
    - Multi-user quote editing
 
 2. **Advanced Analytics:**
+
    - ML-based pricing optimization
    - Demand forecasting
    - Customer behavior analysis
 
 3. **Integration Hub:**
+
    - ERP system connectors
    - CAD software plugins
    - Shipping provider APIs
@@ -574,6 +589,7 @@ npm run dev
 ### Technical Debt
 
 1. **Current Limitations:**
+
    - Single region deployment
    - Limited webhook retry logic
    - No GraphQL API

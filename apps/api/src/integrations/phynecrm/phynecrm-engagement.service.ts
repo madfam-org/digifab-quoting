@@ -148,9 +148,6 @@ export class PhyneCrmEngagementService {
   // body. The timestamp header is already sent separately; signing
   // includes only the body so replay still needs the timestamp window.
   private sign(body: string): string {
-    return crypto
-      .createHmac('sha256', this.secret)
-      .update(body, 'utf-8')
-      .digest('hex');
+    return crypto.createHmac('sha256', this.secret).update(body, 'utf-8').digest('hex');
   }
 }

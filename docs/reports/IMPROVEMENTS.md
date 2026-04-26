@@ -5,6 +5,7 @@
 ### 1. Repository Pattern Implementation ✅
 
 - **Base Repository Interface** (`base-repository.interface.ts`)
+
   - Generic interface for all repositories
   - Pagination support with `PaginatedResult`
   - Transaction support
@@ -19,6 +20,7 @@
 ### 2. Service Refactoring ✅
 
 - **Quote Calculation Service** (`quote-calculation.service.ts`)
+
   - Extracted complex pricing logic from main service
   - Batch loading of materials and machines (N+1 query fix)
   - Proper transaction handling

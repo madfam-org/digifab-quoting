@@ -94,7 +94,7 @@ export enum Currency {
   CLP = 'CLP', // Chilean Peso
   COP = 'COP', // Colombian Peso
   PEN = 'PEN', // Peruvian Sol
-  
+
   // Europe
   EUR = 'EUR', // Euro
   GBP = 'GBP', // British Pound
@@ -103,7 +103,7 @@ export enum Currency {
   NOK = 'NOK', // Norwegian Krone
   DKK = 'DKK', // Danish Krone
   PLN = 'PLN', // Polish Zloty
-  
+
   // Asia Pacific
   CNY = 'CNY', // Chinese Yuan
   JPY = 'JPY', // Japanese Yen
@@ -115,7 +115,7 @@ export enum Currency {
   NZD = 'NZD', // New Zealand Dollar
   TWD = 'TWD', // Taiwan Dollar
   THB = 'THB', // Thai Baht
-  
+
   // Middle East & Africa
   AED = 'AED', // UAE Dirham
   SAR = 'SAR', // Saudi Riyal

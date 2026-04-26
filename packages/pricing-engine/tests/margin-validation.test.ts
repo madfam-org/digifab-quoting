@@ -174,14 +174,14 @@ describe('Margin Validation', () => {
       // Should calculate successfully with different margin floors
       expect(result.unitPrice.toNumber()).toBeGreaterThan(0);
       expect(result.costBreakdown.margin.toNumber()).toBeGreaterThan(0);
-      
+
       // Verify margin floor is respected
       const totalCost = result.costBreakdown.material
         .plus(result.costBreakdown.machine)
         .plus(result.costBreakdown.energy)
         .plus(result.costBreakdown.labor)
         .plus(result.costBreakdown.overhead);
-      
+
       const actualMarginPercent = result.costBreakdown.margin.div(totalCost).mul(100);
       expect(actualMarginPercent.toNumber()).toBeGreaterThanOrEqual(floor);
     });

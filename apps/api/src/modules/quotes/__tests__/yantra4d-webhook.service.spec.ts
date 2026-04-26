@@ -13,9 +13,7 @@ import {
 const API_URL = 'https://api.yantra4d.com';
 const WEBHOOK_SECRET = 'test-yantra4d-webhook-secret-256';
 
-function mockConfigService(
-  overrides: Record<string, unknown> = {},
-): Partial<ConfigService> {
+function mockConfigService(overrides: Record<string, unknown> = {}): Partial<ConfigService> {
   const defaults: Record<string, unknown> = {
     YANTRA4D_API_URL: API_URL,
     YANTRA4D_WEBHOOK_SECRET: WEBHOOK_SECRET,
@@ -29,9 +27,7 @@ function mockConfigService(
   };
 }
 
-function samplePayload(
-  overrides: Partial<Yantra4dWebhookPayload> = {},
-): Yantra4dWebhookPayload {
+function samplePayload(overrides: Partial<Yantra4dWebhookPayload> = {}): Yantra4dWebhookPayload {
   return {
     event_type: 'quote.completed',
     quote_id: 'quote-abc-123',
@@ -198,9 +194,7 @@ describe('Yantra4dWebhookService', () => {
         ],
       }).compile();
 
-      const disabledService = module.get<Yantra4dWebhookService>(
-        Yantra4dWebhookService,
-      );
+      const disabledService = module.get<Yantra4dWebhookService>(Yantra4dWebhookService);
       await disabledService.notify(samplePayload());
 
       expect(fetchSpy).not.toHaveBeenCalled();
@@ -217,9 +211,7 @@ describe('Yantra4dWebhookService', () => {
         ],
       }).compile();
 
-      const disabledService = module.get<Yantra4dWebhookService>(
-        Yantra4dWebhookService,
-      );
+      const disabledService = module.get<Yantra4dWebhookService>(Yantra4dWebhookService);
       await disabledService.notify(samplePayload());
 
       expect(fetchSpy).not.toHaveBeenCalled();
@@ -232,9 +224,7 @@ describe('Yantra4dWebhookService', () => {
     it('should not throw when fetch rejects (fire-and-forget)', async () => {
       fetchSpy.mockRejectedValueOnce(new Error('Connection refused'));
 
-      await expect(
-        service.notify(samplePayload()),
-      ).resolves.toBeUndefined();
+      await expect(service.notify(samplePayload())).resolves.toBeUndefined();
     });
 
     it('should not throw when fetch returns non-OK status', async () => {
@@ -244,17 +234,13 @@ describe('Yantra4dWebhookService', () => {
         text: jest.fn().mockResolvedValue('Bad Gateway'),
       } as unknown as Response);
 
-      await expect(
-        service.notify(samplePayload()),
-      ).resolves.toBeUndefined();
+      await expect(service.notify(samplePayload())).resolves.toBeUndefined();
     });
 
     it('should not throw on timeout/abort', async () => {
       fetchSpy.mockRejectedValueOnce(new DOMException('Aborted', 'AbortError'));
 
-      await expect(
-        service.notify(samplePayload()),
-      ).resolves.toBeUndefined();
+      await expect(service.notify(samplePayload())).resolves.toBeUndefined();
     });
   });
 

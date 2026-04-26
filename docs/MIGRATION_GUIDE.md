@@ -16,24 +16,27 @@ This guide covers the migration from the MADFAM branding to Cotiza Studio, inclu
 
 - Platform name: MADFAM → Cotiza Studio
 - Domain: madfam.io → cotiza.studio
-- Package scope: @madfam/* → @cotiza/*
-- Docker images: madfam-* → cotiza-*
-- AWS resources: madfam-* → cotiza-*
+- Package scope: @madfam/_ → @cotiza/_
+- Docker images: madfam-_ → cotiza-_
+- AWS resources: madfam-_ → cotiza-_
 
 ### 2. New Features
 
 #### Multilingual Support
+
 - Spanish (default), English, Portuguese (Brazil)
 - Automatic locale detection
 - User language preferences
 - Localized emails and PDFs
 
 #### Enhanced Guest Experience
+
 - No registration required for quotes
 - Guest-to-user conversion flow
 - Session persistence
 
 #### DIY vs Professional Tools
+
 - Cost comparison calculator
 - Time investment analysis
 - Skill requirement assessment
@@ -56,7 +59,7 @@ pg_restore --list backup_*.sql | head -20
 
 ```sql
 -- Add user language preference
-ALTER TABLE users 
+ALTER TABLE users
 ADD COLUMN preferred_locale VARCHAR(10) DEFAULT 'es';
 
 -- Create translations table
@@ -91,7 +94,7 @@ CREATE INDEX idx_guest_sessions_token ON guest_sessions(session_token);
 CREATE INDEX idx_guest_sessions_email ON guest_sessions(email);
 
 -- Add quote origin tracking
-ALTER TABLE quotes 
+ALTER TABLE quotes
 ADD COLUMN origin VARCHAR(50) DEFAULT 'authenticated',
 ADD COLUMN guest_session_id VARCHAR(36);
 ```
@@ -167,8 +170,8 @@ aws secretsmanager update-secret \
 ```json
 // package.json
 {
-  "name": "@cotiza/api",  // was @madfam/api
-  "version": "2.0.0",
+  "name": "@cotiza/api", // was @madfam/api
+  "version": "2.0.0"
   // ...
 }
 ```
@@ -186,7 +189,7 @@ find . -type f -name "*.ts" -o -name "*.tsx" | \
 ```typescript
 // config/constants.ts
 export const APP_NAME = 'Cotiza Studio'; // was 'MADFAM'
-export const DOMAIN = 'cotiza.studio';   // was 'madfam.io'
+export const DOMAIN = 'cotiza.studio'; // was 'madfam.io'
 export const SUPPORT_EMAIL = 'support@cotiza.studio';
 ```
 
@@ -212,14 +215,16 @@ docker push $ECR_URL/cotiza-api:v2.0.0
 // task-definition.json
 {
   "family": "cotiza-api",
-  "containerDefinitions": [{
-    "name": "cotiza-api",
-    "image": "${ECR_URL}/cotiza-api:v2.0.0",
-    "environment": [
-      {"name": "APP_NAME", "value": "Cotiza Studio"},
-      {"name": "DEFAULT_LOCALE", "value": "es"}
-    ]
-  }]
+  "containerDefinitions": [
+    {
+      "name": "cotiza-api",
+      "image": "${ECR_URL}/cotiza-api:v2.0.0",
+      "environment": [
+        { "name": "APP_NAME", "value": "Cotiza Studio" },
+        { "name": "DEFAULT_LOCALE", "value": "es" }
+      ]
+    }
+  ]
 }
 ```
 
@@ -305,7 +310,7 @@ aws cloudfront update-distribution \
 
 ```sql
 -- Set default language based on region
-UPDATE users 
+UPDATE users
 SET preferred_locale = CASE
   WHEN country = 'BR' THEN 'pt-BR'
   WHEN country IN ('US', 'CA') THEN 'en'
@@ -407,11 +412,13 @@ aws rds restore-db-instance-from-db-snapshot \
 ### Monitoring
 
 1. **Check Error Rates**
+
    - API 4xx/5xx responses
    - JavaScript errors in frontend
    - Failed payment transactions
 
 2. **Performance Metrics**
+
    - API response times
    - Database query performance
    - CDN cache hit rates
@@ -453,12 +460,12 @@ redis-cli GET "i18n:en:common"
 
 ```sql
 -- Check session table
-SELECT * FROM guest_sessions 
+SELECT * FROM guest_sessions
 WHERE created_at > NOW() - INTERVAL '1 hour'
 ORDER BY created_at DESC;
 
 -- Verify token generation
-SELECT COUNT(*) FROM guest_sessions 
+SELECT COUNT(*) FROM guest_sessions
 WHERE session_token IS NULL;
 ```
 
@@ -471,8 +478,8 @@ curl -X POST https://api.cotiza.studio/test/email \
   -d '{"locale": "en", "template": "welcome"}'
 
 # Check user preferences
-SELECT email, preferred_locale 
-FROM users 
+SELECT email, preferred_locale
+FROM users
 WHERE preferred_locale != 'es';
 ```
 
@@ -489,21 +496,21 @@ For migration assistance:
 
 ### A. Environment Variable Mapping
 
-| Old Variable | New Variable | Notes |
-|-------------|--------------|-------|
-| MADFAM_API_URL | COTIZA_API_URL | Update all references |
-| DEFAULT_CURRENCY | DEFAULT_CURRENCY | No change |
-| - | DEFAULT_LOCALE | New, defaults to 'es' |
-| - | SUPPORTED_LOCALES | New, 'es,en,pt-BR' |
-| S3_BUCKET | S3_BUCKET | Update bucket name |
+| Old Variable     | New Variable      | Notes                 |
+| ---------------- | ----------------- | --------------------- |
+| MADFAM_API_URL   | COTIZA_API_URL    | Update all references |
+| DEFAULT_CURRENCY | DEFAULT_CURRENCY  | No change             |
+| -                | DEFAULT_LOCALE    | New, defaults to 'es' |
+| -                | SUPPORTED_LOCALES | New, 'es,en,pt-BR'    |
+| S3_BUCKET        | S3_BUCKET         | Update bucket name    |
 
 ### B. API Endpoint Changes
 
 | Old Endpoint | New Endpoint | Changes |
 |-------------|--------------|---------||
-| /api/v1/* | /api/v1/* | No change |
+| /api/v1/_ | /api/v1/_ | No change |
 | - | /api/v1/user/preferences | New endpoint |
-| - | /api/v1/guest/* | New guest endpoints |
+| - | /api/v1/guest/\* | New guest endpoints |
 
 ### C. Database Schema Changes
 

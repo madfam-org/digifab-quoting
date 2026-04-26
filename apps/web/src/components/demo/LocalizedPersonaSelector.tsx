@@ -34,21 +34,21 @@ const PERSONAS: Persona[] = [
       'persona.diyMaker.features.timeCalc',
       'persona.diyMaker.features.skillAssess',
       'persona.diyMaker.features.sourcing',
-      'persona.diyMaker.features.tutorials'
+      'persona.diyMaker.features.tutorials',
     ],
     benefitsKeys: [
       'persona.diyMaker.benefits.savings',
       'persona.diyMaker.benefits.skills',
       'persona.diyMaker.benefits.decisions',
-      'persona.diyMaker.benefits.community'
+      'persona.diyMaker.benefits.community',
     ],
     ctaKey: 'persona.diyMaker.cta',
     journeyKeys: {
       step1: 'persona.diyMaker.journey.step1',
       step2: 'persona.diyMaker.journey.step2',
       step3: 'persona.diyMaker.journey.step3',
-      step4: 'persona.diyMaker.journey.step4'
-    }
+      step4: 'persona.diyMaker.journey.step4',
+    },
   },
   {
     id: 'shop-owner',
@@ -61,21 +61,21 @@ const PERSONAS: Persona[] = [
       'persona.shopOwner.features.crm',
       'persona.shopOwner.features.margins',
       'persona.shopOwner.features.bulk',
-      'persona.shopOwner.features.whiteLabel'
+      'persona.shopOwner.features.whiteLabel',
     ],
     benefitsKeys: [
       'persona.shopOwner.benefits.faster',
       'persona.shopOwner.benefits.revenue',
       'persona.shopOwner.benefits.time',
-      'persona.shopOwner.benefits.professional'
+      'persona.shopOwner.benefits.professional',
     ],
     ctaKey: 'persona.shopOwner.cta',
     journeyKeys: {
       step1: 'persona.shopOwner.journey.step1',
       step2: 'persona.shopOwner.journey.step2',
       step3: 'persona.shopOwner.journey.step3',
-      step4: 'persona.shopOwner.journey.step4'
-    }
+      step4: 'persona.shopOwner.journey.step4',
+    },
   },
   {
     id: 'product-designer',
@@ -88,21 +88,21 @@ const PERSONAS: Persona[] = [
       'persona.designer.features.materials',
       'persona.designer.features.optimization',
       'persona.designer.features.validation',
-      'persona.designer.features.cad'
+      'persona.designer.features.cad',
     ],
     benefitsKeys: [
       'persona.designer.benefits.iterations',
       'persona.designer.benefits.costs',
       'persona.designer.benefits.validate',
-      'persona.designer.benefits.practices'
+      'persona.designer.benefits.practices',
     ],
     ctaKey: 'persona.designer.cta',
     journeyKeys: {
       step1: 'persona.designer.journey.step1',
       step2: 'persona.designer.journey.step2',
       step3: 'persona.designer.journey.step3',
-      step4: 'persona.designer.journey.step4'
-    }
+      step4: 'persona.designer.journey.step4',
+    },
   },
   {
     id: 'procurement',
@@ -115,21 +115,21 @@ const PERSONAS: Persona[] = [
       'persona.procurement.features.intelligence',
       'persona.procurement.features.bulk',
       'persona.procurement.features.analytics',
-      'persona.procurement.features.trends'
+      'persona.procurement.features.trends',
     ],
     benefitsKeys: [
       'persona.procurement.benefits.negotiate',
       'persona.procurement.benefits.time',
       'persona.procurement.benefits.intelligence',
-      'persona.procurement.benefits.tracking'
+      'persona.procurement.benefits.tracking',
     ],
     ctaKey: 'persona.procurement.cta',
     journeyKeys: {
       step1: 'persona.procurement.journey.step1',
       step2: 'persona.procurement.journey.step2',
       step3: 'persona.procurement.journey.step3',
-      step4: 'persona.procurement.journey.step4'
-    }
+      step4: 'persona.procurement.journey.step4',
+    },
   },
   {
     id: 'educator',
@@ -142,28 +142,27 @@ const PERSONAS: Persona[] = [
       'persona.educator.features.data',
       'persona.educator.features.projects',
       'persona.educator.features.collaboration',
-      'persona.educator.features.curriculum'
+      'persona.educator.features.curriculum',
     ],
     benefitsKeys: [
       'persona.educator.benefits.realData',
       'persona.educator.benefits.engage',
       'persona.educator.benefits.bridge',
-      'persona.educator.benefits.prepare'
+      'persona.educator.benefits.prepare',
     ],
     ctaKey: 'persona.educator.cta',
     journeyKeys: {
       step1: 'persona.educator.journey.step1',
       step2: 'persona.educator.journey.step2',
       step3: 'persona.educator.journey.step3',
-      step4: 'persona.educator.journey.step4'
-    }
-  }
+      step4: 'persona.educator.journey.step4',
+    },
+  },
 ];
 
 export function LocalizedPersonaSelector() {
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
   const { t } = useTranslation('personas');
-
 
   return (
     <div className="space-y-8">
@@ -182,10 +181,14 @@ export function LocalizedPersonaSelector() {
             layout
           >
             {/* Gradient Background */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${persona.color} opacity-5 rounded-2xl`} />
-            
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${persona.color} opacity-5 rounded-2xl`}
+            />
+
             {/* Icon */}
-            <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${persona.color} text-white mb-4`}>
+            <div
+              className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${persona.color} text-white mb-4`}
+            >
               {persona.icon}
             </div>
 
@@ -204,11 +207,13 @@ export function LocalizedPersonaSelector() {
             </div>
 
             {/* CTA */}
-            <button className={`w-full py-2 px-4 rounded-lg font-semibold transition-all ${
-              selectedPersona === persona.id
-                ? `bg-gradient-to-r ${persona.color} text-white`
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}>
+            <button
+              className={`w-full py-2 px-4 rounded-lg font-semibold transition-all ${
+                selectedPersona === persona.id
+                  ? `bg-gradient-to-r ${persona.color} text-white`
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
               {t(persona.ctaKey)}
             </button>
 
@@ -235,7 +240,7 @@ export function LocalizedPersonaSelector() {
           className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border border-gray-200"
         >
           {(() => {
-            const persona = PERSONAS.find(p => p.id === selectedPersona);
+            const persona = PERSONAS.find((p) => p.id === selectedPersona);
             if (!persona) return null;
 
             return (
@@ -243,16 +248,20 @@ export function LocalizedPersonaSelector() {
                 {/* Journey Steps */}
                 <div>
                   <h4 className="text-2xl font-bold mb-6 flex items-center">
-                    <span className={`p-2 rounded-lg bg-gradient-to-r ${persona.color} text-white mr-3`}>
+                    <span
+                      className={`p-2 rounded-lg bg-gradient-to-r ${persona.color} text-white mr-3`}
+                    >
                       {persona.icon}
                     </span>
                     Tu Camino
                   </h4>
-                  
+
                   <div className="space-y-4">
                     {Object.entries(persona.journeyKeys).map(([step, key], idx) => (
                       <div key={step} className="flex items-start space-x-4">
-                        <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${persona.color} text-white flex items-center justify-center font-semibold text-sm flex-shrink-0`}>
+                        <div
+                          className={`w-8 h-8 rounded-full bg-gradient-to-r ${persona.color} text-white flex items-center justify-center font-semibold text-sm flex-shrink-0`}
+                        >
                           {idx + 1}
                         </div>
                         <div>
@@ -266,14 +275,16 @@ export function LocalizedPersonaSelector() {
                 {/* Features & Benefits */}
                 <div>
                   <h4 className="text-2xl font-bold mb-6">Lo Que Obtienes</h4>
-                  
+
                   <div className="space-y-6">
                     <div>
                       <h5 className="font-semibold mb-3 text-gray-800">Características Clave</h5>
                       <div className="grid grid-cols-1 gap-2">
                         {persona.featuresKeys.map((featureKey, idx) => (
                           <div key={idx} className="flex items-center space-x-3">
-                            <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${persona.color}`} />
+                            <div
+                              className={`w-2 h-2 rounded-full bg-gradient-to-r ${persona.color}`}
+                            />
                             <span className="text-sm text-gray-700">{t(featureKey)}</span>
                           </div>
                         ))}
@@ -295,7 +306,9 @@ export function LocalizedPersonaSelector() {
 
                   {/* Action Button */}
                   <div className="mt-8">
-                    <button className={`w-full py-4 px-6 rounded-xl font-bold text-lg text-white bg-gradient-to-r ${persona.color} hover:scale-105 transition-transform shadow-lg`}>
+                    <button
+                      className={`w-full py-4 px-6 rounded-xl font-bold text-lg text-white bg-gradient-to-r ${persona.color} hover:scale-105 transition-transform shadow-lg`}
+                    >
                       {t(persona.ctaKey)} - Prueba Gratis
                     </button>
                     <p className="text-center text-sm text-gray-500 mt-2">

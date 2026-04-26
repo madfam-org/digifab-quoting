@@ -119,61 +119,47 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 An unexpected error occurred. This has been automatically reported to our team.
               </CardDescription>
             </CardHeader>
-            
+
             <CardContent className="space-y-4">
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="bg-gray-100 p-3 rounded text-sm">
                   <summary className="cursor-pointer font-medium">Error Details</summary>
-                  <pre className="mt-2 text-xs overflow-auto">
-                    {this.state.error.stack}
-                  </pre>
+                  <pre className="mt-2 text-xs overflow-auto">{this.state.error.stack}</pre>
                 </details>
               )}
-              
+
               {this.state.errorId && (
-                <p className="text-xs text-gray-500 text-center">
-                  Error ID: {this.state.errorId}
-                </p>
+                <p className="text-xs text-gray-500 text-center">Error ID: {this.state.errorId}</p>
               )}
-              
+
               <div className="flex flex-col space-y-2">
-                <Button 
-                  onClick={this.handleRetry} 
-                  className="w-full"
-                  variant="default"
-                >
+                <Button onClick={this.handleRetry} className="w-full" variant="default">
                   Try Again
                 </Button>
-                
+
                 {this.props.showReloadButton !== false && (
-                  <Button 
-                    onClick={this.handleReload} 
-                    variant="outline" 
+                  <Button
+                    onClick={this.handleReload}
+                    variant="outline"
                     className="w-full"
                     disabled={this.state.isReloading}
                   >
-                    <RefreshCw className={`w-4 h-4 mr-2 ${this.state.isReloading ? 'animate-spin' : ''}`} />
+                    <RefreshCw
+                      className={`w-4 h-4 mr-2 ${this.state.isReloading ? 'animate-spin' : ''}`}
+                    />
                     {this.state.isReloading ? 'Reloading...' : 'Reload Page'}
                   </Button>
                 )}
-                
+
                 {this.props.showHomeButton !== false && (
-                  <Button 
-                    onClick={this.handleGoHome} 
-                    variant="outline" 
-                    className="w-full"
-                  >
+                  <Button onClick={this.handleGoHome} variant="outline" className="w-full">
                     <Home className="w-4 h-4 mr-2" />
                     Go Home
                   </Button>
                 )}
-                
+
                 {this.props.showContactButton !== false && (
-                  <Button 
-                    onClick={this.handleContact} 
-                    variant="ghost" 
-                    className="w-full"
-                  >
+                  <Button onClick={this.handleContact} variant="ghost" className="w-full">
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Contact Support
                   </Button>
@@ -192,7 +178,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 // HOC wrapper for easier use
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>,
 ) {
   return function WrappedComponent(props: P) {
     return (

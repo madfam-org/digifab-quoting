@@ -1,10 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import {
-  DhanamMilestoneContext,
-  DhanamMilestoneService,
-} from '../dhanam-milestone.service';
+import { DhanamMilestoneContext, DhanamMilestoneService } from '../dhanam-milestone.service';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -13,9 +10,7 @@ import {
 const API_URL = 'https://dhanam.madfam.io';
 const SECRET = 'test-dhanam-billing-secret-256';
 
-function mockConfigService(
-  overrides: Record<string, unknown> = {},
-): Partial<ConfigService> {
+function mockConfigService(overrides: Record<string, unknown> = {}): Partial<ConfigService> {
   const defaults: Record<string, unknown> = {
     DHANAM_API_URL: API_URL,
     DHANAM_BILLING_SECRET: SECRET,
@@ -29,9 +24,7 @@ function mockConfigService(
   };
 }
 
-function sampleContext(
-  overrides: Partial<DhanamMilestoneContext> = {},
-): DhanamMilestoneContext {
+function sampleContext(overrides: Partial<DhanamMilestoneContext> = {}): DhanamMilestoneContext {
   return {
     tenantId: 'tenant-madfam',
     quoteId: 'quote-abc',
@@ -176,27 +169,21 @@ describe('DhanamMilestoneService', () => {
         status: 409,
         text: jest.fn().mockResolvedValue('duplicate'),
       } as unknown as Response);
-      await expect(
-        service.createInvoicesForMilestones(sampleContext()),
-      ).resolves.toBeUndefined();
+      await expect(service.createInvoicesForMilestones(sampleContext())).resolves.toBeUndefined();
     });
 
     it('does not throw on fetch rejection (fire-and-forget)', async () => {
       fetchSpy.mockRejectedValueOnce(new Error('ECONNREFUSED'));
-      await expect(
-        service.createInvoicesForMilestones(sampleContext()),
-      ).resolves.toBeUndefined();
+      await expect(service.createInvoicesForMilestones(sampleContext())).resolves.toBeUndefined();
     });
 
     it('one failing milestone does not prevent the others from posting', async () => {
       // First call rejects, second resolves ok.
-      fetchSpy
-        .mockRejectedValueOnce(new Error('boom'))
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 201,
-          text: jest.fn().mockResolvedValue('Created'),
-        } as unknown as Response);
+      fetchSpy.mockRejectedValueOnce(new Error('boom')).mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        text: jest.fn().mockResolvedValue('Created'),
+      } as unknown as Response);
 
       await service.createInvoicesForMilestones(sampleContext());
       expect(fetchSpy).toHaveBeenCalledTimes(2);
@@ -223,9 +210,7 @@ describe('DhanamMilestoneService', () => {
     it('omits order_id when ctx.orderId is absent (backward compat for pre-order flows)', async () => {
       const ctx = sampleContext({ orderId: undefined });
       await service.createInvoicesForMilestones(ctx);
-      const body = JSON.parse(
-        (fetchSpy.mock.calls[0][1] as RequestInit).body as string,
-      );
+      const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
       // undefined fields survive JSON.stringify as missing keys; assert shape.
       expect(body.metadata.order_id).toBeUndefined();
       // But the other ecosystem keys are still there.

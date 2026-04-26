@@ -89,10 +89,7 @@ export class EngagementsService {
    * QuotesService when creating a quote with `engagementId` that
    * doesn't yet exist in Cotiza.
    */
-  async ensureProjection(
-    tenantId: string,
-    phynecrmEngagementId: string,
-  ): Promise<string> {
+  async ensureProjection(tenantId: string, phynecrmEngagementId: string): Promise<string> {
     const existing = await this.prisma.engagement.findUnique({
       where: { phynecrmEngagementId },
       select: { id: true, tenantId: true },

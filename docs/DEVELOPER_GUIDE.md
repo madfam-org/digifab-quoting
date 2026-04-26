@@ -60,21 +60,8 @@ npm run test:routes
 
 ```typescript
 // apps/api/src/modules/products/products.controller.ts
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Param, 
-  UseGuards,
-  UsePipes
-} from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse,
-  ApiBearerAuth 
-} from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, UseGuards, UsePipes } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/auth/guards/roles.guard';
 import { Roles } from '@/auth/decorators/roles.decorator';
@@ -126,9 +113,9 @@ export class CreateProductDto {
   @Min(0)
   price: number;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Product category',
-    enum: ['3D_PRINT', 'CNC', 'LASER'] 
+    enum: ['3D_PRINT', 'CNC', 'LASER'],
   })
   @IsEnum(['3D_PRINT', 'CNC', 'LASER'])
   category: string;
@@ -148,17 +135,17 @@ import { CreateProductDto } from './dto/create-product.dto';
 export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly cache: CacheService
+    private readonly cache: CacheService,
   ) {}
 
   async create(dto: CreateProductDto) {
     const product = await this.prisma.product.create({
-      data: dto
+      data: dto,
     });
-    
+
     // Invalidate cache
     await this.cache.del('products:*');
-    
+
     return product;
   }
 
@@ -166,18 +153,18 @@ export class ProductsService {
     // Check cache first
     const cached = await this.cache.get(`product:${id}`);
     if (cached) return cached;
-    
+
     const product = await this.prisma.product.findUnique({
-      where: { id }
+      where: { id },
     });
-    
+
     if (!product) {
       throw new NotFoundException('Product not found');
     }
-    
+
     // Cache for 5 minutes
     await this.cache.set(`product:${id}`, product, 300);
-    
+
     return product;
   }
 }
@@ -194,7 +181,7 @@ import { ProductsService } from './products.service';
 @Module({
   controllers: [ProductsController],
   providers: [ProductsService],
-  exports: [ProductsService]
+  exports: [ProductsService],
 })
 export class ProductsModule {}
 
@@ -204,8 +191,8 @@ import { ProductsModule } from './modules/products/products.module';
 @Module({
   imports: [
     // ... other modules
-    ProductsModule
-  ]
+    ProductsModule,
+  ],
 })
 export class AppModule {}
 ```
@@ -228,11 +215,11 @@ export const metadata: Metadata = {
 
 export default async function ProductsPage() {
   const session = await getServerSession(authOptions);
-  
+
   if (!session) {
     redirect('/auth/login');
   }
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Products</h1>
@@ -310,7 +297,7 @@ export interface Product {
 export const productsApi = {
   async list(params?: { page?: number; limit?: number }) {
     const response = await apiClient.get<{ data: Product[] }>('/products', {
-      params
+      params,
     });
     return response.data;
   },
@@ -323,7 +310,7 @@ export const productsApi = {
   async create(data: Omit<Product, 'id'>) {
     const response = await apiClient.post<Product>('/products', data);
     return response.data;
-  }
+  },
 };
 ```
 
@@ -342,14 +329,14 @@ export class ProtectedController {
 // Frontend: Protect pages with middleware
 export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request });
-  
+
   if (!token && request.nextUrl.pathname.startsWith('/protected')) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 }
 
 export const config = {
-  matcher: ['/protected/:path*']
+  matcher: ['/protected/:path*'],
 };
 ```
 
@@ -367,11 +354,11 @@ async adminAction() {
 // Frontend: Role check in component
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
-  
+
   if (session?.user?.role !== 'admin') {
     return <AccessDenied />;
   }
-  
+
   return <AdminDashboard />;
 }
 ```
@@ -419,7 +406,7 @@ describe('ProductsController', () => {
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [ProductsModule]
+      imports: [ProductsModule],
     }).compile();
 
     app = moduleRef.createNestApplication();
@@ -444,9 +431,7 @@ describe('ProductsController', () => {
     });
 
     it('should reject unauthorized requests', async () => {
-      await request(app.getHttpServer())
-        .get('/products')
-        .expect(401);
+      await request(app.getHttpServer()).get('/products').expect(401);
     });
   });
 
@@ -455,7 +440,7 @@ describe('ProductsController', () => {
       const productData = {
         name: 'Test Product',
         price: 99.99,
-        category: '3D_PRINT'
+        category: '3D_PRINT',
       };
 
       const response = await request(app.getHttpServer())
@@ -472,7 +457,7 @@ describe('ProductsController', () => {
       const invalidData = {
         name: '', // Invalid: empty
         price: -10, // Invalid: negative
-        category: 'INVALID' // Invalid: not in enum
+        category: 'INVALID', // Invalid: not in enum
       };
 
       const response = await request(app.getHttpServer())
@@ -505,21 +490,21 @@ jest.mock('@/lib/api/products');
 
 describe('ProductsPage', () => {
   const mockPush = jest.fn();
-  
+
   beforeEach(() => {
     (useRouter as jest.Mock).mockReturnValue({
-      push: mockPush
+      push: mockPush,
     });
   });
 
   it('should render products list', async () => {
     const mockProducts = [
       { id: '1', name: 'Product 1', price: 99.99, category: '3D_PRINT' },
-      { id: '2', name: 'Product 2', price: 149.99, category: 'CNC' }
+      { id: '2', name: 'Product 2', price: 149.99, category: 'CNC' },
     ];
 
     (productsApi.list as jest.Mock).mockResolvedValue({
-      data: mockProducts
+      data: mockProducts,
     });
 
     render(await ProductsPage());
@@ -531,9 +516,7 @@ describe('ProductsPage', () => {
   });
 
   it('should handle errors gracefully', async () => {
-    (productsApi.list as jest.Mock).mockRejectedValue(
-      new Error('Failed to fetch products')
-    );
+    (productsApi.list as jest.Mock).mockRejectedValue(new Error('Failed to fetch products'));
 
     render(await ProductsPage());
 
@@ -563,22 +546,22 @@ test.describe('Products Flow', () => {
   test('should navigate to products page', async ({ page }) => {
     await page.goto('/products');
     await expect(page).toHaveTitle(/Products/);
-    
+
     // Check if products are loaded
     await expect(page.locator('.product-card')).toHaveCount(6);
   });
 
   test('should create new product', async ({ page }) => {
     await page.goto('/products/new');
-    
+
     // Fill form
     await page.fill('[name="name"]', 'Test Product');
     await page.fill('[name="price"]', '99.99');
     await page.selectOption('[name="category"]', '3D_PRINT');
-    
+
     // Submit
     await page.click('[type="submit"]');
-    
+
     // Should redirect to product detail
     await expect(page).toHaveURL(/\/products\/[\w-]+/);
     await expect(page.locator('h1')).toContainText('Test Product');
@@ -586,10 +569,10 @@ test.describe('Products Flow', () => {
 
   test('should handle validation errors', async ({ page }) => {
     await page.goto('/products/new');
-    
+
     // Submit empty form
     await page.click('[type="submit"]');
-    
+
     // Check for validation messages
     await expect(page.locator('.error-message')).toContainText('Name is required');
     await expect(page.locator('.error-message')).toContainText('Price is required');
@@ -670,7 +653,7 @@ async findOne(
     acc[field] = true;
     return acc;
   }, {});
-  
+
   return this.prisma.product.findUnique({
     where: { id },
     select: select || undefined
@@ -694,10 +677,10 @@ import { Logger } from '@nestjs/common';
 @Injectable()
 export class ProductsService {
   private readonly logger = new Logger(ProductsService.name);
-  
+
   async create(dto: CreateProductDto) {
     this.logger.debug(`Creating product: ${JSON.stringify(dto)}`);
-    
+
     try {
       const product = await this.prisma.product.create({ data: dto });
       this.logger.log(`Product created: ${product.id}`);
@@ -739,12 +722,12 @@ export class PerformanceInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const start = Date.now();
     const request = context.switchToHttp().getRequest();
-    
+
     return next.handle().pipe(
       tap(() => {
         const duration = Date.now() - start;
         console.log(`${request.method} ${request.url} - ${duration}ms`);
-      })
+      }),
     );
   }
 }
@@ -796,14 +779,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    
+
     const error: ApiError = {
       code: 'INTERNAL_ERROR',
       message: 'An unexpected error occurred',
       timestamp: new Date().toISOString(),
-      path: request.url
+      path: request.url,
     };
-    
+
     response.status(500).json({ error });
   }
 }
@@ -813,21 +796,21 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
 ```typescript
 // Always document your routes
-@ApiOperation({ 
+@ApiOperation({
   summary: 'Create a new product',
   description: 'Creates a new product with the provided details'
 })
-@ApiBody({ 
+@ApiBody({
   type: CreateProductDto,
   description: 'Product creation data'
 })
-@ApiResponse({ 
-  status: 201, 
+@ApiResponse({
+  status: 201,
   description: 'Product created successfully',
   type: Product
 })
-@ApiResponse({ 
-  status: 400, 
+@ApiResponse({
+  status: 400,
   description: 'Invalid input data'
 })
 @Post()
@@ -842,20 +825,20 @@ export class CreateProductDto {
   @IsString()
   @MinLength(3)
   @MaxLength(100)
-  @ApiProperty({ 
-    minLength: 3, 
+  @ApiProperty({
+    minLength: 3,
     maxLength: 100,
-    example: 'Carbon Fiber Part'
+    example: 'Carbon Fiber Part',
   })
   name: string;
 
   @IsNumber()
   @Min(0)
   @Max(999999)
-  @ApiProperty({ 
-    minimum: 0, 
+  @ApiProperty({
+    minimum: 0,
     maximum: 999999,
-    example: 99.99
+    example: 99.99,
   })
   price: number;
 }
@@ -878,21 +861,25 @@ npm run test:cov
 ### Common Issues
 
 1. **Route Not Found (404)**
+
    - Check route registration in module
    - Verify path spelling and parameters
    - Check middleware order
 
 2. **Authentication Failures (401)**
+
    - Verify token is included in headers
    - Check token expiration
    - Validate auth guard configuration
 
 3. **Permission Denied (403)**
+
    - Check role requirements
    - Verify user has required role
    - Check tenant context
 
 4. **Validation Errors (400)**
+
    - Review DTO validation rules
    - Check request body format
    - Validate data types
@@ -924,4 +911,4 @@ npm run validate:openapi
 
 ---
 
-*Developer Guide Version: 1.0.0 | Last Updated: 2025-01-26*
+_Developer Guide Version: 1.0.0 | Last Updated: 2025-01-26_

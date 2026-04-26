@@ -230,7 +230,10 @@ export class CacheService {
   /**
    * Get cached quote calculation
    */
-  async getCachedQuoteCalculation(fileHash: string, configuration: QuoteConfiguration): Promise<QuoteCalculationResult | null> {
+  async getCachedQuoteCalculation(
+    fileHash: string,
+    configuration: QuoteConfiguration,
+  ): Promise<QuoteCalculationResult | null> {
     const key = this.generateQuoteKey(fileHash, configuration);
     return await this.redisService.get<QuoteCalculationResult>(key);
   }

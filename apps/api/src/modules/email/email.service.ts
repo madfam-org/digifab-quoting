@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import * as aws from 'aws-sdk';
 import { I18nService, Locale } from '../i18n/i18n.service';
 import { PrismaService } from '@/prisma/prisma.service';
 
@@ -65,15 +66,17 @@ export class EmailService {
       });
     } else if (emailProvider === 'ses') {
       // AWS SES configuration
-      const aws = require('aws-sdk');
       aws.config.update({
         accessKeyId: this.config.get('AWS_ACCESS_KEY_ID'),
         secretAccessKey: this.config.get('AWS_SECRET_ACCESS_KEY'),
         region: this.config.get('AWS_REGION', 'us-east-1'),
       });
+      // Cast at the lib boundary: nodemailer's SES option is typed against
+      // its own bundled aws-sdk shape, which drifts from the standalone
+      // aws-sdk package's SES instance type.
       this.transporter = nodemailer.createTransport({
         SES: new aws.SES({ apiVersion: '2010-12-01' }),
-      });
+      } as nodemailer.TransportOptions);
     } else {
       // Default SMTP configuration
       this.transporter = nodemailer.createTransport({
