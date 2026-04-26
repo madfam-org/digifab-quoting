@@ -81,7 +81,7 @@ curl -X POST http://localhost:4000/auth/login \
 | PATCH  | `/quotes/:id`           | Update quote      | Bearer | Owner/Admin | Standard   | Invalidate |
 | POST   | `/quotes/:id/items`     | Add quote item    | Bearer | Owner/Admin | 50/hour    | Invalidate |
 | POST   | `/quotes/:id/calculate` | Calculate pricing | Bearer | Owner/Admin | 100/hour   | 1min       |
-| POST   | `/quotes/:id/approve`   | Approve quote     | Bearer | Owner       | 10/hour    | Invalidate |
+| POST   | `/quotes/:id/accept`    | Accept quote, mint Dhanam checkout URL | Bearer | Owner | 10/hour | Invalidate |
 | POST   | `/quotes/:id/cancel`    | Cancel quote      | Bearer | Owner/Admin | 10/hour    | Invalidate |
 | GET    | `/quotes/:id/pdf`       | Generate PDF      | Bearer | Owner/Admin | 20/hour    | 24hr       |
 

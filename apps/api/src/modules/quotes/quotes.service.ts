@@ -33,6 +33,9 @@ import {
   PravaraJobItem,
 } from '../../integrations/pravara/pravara-dispatch.service';
 import { EngagementsService } from '../engagements/engagements.service';
+import { ConfigService } from '@nestjs/config';
+import { JanuaBillingService } from '../billing/services/janua-billing.service';
+import { DhanamRelayService } from '../billing/services/dhanam-relay.service';
 
 @Injectable()
 export class QuotesService {
@@ -50,6 +53,9 @@ export class QuotesService {
     private dhanamMilestone: DhanamMilestoneService,
     private pravaraDispatch: PravaraDispatchService,
     private engagements: EngagementsService,
+    private januaBilling: JanuaBillingService,
+    private dhanamRelay: DhanamRelayService,
+    private configService: ConfigService,
   ) {}
 
   async create(tenantId: string, customerId: string, dto: CreateQuoteDto): Promise<PrismaQuote> {
@@ -456,7 +462,7 @@ export class QuotesService {
     tenantId: string,
     quoteId: string,
     customerId: string,
-  ): Promise<{ quote: PrismaQuote; sessionId?: string; paymentUrl?: string }> {
+  ): Promise<{ quote: PrismaQuote; sessionId?: string; checkoutUrl?: string; paymentUrl?: string }> {
     const quote = await this.findOne(tenantId, quoteId);
 
     if (quote.customerId !== customerId) {
@@ -474,6 +480,58 @@ export class QuotesService {
     const updatedQuote = await this.prisma.quote.update({
       where: { id: quoteId },
       data: { status: QuoteStatus.APPROVED },
+    });
+
+    // ---------------------------------------------------------------
+    // Mint a Dhanam checkout URL (synchronous) + relay quote.accepted
+    // (fire-and-forget). Cotiza is a Dhanam billing-API client per the
+    // 2026-04-25 monetization-architecture directive — it does NOT hold
+    // Stripe keys. The checkout URL is what the frontend redirects the
+    // user to immediately after the "Accept Quote" confirmation.
+    //
+    // The relay is observability/fan-out (Dhanam observes the event for
+    // analytics/idempotency); the checkout call is the load-bearing
+    // synchronous step. If the checkout call throws, the controller
+    // surfaces a 502 — but the quote is already APPROVED in the DB so
+    // the user can retry checkout from the dashboard without losing
+    // approval state.
+    // ---------------------------------------------------------------
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL', 'http://localhost:3002') ?? '';
+    const successUrl = `${frontendUrl.replace(/\/+$/, '')}/quote/${quoteId}?payment=success`;
+    const cancelUrl = `${frontendUrl.replace(/\/+$/, '')}/quote/${quoteId}?payment=cancel`;
+
+    let checkoutUrl: string | undefined;
+    let sessionId: string | undefined;
+    if (this.januaBilling.isDhanamCheckoutEnabled()) {
+      const session = await this.januaBilling.createCheckoutSession(
+        quoteId,
+        customerId,
+        'cotiza_quote_payment',
+        successUrl,
+        cancelUrl,
+      );
+      checkoutUrl = session.checkoutUrl;
+      sessionId = session.sessionId;
+    } else {
+      this.logger.warn(
+        `approve(): Dhanam checkout client disabled — returning approved quote without checkout URL (quote=${quoteId})`,
+      );
+    }
+
+    // Fan-out event for ecosystem observability. Errors are swallowed
+    // by DhanamRelayService.relay (fire-and-forget contract).
+    void this.dhanamRelay.relay('quote.accepted', {
+      tenantId,
+      quoteId,
+      customerId,
+      amount: Number(updatedQuote.total ?? updatedQuote.totalPrice ?? 0),
+      currency: updatedQuote.currency,
+      status: 'approved',
+      metadata: {
+        quote_number: updatedQuote.number,
+        session_id: sessionId,
+      },
     });
 
     // Fire-and-forget: announce the approval into the client's PhyneCRM
@@ -513,8 +571,7 @@ export class QuotesService {
       void this.pushProposalArtifact(tenantId, engagementId, updatedQuote);
     }
 
-    // Return just the quote for now - payment integration will be handled separately
-    return { quote: updatedQuote };
+    return { quote: updatedQuote, checkoutUrl, sessionId };
   }
 
   private async pushProposalArtifact(

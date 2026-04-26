@@ -16,6 +16,7 @@ import { PricingModule } from '../pricing/pricing.module';
 import { TenantsModule } from '../tenants/tenants.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { EngagementsModule } from '../engagements/engagements.module';
+import { BillingModule } from '../billing/billing.module';
 
 @Module({
   imports: [
@@ -24,6 +25,11 @@ import { EngagementsModule } from '../engagements/engagements.module';
     TenantsModule,
     forwardRef(() => JobsModule),
     EngagementsModule,
+    // BillingModule exports JanuaBillingService (Dhanam-checkout client)
+    // and DhanamRelayService (event broadcast). Both are wired into
+    // QuotesService.approve() — the synchronous checkout-URL mint and
+    // the fire-and-forget `quote.accepted` relay respectively.
+    BillingModule,
   ],
   controllers: [QuotesController, Yantra4dImportController],
   providers: [
