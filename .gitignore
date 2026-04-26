@@ -17,6 +17,29 @@ build
 dist
 *.tsbuildinfo
 
+# tsc-emit leakage. When typecheck runs against a tsconfig with a
+# misconfigured `noEmit` (or no `noEmit` at all in a downstream tsconfig
+# that extends the root), .js / .d.ts / .map files leak alongside the
+# .ts source. Catch them everywhere — these are NEVER source-of-truth.
+**/src/**/*.js
+**/src/**/*.js.map
+**/src/**/*.d.ts
+**/src/**/*.d.ts.map
+**/tests/**/*.js
+**/tests/**/*.js.map
+**/tests/**/*.d.ts
+**/tests/**/*.d.ts.map
+test/utils/*.js
+test/utils/*.js.map
+test/utils/*.d.ts
+test/utils/*.d.ts.map
+e2e/*.js
+e2e/*.js.map
+e2e/*.d.ts
+e2e/*.d.ts.map
+**/tsup.config.js
+apps/web/tailwind.config.js
+
 # Misc
 .DS_Store
 *.pem
