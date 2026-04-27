@@ -294,6 +294,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.3.4
         version: 3.3.4(react-hook-form@7.51.0(react@18.3.1))
+      '@madfam/pmf-widget':
+        specifier: ^0.1.0
+        version: 0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-accordion':
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@18.2.21)(@types/react@18.2.64)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1650,6 +1653,12 @@ packages:
   '@lukeed/csprng@1.1.0':
     resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
     engines: {node: '>=8'}
+
+  '@madfam/pmf-widget@0.1.0':
+    resolution: {integrity: sha512-i8t3/1SNqSFOpxE2cBSuUMFG2ohxr5GH3VhK3mcvnuAeNCew5t4mi2URd729YM1l4eRSO5NG4Lf72ko2VcRtgw==}
+    peerDependencies:
+      react: ^18.0.0
+      react-dom: ^18.0.0
 
   '@microsoft/tsdoc@0.14.2':
     resolution: {integrity: sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug==}
@@ -9974,6 +9983,11 @@ snapshots:
       call-bind: 1.0.8
 
   '@lukeed/csprng@1.1.0': {}
+
+  '@madfam/pmf-widget@0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@microsoft/tsdoc@0.14.2': {}
 
