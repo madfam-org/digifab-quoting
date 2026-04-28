@@ -59,6 +59,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
+      - name: Configure npm registry auth
+        run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
+
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -137,6 +141,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
+      - name: Configure npm registry auth
+        run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
+
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -184,6 +192,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+
+      - name: Configure npm registry auth
+        run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
+
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -243,6 +255,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+
+      - name: Configure npm registry auth
+        run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
+
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -305,6 +321,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
+      - name: Configure npm registry auth
+        run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
+
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -335,6 +355,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
+      - name: Configure npm registry auth
+        run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
+
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -357,6 +381,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+
+      - name: Configure npm registry auth
+        run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
+
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
