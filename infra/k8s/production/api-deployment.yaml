@@ -61,8 +61,18 @@ spec:
             path: /health
             port: 4000
           periodSeconds: 10
+          # Explicit timeoutSeconds — k8s default is 1s, which is too tight
+          # for a NestJS handler under load (GC pauses, Prisma pool init).
+          timeoutSeconds: 5
+          failureThreshold: 3
         livenessProbe:
           httpGet:
             path: /health
             port: 4000
           periodSeconds: 30
+          # Default 1s timeout was killing the container with exit 137
+          # after three consecutive >1s healthcheck responses (33 restarts
+          # in 173 min observed 2026-05-05). 5s is generous enough that
+          # only a genuinely hung process triggers the kill.
+          timeoutSeconds: 5
+          failureThreshold: 3
