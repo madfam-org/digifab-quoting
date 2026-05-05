@@ -249,6 +249,12 @@ jobs:
           tags: cotiza/${{ matrix.service }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # BuildKit secret `npmrc` mirrors the production reusable workflow
+          # (madfam-org/enclii build-publish.yml). Required by web/Dockerfile
+          # to fetch @madfam-scoped packages from npm.madfam.io. Worker
+          # (Python) and api (no @madfam deps) ignore it harmlessly.
+          secrets: |
+            npmrc=//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}
 
   typecheck:
     name: Type Check
