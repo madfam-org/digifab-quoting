@@ -6,6 +6,7 @@ import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('health')
 @Controller('health')
+@Public()
 export class HealthController {
   constructor(
     private readonly redisService: RedisService,
