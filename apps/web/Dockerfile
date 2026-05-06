@@ -14,7 +14,13 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json .n
 COPY packages/ ./packages/
 COPY apps/web/ ./apps/web/
 
-RUN pnpm install --frozen-lockfile
+# BuildKit secret `npmrc` is forwarded by the Enclii reusable build-publish
+# workflow as `npmrc=//npm.madfam.io/:_authToken=${NPM_MADFAM_TOKEN}` and
+# carries auth for private @madfam-scoped packages. The committed project
+# `.npmrc` supplies scope-to-registry mappings; pnpm merges auth from
+# /root/.npmrc with those mappings. The secret never lands in an image layer.
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc,required=true \
+    pnpm install --frozen-lockfile
 RUN pnpm run build --filter=@cotiza/web...
 # Ensure public/ exists for runner COPY (may be empty in some projects)
 RUN mkdir -p /app/apps/web/public

@@ -51,14 +51,14 @@ spec:
             drop: [ALL]
         startupProbe:
           httpGet:
-            path: /health
+            path: /api/docs
             port: 4000
           initialDelaySeconds: 5
           periodSeconds: 5
           failureThreshold: 30
         readinessProbe:
           httpGet:
-            path: /health
+            path: /api/docs
             port: 4000
           periodSeconds: 10
           # Explicit timeoutSeconds — k8s default is 1s, which is too tight
@@ -67,7 +67,7 @@ spec:
           failureThreshold: 3
         livenessProbe:
           httpGet:
-            path: /health
+            path: /api/docs
             port: 4000
           periodSeconds: 30
           # Default 1s timeout was killing the container with exit 137

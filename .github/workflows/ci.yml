@@ -65,7 +65,6 @@ jobs:
       - name: Configure npm registry auth
         run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
 
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -92,7 +91,6 @@ jobs:
 
       - name: Configure npm registry auth
         run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -145,7 +143,6 @@ jobs:
 
       - name: Configure npm registry auth
         run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -212,7 +209,6 @@ jobs:
       - name: Configure npm registry auth
         run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
 
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -249,6 +245,11 @@ jobs:
           tags: cotiza/${{ matrix.service }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # BuildKit secret mirrors the production reusable workflow. It is
+          # required by apps/web/Dockerfile for private @madfam packages; api
+          # and worker ignore it harmlessly.
+          secrets: |
+            npmrc=//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}
 
   typecheck:
     name: Type Check
@@ -267,7 +268,6 @@ jobs:
 
       - name: Configure npm registry auth
         run: echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> .npmrc
-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
