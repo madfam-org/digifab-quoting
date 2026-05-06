@@ -40,8 +40,7 @@ import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 const FLAG_ENABLED = process.env.NEXT_PUBLIC_PMF_WIDGET_ENABLED === 'true';
-const TULANA_API_URL =
-  process.env.NEXT_PUBLIC_TULANA_API_URL || 'https://api.tulana.madfam.io';
+const TULANA_API_URL = process.env.NEXT_PUBLIC_TULANA_API_URL || 'https://api.tulana.madfam.io';
 
 /**
  * Route prefixes where the PMF widget MUST NOT render. PMF signal is
@@ -58,15 +57,15 @@ const TULANA_API_URL =
  * an authenticated user can still browse marketing.
  */
 const EXCLUDED_PATH_PREFIXES = [
-  '/login',     // Janua sign-in / sign-up flow
-  '/auth',      // NextAuth callback + auth utility pages
-  '/upload',    // File upload step (pre-quote, friction-heavy)
-  '/quote',     // Quote configuration (pre-acceptance) and detail
-  '/checkout',  // Stripe checkout flow
-  '/for',       // Marketing audience pages (/for/fabricators, etc.)
-  '/pricing',   // Marketing pricing page
-  '/features',  // Marketing features page
-  '/try',       // DIY landing
+  '/login', // Janua sign-in / sign-up flow
+  '/auth', // NextAuth callback + auth utility pages
+  '/upload', // File upload step (pre-quote, friction-heavy)
+  '/quote', // Quote configuration (pre-acceptance) and detail
+  '/checkout', // Stripe checkout flow
+  '/for', // Marketing audience pages (/for/fabricators, etc.)
+  '/pricing', // Marketing pricing page
+  '/features', // Marketing features page
+  '/try', // DIY landing
 ];
 
 // Marketing root `/` is excluded as an exact match (not prefix) so we

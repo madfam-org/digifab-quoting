@@ -73,17 +73,17 @@ curl -X POST http://localhost:4000/auth/login \
 
 ### Quote Management Routes (`/quotes`)
 
-| Method | Path                    | Description       | Auth   | Roles       | Rate Limit | Cache      |
-| ------ | ----------------------- | ----------------- | ------ | ----------- | ---------- | ---------- |
-| POST   | `/quotes`               | Create quote      | Bearer | All         | 20/hour    | None       |
-| GET    | `/quotes`               | List quotes       | Bearer | All         | Standard   | 30s        |
-| GET    | `/quotes/:id`           | Get quote details | Bearer | Owner/Admin | Standard   | 5min       |
-| PATCH  | `/quotes/:id`           | Update quote      | Bearer | Owner/Admin | Standard   | Invalidate |
-| POST   | `/quotes/:id/items`     | Add quote item    | Bearer | Owner/Admin | 50/hour    | Invalidate |
-| POST   | `/quotes/:id/calculate` | Calculate pricing | Bearer | Owner/Admin | 100/hour   | 1min       |
-| POST   | `/quotes/:id/accept`    | Accept quote, mint Dhanam checkout URL | Bearer | Owner | 10/hour | Invalidate |
-| POST   | `/quotes/:id/cancel`    | Cancel quote      | Bearer | Owner/Admin | 10/hour    | Invalidate |
-| GET    | `/quotes/:id/pdf`       | Generate PDF      | Bearer | Owner/Admin | 20/hour    | 24hr       |
+| Method | Path                    | Description                            | Auth   | Roles       | Rate Limit | Cache      |
+| ------ | ----------------------- | -------------------------------------- | ------ | ----------- | ---------- | ---------- |
+| POST   | `/quotes`               | Create quote                           | Bearer | All         | 20/hour    | None       |
+| GET    | `/quotes`               | List quotes                            | Bearer | All         | Standard   | 30s        |
+| GET    | `/quotes/:id`           | Get quote details                      | Bearer | Owner/Admin | Standard   | 5min       |
+| PATCH  | `/quotes/:id`           | Update quote                           | Bearer | Owner/Admin | Standard   | Invalidate |
+| POST   | `/quotes/:id/items`     | Add quote item                         | Bearer | Owner/Admin | 50/hour    | Invalidate |
+| POST   | `/quotes/:id/calculate` | Calculate pricing                      | Bearer | Owner/Admin | 100/hour   | 1min       |
+| POST   | `/quotes/:id/accept`    | Accept quote, mint Dhanam checkout URL | Bearer | Owner       | 10/hour    | Invalidate |
+| POST   | `/quotes/:id/cancel`    | Cancel quote                           | Bearer | Owner/Admin | 10/hour    | Invalidate |
+| GET    | `/quotes/:id/pdf`       | Generate PDF                           | Bearer | Owner/Admin | 20/hour    | 24hr       |
 
 **Example: Create Quote**
 

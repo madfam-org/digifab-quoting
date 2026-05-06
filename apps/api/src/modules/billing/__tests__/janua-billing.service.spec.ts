@@ -1,9 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import {
-  DhanamBillingUpstreamError,
-  JanuaBillingService,
-} from '../services/janua-billing.service';
+import { DhanamBillingUpstreamError, JanuaBillingService } from '../services/janua-billing.service';
 
 // ---------------------------------------------------------------------------
 // JanuaBillingService.createCheckoutSession() — Dhanam billing-API client
@@ -32,9 +29,7 @@ function mockConfig(overrides: Record<string, unknown> = {}): Partial<ConfigServ
     ...overrides,
   };
   return {
-    get: jest.fn((key: string, fallback?: unknown) =>
-      key in defaults ? defaults[key] : fallback,
-    ),
+    get: jest.fn((key: string, fallback?: unknown) => (key in defaults ? defaults[key] : fallback)),
   };
 }
 
@@ -139,13 +134,7 @@ describe('JanuaBillingService.createCheckoutSession (Dhanam client)', () => {
 
     it('returns the checkoutUrl and sessionId from the response', async () => {
       const service = await buildService();
-      const result = await service.createCheckoutSession(
-        'quote-1',
-        'user-1',
-        'plan',
-        's',
-        'c',
-      );
+      const result = await service.createCheckoutSession('quote-1', 'user-1', 'plan', 's', 'c');
       expect(result).toEqual({
         checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_123',
         sessionId: 'cs_test_123',
@@ -180,18 +169,18 @@ describe('JanuaBillingService.createCheckoutSession (Dhanam client)', () => {
   describe('error handling', () => {
     it('throws DhanamBillingUpstreamError when not configured', async () => {
       const service = await buildService({ DHANAM_API_URL: '' });
-      await expect(
-        service.createCheckoutSession('q', 'u', 'p', 's', 'c'),
-      ).rejects.toBeInstanceOf(DhanamBillingUpstreamError);
+      await expect(service.createCheckoutSession('q', 'u', 'p', 's', 'c')).rejects.toBeInstanceOf(
+        DhanamBillingUpstreamError,
+      );
       expect(fetchSpy).not.toHaveBeenCalled();
     });
 
     it('throws DhanamBillingUpstreamError on network failure', async () => {
       fetchSpy.mockRejectedValueOnce(new Error('ECONNREFUSED'));
       const service = await buildService();
-      await expect(
-        service.createCheckoutSession('q', 'u', 'p', 's', 'c'),
-      ).rejects.toBeInstanceOf(DhanamBillingUpstreamError);
+      await expect(service.createCheckoutSession('q', 'u', 'p', 's', 'c')).rejects.toBeInstanceOf(
+        DhanamBillingUpstreamError,
+      );
     });
 
     it('throws DhanamBillingUpstreamError on non-2xx response', async () => {
@@ -201,9 +190,9 @@ describe('JanuaBillingService.createCheckoutSession (Dhanam client)', () => {
         text: jest.fn().mockResolvedValue('upstream down'),
       } as unknown as Response);
       const service = await buildService();
-      await expect(
-        service.createCheckoutSession('q', 'u', 'p', 's', 'c'),
-      ).rejects.toThrow(/HTTP 503/);
+      await expect(service.createCheckoutSession('q', 'u', 'p', 's', 'c')).rejects.toThrow(
+        /HTTP 503/,
+      );
     });
 
     it('throws DhanamBillingUpstreamError on invalid JSON', async () => {
@@ -213,9 +202,9 @@ describe('JanuaBillingService.createCheckoutSession (Dhanam client)', () => {
         json: jest.fn().mockRejectedValue(new Error('not json')),
       } as unknown as Response);
       const service = await buildService();
-      await expect(
-        service.createCheckoutSession('q', 'u', 'p', 's', 'c'),
-      ).rejects.toThrow(/invalid response body/);
+      await expect(service.createCheckoutSession('q', 'u', 'p', 's', 'c')).rejects.toThrow(
+        /invalid response body/,
+      );
     });
 
     it('throws DhanamBillingUpstreamError when checkoutUrl missing in response', async () => {
@@ -225,9 +214,9 @@ describe('JanuaBillingService.createCheckoutSession (Dhanam client)', () => {
         json: jest.fn().mockResolvedValue({ sessionId: 'no-url' }),
       } as unknown as Response);
       const service = await buildService();
-      await expect(
-        service.createCheckoutSession('q', 'u', 'p', 's', 'c'),
-      ).rejects.toThrow(/missing checkoutUrl/);
+      await expect(service.createCheckoutSession('q', 'u', 'p', 's', 'c')).rejects.toThrow(
+        /missing checkoutUrl/,
+      );
     });
 
     it('DhanamBillingUpstreamError maps to HTTP 502', () => {

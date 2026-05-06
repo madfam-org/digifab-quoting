@@ -16,10 +16,7 @@
  */
 import { render, waitFor } from '@testing-library/react';
 
-const mockUseSession = jest.fn<
-  ReturnType<typeof getDefaultSession>,
-  []
->(() => getDefaultSession());
+const mockUseSession = jest.fn<ReturnType<typeof getDefaultSession>, []>(() => getDefaultSession());
 
 function getDefaultSession() {
   return { data: null as unknown, status: 'unauthenticated' as string };

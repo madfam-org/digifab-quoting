@@ -462,7 +462,12 @@ export class QuotesService {
     tenantId: string,
     quoteId: string,
     customerId: string,
-  ): Promise<{ quote: PrismaQuote; sessionId?: string; checkoutUrl?: string; paymentUrl?: string }> {
+  ): Promise<{
+    quote: PrismaQuote;
+    sessionId?: string;
+    checkoutUrl?: string;
+    paymentUrl?: string;
+  }> {
     const quote = await this.findOne(tenantId, quoteId);
 
     if (quote.customerId !== customerId) {

@@ -161,12 +161,19 @@ export class JanuaBillingService {
       throw new DhanamBillingUpstreamError(`HTTP ${response.status}`);
     }
 
-    let data: { checkoutUrl?: string; sessionId?: string; checkout_url?: string; session_id?: string };
+    let data: {
+      checkoutUrl?: string;
+      sessionId?: string;
+      checkout_url?: string;
+      session_id?: string;
+    };
     try {
       data = (await response.json()) as typeof data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'invalid JSON';
-      this.logger.error(`Dhanam createCheckoutSession invalid JSON for quote=${quoteId}: ${message}`);
+      this.logger.error(
+        `Dhanam createCheckoutSession invalid JSON for quote=${quoteId}: ${message}`,
+      );
       throw new DhanamBillingUpstreamError('invalid response body');
     }
 
@@ -184,7 +191,9 @@ export class JanuaBillingService {
       throw new DhanamBillingUpstreamError('response missing checkoutUrl');
     }
 
-    this.logger.log(`Dhanam checkout session created for quote=${quoteId} -> ${sessionId || '<unknown>'}`);
+    this.logger.log(
+      `Dhanam checkout session created for quote=${quoteId} -> ${sessionId || '<unknown>'}`,
+    );
     return { checkoutUrl, sessionId };
   }
 

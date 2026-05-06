@@ -101,7 +101,8 @@ function makeHarness(opts: {
     opts.pravaraThrows ? Promise.reject(new Error('pravara down')) : { ok: true },
   );
   const resolveRfc: jest.Mock = jest.fn(
-    (_metadata: Record<string, unknown>, _settings: Record<string, unknown>) => opts.karafielReceptor,
+    (_metadata: Record<string, unknown>, _settings: Record<string, unknown>) =>
+      opts.karafielReceptor,
   );
 
   // Mirror the production handleOrdered logic just closely enough to
