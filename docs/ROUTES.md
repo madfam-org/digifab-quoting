@@ -176,19 +176,19 @@ curl -X POST http://localhost:4000/quotes \
 
 ### Engagements (`/api/v1/engagements`)
 
-First-class projection of PhyneCRM's engagement aggregate. Groups quotes under one engagement (e.g. tablaco's physical + digital quotes). See [Engagement projection](../CLAUDE.md#engagement-projection-phase-b-consumer) in CLAUDE.md.
+First-class projection of PhyndCRM's engagement aggregate. Groups quotes under one engagement (e.g. tablaco's physical + digital quotes). See [Engagement projection](../CLAUDE.md#engagement-projection-phase-b-consumer) in CLAUDE.md.
 
 | Method | Path                                               | Description                    | Auth   | Notes                                     |
 | ------ | -------------------------------------------------- | ------------------------------ | ------ | ----------------------------------------- |
-| GET    | `/api/v1/engagements/:phynecrmEngagementId`        | Projection + quote type counts | Bearer | Tenant-scoped via JWT                     |
-| GET    | `/api/v1/engagements/:phynecrmEngagementId/quotes` | Quotes grouped by quoteType    | Bearer | Returns `{ fab: [...], services: [...] }` |
+| GET    | `/api/v1/engagements/:phyndcrmEngagementId`        | Projection + quote type counts | Bearer | Tenant-scoped via JWT                     |
+| GET    | `/api/v1/engagements/:phyndcrmEngagementId/quotes` | Quotes grouped by quoteType    | Bearer | Returns `{ fab: [...], services: [...] }` |
 
 ### Webhooks (`/api/v1/webhooks`)
 
 | Method | Path                                    | Description                                                  | Auth | Signature                                                          |
 | ------ | --------------------------------------- | ------------------------------------------------------------ | ---- | ------------------------------------------------------------------ |
 | POST   | `/api/v1/webhooks/forgesight`           | Forgesight price update relay                                | HMAC | `x-forgesight-signature` (SHA-256)                                 |
-| POST   | `/api/v1/webhooks/phynecrm/engagements` | PhyneCRM engagement lifecycle (created / updated / archived) | HMAC | `x-phynecrm-signature` (SHA-256), secret `PHYNECRM_INBOUND_SECRET` |
+| POST   | `/api/v1/webhooks/phyndcrm/engagements` | PhyndCRM engagement lifecycle (created / updated / archived) | HMAC | `x-phyndcrm-signature` (SHA-256), secret `PHYNECRM_INBOUND_SECRET` |
 
 ## Frontend Routes
 

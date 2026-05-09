@@ -4,7 +4,7 @@
  * When a services-mode Cotiza quote with billableType=MILESTONE
  * transitions to ORDERED, fan out one invoice per milestone to Dhanam.
  *
- * HMAC-SHA256 signed body (same pattern as PhyneCRM engagement
+ * HMAC-SHA256 signed body (same pattern as PhyndCRM engagement
  * webhooks). Fire-and-forget: per-milestone, so one failing milestone
  * doesn't stop the others. Retries won't double-create thanks to a
  * deterministic Idempotency-Key per milestone.
@@ -41,7 +41,7 @@ export interface DhanamMilestoneContext {
   /**
    * Cotiza Order ID (post-acceptance bundle). Stamped onto each Stripe
    * PaymentIntent so Dhanam's ecosystem extractor can pass it through
-   * to PhyneCRM's engagement timeline. Absent when invoicing runs from
+   * to PhyndCRM's engagement timeline. Absent when invoicing runs from
    * a flow that doesn't materialize an Order row.
    */
   orderId?: string;

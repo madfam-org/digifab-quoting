@@ -177,33 +177,33 @@ Key files: `apps/api/src/modules/auth/auth.controller.ts`, `apps/api/src/modules
 
 ### Engagement projection (Phase B Consumer)
 
-Cotiza stores a lightweight projection of PhyneCRM's engagement
+Cotiza stores a lightweight projection of PhyndCRM's engagement
 aggregate in the `Engagement` table (migration
 `20260419100000_add_engagements_and_quote_fk`). Purpose:
 
 - group quotes under one engagement (two-quotes-per-engagement is the
   tablaco flow — physical fab + digital services under the same client
   engagement)
-- serve portal queries without a round-trip to PhyneCRM on every render
+- serve portal queries without a round-trip to PhyndCRM on every render
 
 Lifecycle:
 
 - `Quote.engagementId` is a first-class nullable FK. When a quote is
   created with the `engagementId` DTO field, `EngagementsService.ensureProjection`
   auto-materializes the row with `lastSyncedAt = NULL`.
-- `POST /api/v1/webhooks/phynecrm/engagements` — inbound HMAC-SHA256
+- `POST /api/v1/webhooks/phyndcrm/engagements` — inbound HMAC-SHA256
   signed webhook. Handles `engagement.created` / `engagement.updated`
   (upsert + stamp `lastSyncedAt`) and `engagement.archived` (soft-delete).
-- `GET /api/v1/engagements/:phynecrmEngagementId` — projection + quote
+- `GET /api/v1/engagements/:phyndcrmEngagementId` — projection + quote
   type counts.
-- `GET /api/v1/engagements/:phynecrmEngagementId/quotes` — quotes
+- `GET /api/v1/engagements/:phyndcrmEngagementId/quotes` — quotes
   grouped by `quoteType` for the portal's side-by-side card layout.
 
 Env: `PHYNECRM_INBOUND_SECRET` (separate from outbound `PHYNECRM_ENGAGEMENT_SECRET`).
 
 ### Services-mode quoting
 
-Services-mode (`Quote.quoteType === 'services'`) is feature-flag gated per tenant via `Tenant.features.servicesQuotes`. The `QuoteItem.servicesDetails` Json column carries the per-line billable shape (`hourly` / `fixed_fee` / `milestone`). Schema in `packages/shared/src/schemas/services-quote.ts`; types in `packages/shared/src/types/services-quote.ts`. The services-mode branch in `QuotesService.calculate()` sidesteps the fab pricing engine entirely. See `PhyneCrmEngagementService` for how the quote-approval flow pushes lifecycle events + the signed proposal PDF into the client's PhyneCRM engagement timeline.
+Services-mode (`Quote.quoteType === 'services'`) is feature-flag gated per tenant via `Tenant.features.servicesQuotes`. The `QuoteItem.servicesDetails` Json column carries the per-line billable shape (`hourly` / `fixed_fee` / `milestone`). Schema in `packages/shared/src/schemas/services-quote.ts`; types in `packages/shared/src/types/services-quote.ts`. The services-mode branch in `QuotesService.calculate()` sidesteps the fab pricing engine entirely. See `PhyneCrmEngagementService` for how the quote-approval flow pushes lifecycle events + the signed proposal PDF into the client's PhyndCRM engagement timeline.
 
 On ORDERED (post-payment) transitions, `QuotesService.handleOrdered(tenantId, quoteId)` fans out three fire-and-forget outbound integrations via `Promise.allSettled` from `OrdersService.createOrderFromQuote`:
 
@@ -218,7 +218,7 @@ On ORDERED (post-payment) transitions, `QuotesService.handleOrdered(tenantId, qu
 **Dhanam Milestone Invoicing** (`DhanamMilestoneService`):
 
 - Iterates `servicesDetails.milestones[]` for each `billableType='milestone'` QuoteItem and POSTs one invoice per milestone to `/api/v1/invoices`
-- HMAC-SHA256 signed (same pattern as PhyneCRM) + stable `Idempotency-Key: dhanam-milestone:<quoteItemId>:<milestoneId>` header
+- HMAC-SHA256 signed (same pattern as PhyndCRM) + stable `Idempotency-Key: dhanam-milestone:<quoteItemId>:<milestoneId>` header
 - Per-milestone fire-and-forget (one failure doesn't stop siblings)
 - Key files: `apps/api/src/integrations/dhanam/dhanam-milestone.service.ts`
 - Env: `DHANAM_API_URL`, `DHANAM_BILLING_SECRET`, `DHANAM_WEBHOOK_TIMEOUT` (default 10000)

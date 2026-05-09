@@ -21,7 +21,7 @@ const PAINS = [
   },
   {
     pain: 'Tracking 8 quotes for one client across email, Notion, and your CRM.',
-    fix: 'PhyneCRM engagement projection: every quote auto-links to the client engagement. Fab + services side by side.',
+    fix: 'PhyndCRM engagement projection: every quote auto-links to the client engagement. Fab + services side by side.',
   },
   {
     pain: 'Manually invoicing every milestone of a 4-stage project.',
@@ -42,7 +42,7 @@ const CAPABILITIES = [
   {
     icon: Workflow,
     title: 'Engagement projection',
-    body: 'PhyneCRM-synced engagement table groups fab + services quotes for the same client. Two-quotes-per-engagement is the canonical flow.',
+    body: 'PhyndCRM-synced engagement table groups fab + services quotes for the same client. Two-quotes-per-engagement is the canonical flow.',
   },
   {
     icon: Clock,

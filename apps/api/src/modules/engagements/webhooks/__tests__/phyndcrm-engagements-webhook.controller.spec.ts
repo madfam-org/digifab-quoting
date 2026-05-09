@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 
 import { EngagementsService } from '../../engagements.service';
-import { PhynecrmEngagementsWebhookController } from '../phynecrm-engagements-webhook.controller';
+import { PhynecrmEngagementsWebhookController } from '../phyndcrm-engagements-webhook.controller';
 
 const SECRET = 'test-inbound-secret';
 
@@ -86,7 +86,7 @@ describe('PhynecrmEngagementsWebhookController', () => {
     expect(service.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         tenantId: 't1',
-        phynecrmEngagementId: 'pcrm_1',
+        phyndcrmEngagementId: 'pcrm_1',
         projectName: 'Tablaco',
         status: 'active',
         contactId: 'c_1',

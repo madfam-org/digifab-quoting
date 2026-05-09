@@ -30,7 +30,7 @@
       "karafiel": "CFDI 4.0 + NOM-151 via Karafiel",
       "dhanam": "Stripe + SPEI + OXXO via Dhanam",
       "pravara": "MES dispatch via Pravara",
-      "phynecrm": "Engagement sync via PhyneCRM",
+      "phyndcrm": "Engagement sync via PhyndCRM",
       "forgesight": "Live market pricing via Forgesight"
     }
   },
@@ -113,7 +113,7 @@
       "description": "You quote design-for-manufacturing reviews, fixture design, prototype runs, full product engineering. You bill in hours, fixed fees, and milestones. Your CRM, your invoicing, and your fab vendors don't talk to each other.",
       "fixes": [
         "Services-mode quoting: hourly, fixed-fee, milestone — first-class billing types",
-        "Group fabrication + services quotes under one client engagement (PhyneCRM-synced)",
+        "Group fabrication + services quotes under one client engagement (PhyndCRM-synced)",
         "Per-milestone invoicing fans out to Dhanam automatically",
         "DFM analysis runs on every CAD upload — included in every services quote",
         "Live Forgesight market pricing so your DFM advice cites real numbers"
@@ -168,7 +168,7 @@
     },
     "ecosystem": {
       "title": "Pre-wired ecosystem fan-out",
-      "description": "On every order: Karafiel CFDI, Dhanam invoicing, Pravara MES dispatch, PhyneCRM engagement update, Yantra4D webhook. No glue code."
+      "description": "On every order: Karafiel CFDI, Dhanam invoicing, Pravara MES dispatch, PhyndCRM engagement update, Yantra4D webhook. No glue code."
     },
     "intelligence": {
       "title": "Live market pricing",
@@ -238,7 +238,7 @@
   },
   "footer": {
     "tagline": "Manufacturing intelligence that previously cost $50K/yr. Now $0–$499/mo.",
-    "ecosystem": "Part of the MADFAM platform — Karafiel · Dhanam · Pravara · PhyneCRM · Forgesight",
+    "ecosystem": "Part of the MADFAM platform — Karafiel · Dhanam · Pravara · PhyndCRM · Forgesight",
     "joinCommunity": "Built openly. Operated transparently."
   }
 }

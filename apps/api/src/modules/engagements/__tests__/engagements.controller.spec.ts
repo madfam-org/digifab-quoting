@@ -30,7 +30,7 @@ describe('EngagementsController', () => {
       findByPhynecrmId: jest.fn().mockResolvedValue({
         id: 'eng_1',
         tenantId: 't1',
-        phynecrmEngagementId: 'pcrm_1',
+        phyndcrmEngagementId: 'pcrm_1',
         projectName: 'Tablaco',
         status: 'active',
         contactId: null,
@@ -52,14 +52,14 @@ describe('EngagementsController', () => {
     controller = module.get(EngagementsController);
   });
 
-  it('findOne — forwards tenantId from req.user + phynecrmEngagementId from path', async () => {
+  it('findOne — forwards tenantId from req.user + phyndcrmEngagementId from path', async () => {
     const req = { user: { tenantId: 't1' } } as any;
     const result = await controller.findOne(req, 'pcrm_1');
     expect(service.findByPhynecrmId).toHaveBeenCalledWith('t1', 'pcrm_1');
     expect(result.quoteCountsByType).toEqual({ fab: 1, services: 1 });
   });
 
-  it('listQuotes — forwards tenantId + phynecrmEngagementId, returns grouped shape', async () => {
+  it('listQuotes — forwards tenantId + phyndcrmEngagementId, returns grouped shape', async () => {
     const req = { user: { tenantId: 't1' } } as any;
     const result = await controller.listQuotes(req, 'pcrm_1');
     expect(service.listQuotesForEngagement).toHaveBeenCalledWith('t1', 'pcrm_1');

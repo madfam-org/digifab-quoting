@@ -38,7 +38,7 @@ Cotiza Studio is MADFAM's quoting engine. Externally it's positioned as digital-
 
 ### Downstream consumers (this repo is consumed by)
 
-- phyne-crm (quote history federation)
+- phynd-crm (quote history federation)
 - pravara-mes (fab jobs created from accepted quotes)
 - karafiel (CFDI emission for accepted quotes)
 
@@ -70,7 +70,7 @@ below is embedded here so this document stands alone.
 | **Cotiza**      | `madfam-org/digifab-quoting`  | MADFAM's quoting engine (fabrication + services)                                                   |
 | **Forgesight**  | `madfam-org/forgesight`       | Digital fabrication industry intelligence (pricing/vendor feed to Cotiza)                          |
 | **Pravara MES** | `madfam-org/pravara-mes`      | Fabrication-node routing and dispatch (physical jobs)                                              |
-| **PhyneCRM**    | `madfam-org/phyne-crm`        | Client-facing deliverables portal (single pane of glass per engagement)                            |
+| **PhyndCRM**    | `madfam-org/phynd-crm`        | Client-facing deliverables portal (single pane of glass per engagement)                            |
 | **Fortuna**     | `madfam-org/fortuna`          | Problem intelligence / zeitgeist analysis                                                          |
 | **Avala**       | `madfam-org/avala`            | Learning verification platform                                                                     |
 

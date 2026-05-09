@@ -5,14 +5,14 @@ import {
   EngagementArtifactPayload,
   EngagementEventPayload,
   PhyneCrmEngagementService,
-} from '../phynecrm-engagement.service';
+} from '../phyndcrm-engagement.service';
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
 // ---------------------------------------------------------------------------
 
-const API_URL = 'https://phyne-crm.madfam.io';
-const SECRET = 'test-phynecrm-engagement-secret-256';
+const API_URL = 'https://phynd-crm.madfam.io';
+const SECRET = 'test-phyndcrm-engagement-secret-256';
 
 function mockConfigService(overrides: Record<string, unknown> = {}): Partial<ConfigService> {
   const defaults: Record<string, unknown> = {
@@ -93,8 +93,8 @@ describe('PhyneCrmEngagementService', () => {
   // ---------- getEngagementId ----------
 
   describe('getEngagementId', () => {
-    it('returns the id when metadata.phynecrmEngagementId is a non-empty string', () => {
-      expect(service.getEngagementId({ phynecrmEngagementId: 'eng-123' })).toBe('eng-123');
+    it('returns the id when metadata.phyndcrmEngagementId is a non-empty string', () => {
+      expect(service.getEngagementId({ phyndcrmEngagementId: 'eng-123' })).toBe('eng-123');
     });
 
     it('returns null when metadata is undefined / null', () => {
@@ -104,8 +104,8 @@ describe('PhyneCrmEngagementService', () => {
 
     it('returns null when the field is empty or of wrong type', () => {
       expect(service.getEngagementId({})).toBeNull();
-      expect(service.getEngagementId({ phynecrmEngagementId: '' })).toBeNull();
-      expect(service.getEngagementId({ phynecrmEngagementId: 42 as unknown as string })).toBeNull();
+      expect(service.getEngagementId({ phyndcrmEngagementId: '' })).toBeNull();
+      expect(service.getEngagementId({ phyndcrmEngagementId: 42 as unknown as string })).toBeNull();
     });
   });
 

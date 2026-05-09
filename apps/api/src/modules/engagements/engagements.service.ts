@@ -1,17 +1,17 @@
 /**
- * Engagements — first-class projection of PhyneCRM engagement aggregates.
+ * Engagements — first-class projection of PhyndCRM engagement aggregates.
  *
- * PhyneCRM owns the engagement lifecycle; Cotiza stores a projection so
+ * PhyndCRM owns the engagement lifecycle; Cotiza stores a projection so
  * it can group quotes by engagement without reaching across service
  * boundaries for every portal render. Three mutation paths:
  *
  * 1. `ensureProjection` — called when a Quote references an engagement
  *    ID we haven't seen yet. Auto-materializes a stub row with
- *    `lastSyncedAt = NULL` that gets filled in when PhyneCRM pushes the
+ *    `lastSyncedAt = NULL` that gets filled in when PhyndCRM pushes the
  *    `engagement.created`/`engagement.updated` webhook.
  *
  * 2. `applyWebhook` — the inbound webhook path. Upsert keyed by
- *    `phynecrmEngagementId`, always bumps `lastSyncedAt`.
+ *    `phyndcrmEngagementId`, always bumps `lastSyncedAt`.
  *
  * 3. `softDelete` — `engagement.archived`. Sets `deletedAt`; quotes keep
  *    their FK but any portal query filters on non-null `deletedAt`.
@@ -23,7 +23,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 export interface UpsertEngagementInput {
   tenantId: string;
-  phynecrmEngagementId: string;
+  phyndcrmEngagementId: string;
   projectName?: string | null;
   status?: string;
   contactId?: string | null;
@@ -34,7 +34,7 @@ export interface UpsertEngagementInput {
 export interface EngagementWithQuoteCounts {
   id: string;
   tenantId: string;
-  phynecrmEngagementId: string;
+  phyndcrmEngagementId: string;
   projectName: string | null;
   status: string;
   contactId: string | null;
@@ -55,7 +55,7 @@ export class EngagementsService {
    * `ensureProjection`. When `synced=true` (webhook path) we stamp
    * `lastSyncedAt`; when false (auto-materialized from a quote), we
    * leave it NULL so we know the row hasn't been confirmed from
-   * PhyneCRM yet.
+   * PhyndCRM yet.
    */
   async upsert(input: UpsertEngagementInput) {
     const now = new Date();
@@ -70,10 +70,10 @@ export class EngagementsService {
     };
 
     return this.prisma.engagement.upsert({
-      where: { phynecrmEngagementId: input.phynecrmEngagementId },
+      where: { phyndcrmEngagementId: input.phyndcrmEngagementId },
       create: {
         tenantId: input.tenantId,
-        phynecrmEngagementId: input.phynecrmEngagementId,
+        phyndcrmEngagementId: input.phyndcrmEngagementId,
         projectName: input.projectName ?? null,
         status: input.status ?? 'active',
         contactId: input.contactId ?? null,
@@ -85,13 +85,13 @@ export class EngagementsService {
   }
 
   /**
-   * Auto-materialize from a quote's PhyneCRM engagement ID. Used by
+   * Auto-materialize from a quote's PhyndCRM engagement ID. Used by
    * QuotesService when creating a quote with `engagementId` that
    * doesn't yet exist in Cotiza.
    */
-  async ensureProjection(tenantId: string, phynecrmEngagementId: string): Promise<string> {
+  async ensureProjection(tenantId: string, phyndcrmEngagementId: string): Promise<string> {
     const existing = await this.prisma.engagement.findUnique({
-      where: { phynecrmEngagementId },
+      where: { phyndcrmEngagementId },
       select: { id: true, tenantId: true },
     });
     if (existing) {
@@ -99,37 +99,37 @@ export class EngagementsService {
       // return the canonical ID. We don't flip the tenant.
       if (existing.tenantId !== tenantId) {
         this.logger.warn(
-          `engagement ${phynecrmEngagementId} already owned by tenant ${existing.tenantId}, refusing cross-tenant attach (caller tenant=${tenantId})`,
+          `engagement ${phyndcrmEngagementId} already owned by tenant ${existing.tenantId}, refusing cross-tenant attach (caller tenant=${tenantId})`,
         );
       }
       return existing.id;
     }
     const created = await this.upsert({
       tenantId,
-      phynecrmEngagementId,
+      phyndcrmEngagementId,
       metadata: { autoMaterialized: true },
       synced: false,
     });
     this.logger.log(
-      `auto-materialized engagement projection for ${phynecrmEngagementId} (tenant=${tenantId})`,
+      `auto-materialized engagement projection for ${phyndcrmEngagementId} (tenant=${tenantId})`,
     );
     return created.id;
   }
 
-  async softDelete(phynecrmEngagementId: string): Promise<void> {
+  async softDelete(phyndcrmEngagementId: string): Promise<void> {
     await this.prisma.engagement.updateMany({
-      where: { phynecrmEngagementId, deletedAt: null },
+      where: { phyndcrmEngagementId, deletedAt: null },
       data: { deletedAt: new Date(), status: 'archived' },
     });
   }
 
   async findByPhynecrmId(
     tenantId: string,
-    phynecrmEngagementId: string,
+    phyndcrmEngagementId: string,
   ): Promise<EngagementWithQuoteCounts> {
     const engagement = await this.prisma.engagement.findFirst({
       where: {
-        phynecrmEngagementId,
+        phyndcrmEngagementId,
         tenantId,
         deletedAt: null,
       },
@@ -141,7 +141,7 @@ export class EngagementsService {
     });
     if (!engagement) {
       throw new NotFoundException(
-        `engagement ${phynecrmEngagementId} not found for tenant ${tenantId}`,
+        `engagement ${phyndcrmEngagementId} not found for tenant ${tenantId}`,
       );
     }
     const counts: Record<string, number> = {};
@@ -151,7 +151,7 @@ export class EngagementsService {
     return {
       id: engagement.id,
       tenantId: engagement.tenantId,
-      phynecrmEngagementId: engagement.phynecrmEngagementId,
+      phyndcrmEngagementId: engagement.phyndcrmEngagementId,
       projectName: engagement.projectName,
       status: engagement.status,
       contactId: engagement.contactId,
@@ -169,11 +169,11 @@ export class EngagementsService {
    */
   async listQuotesForEngagement(
     tenantId: string,
-    phynecrmEngagementId: string,
+    phyndcrmEngagementId: string,
   ): Promise<Record<string, unknown[]>> {
     const engagement = await this.prisma.engagement.findFirst({
       where: {
-        phynecrmEngagementId,
+        phyndcrmEngagementId,
         tenantId,
         deletedAt: null,
       },
@@ -181,7 +181,7 @@ export class EngagementsService {
     });
     if (!engagement) {
       throw new NotFoundException(
-        `engagement ${phynecrmEngagementId} not found for tenant ${tenantId}`,
+        `engagement ${phyndcrmEngagementId} not found for tenant ${tenantId}`,
       );
     }
     const quotes = await this.prisma.quote.findMany({

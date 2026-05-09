@@ -22,7 +22,7 @@ import { TenantCacheService } from '../tenants/services/tenant-cache.service';
 import { JobsService } from '../jobs/jobs.service';
 import { JobType } from '../jobs/interfaces/job.interface';
 import { FilesService } from '../files/files.service';
-import { PhyneCrmEngagementService } from '../../integrations/phynecrm/phynecrm-engagement.service';
+import { PhyneCrmEngagementService } from '../../integrations/phyndcrm/phyndcrm-engagement.service';
 import { KarafielComplianceService } from '../../integrations/karafiel/karafiel-compliance.service';
 import {
   DhanamMilestoneService,
@@ -48,7 +48,7 @@ export class QuotesService {
     private tenantCacheService: TenantCacheService,
     private jobsService: JobsService,
     private filesService: FilesService,
-    private phynecrmEngagement: PhyneCrmEngagementService,
+    private phyndcrmEngagement: PhyneCrmEngagementService,
     private karafielCompliance: KarafielComplianceService,
     private dhanamMilestone: DhanamMilestoneService,
     private pravaraDispatch: PravaraDispatchService,
@@ -70,10 +70,10 @@ export class QuotesService {
       }
     }
 
-    // If the DTO cites a PhyneCRM engagement ID, auto-materialize the
+    // If the DTO cites a PhyndCRM engagement ID, auto-materialize the
     // Cotiza projection so subsequent queries (portal grouping,
     // engagement detail) can join on it. The projection is marked
-    // `lastSyncedAt: NULL` until PhyneCRM pushes back a webhook.
+    // `lastSyncedAt: NULL` until PhyndCRM pushes back a webhook.
     let engagementProjectionId: string | null = null;
     if (dto.engagementId) {
       engagementProjectionId = await this.engagements.ensureProjection(tenantId, dto.engagementId);
@@ -100,7 +100,7 @@ export class QuotesService {
         status: QuoteStatus.DRAFT,
         ...(engagementProjectionId && { engagementId: engagementProjectionId }),
         ...(dto.engagementId && {
-          metadata: { phynecrmEngagementId: dto.engagementId },
+          metadata: { phyndcrmEngagementId: dto.engagementId },
         }),
       },
     });
@@ -539,11 +539,11 @@ export class QuotesService {
       },
     });
 
-    // Fire-and-forget: announce the approval into the client's PhyneCRM
+    // Fire-and-forget: announce the approval into the client's PhyndCRM
     // portal timeline + push the signed-proposal PDF as an artifact so
     // the client can open it from the portal. Failures never block the
     // approve flow; the integration service logs its own errors.
-    const engagementId = this.phynecrmEngagement.getEngagementId(
+    const engagementId = this.phyndcrmEngagement.getEngagementId(
       updatedQuote.metadata as Record<string, unknown> | null,
     );
     if (engagementId) {
@@ -552,7 +552,7 @@ export class QuotesService {
           ? 'services'
           : 'fabrication';
 
-      void this.phynecrmEngagement.recordEvent({
+      void this.phyndcrmEngagement.recordEvent({
         engagement_id: engagementId,
         source: 'cotiza',
         event_type: 'quote.approved',
@@ -586,7 +586,7 @@ export class QuotesService {
   ): Promise<void> {
     try {
       const { url } = await this.generatePdf(tenantId, quote.id);
-      await this.phynecrmEngagement.recordArtifact({
+      await this.phyndcrmEngagement.recordArtifact({
         engagement_id: engagementId,
         type: 'signed_proposal',
         entity_type: 'quote',
@@ -638,7 +638,7 @@ export class QuotesService {
     }
 
     const metadata = (quote.metadata ?? {}) as Record<string, unknown>;
-    const engagementId = this.phynecrmEngagement.getEngagementId(metadata);
+    const engagementId = this.phyndcrmEngagement.getEngagementId(metadata);
 
     // Load tenant for RFC/branding. Non-fatal if missing.
     let tenantSettings: Record<string, unknown> = {};

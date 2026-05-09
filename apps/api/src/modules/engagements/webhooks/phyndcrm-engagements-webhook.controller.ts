@@ -1,17 +1,17 @@
 /**
- * POST /api/v1/webhooks/phynecrm/engagements
+ * POST /api/v1/webhooks/phyndcrm/engagements
  *
- * Inbound webhook from PhyneCRM announcing engagement lifecycle events.
+ * Inbound webhook from PhyndCRM announcing engagement lifecycle events.
  * HMAC-SHA256 signed with `PHYNECRM_INBOUND_SECRET`. Idempotent — same
  * `engagement_id` + `event_type` + `timestamp` is a no-op on second
- * delivery (PhyneCRM may retry).
+ * delivery (PhyndCRM may retry).
  *
  * Event types handled:
  *   engagement.created   → upsert projection, lastSyncedAt stamped
  *   engagement.updated   → upsert projection, lastSyncedAt stamped
  *   engagement.archived  → soft-delete projection
  *
- * Unknown event types return 200 (acknowledged, ignored) so PhyneCRM
+ * Unknown event types return 200 (acknowledged, ignored) so PhyndCRM
  * can add new event types without breaking Cotiza's webhook contract.
  */
 import * as crypto from 'crypto';
@@ -54,7 +54,7 @@ export interface PhynecrmEngagementWebhookPayload {
 }
 
 @ApiTags('Webhooks')
-@Controller('webhooks/phynecrm/engagements')
+@Controller('webhooks/phyndcrm/engagements')
 export class PhynecrmEngagementsWebhookController {
   private readonly logger = new Logger(PhynecrmEngagementsWebhookController.name);
   private readonly secret: string;
@@ -66,7 +66,7 @@ export class PhynecrmEngagementsWebhookController {
     this.secret = this.config.get<string>('PHYNECRM_INBOUND_SECRET', '');
     if (!this.secret) {
       this.logger.warn(
-        'PHYNECRM_INBOUND_SECRET not configured — PhyneCRM engagement webhook will reject all requests',
+        'PHYNECRM_INBOUND_SECRET not configured — PhyndCRM engagement webhook will reject all requests',
       );
     }
   }
@@ -74,15 +74,15 @@ export class PhynecrmEngagementsWebhookController {
   @Post()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Receive engagement lifecycle events from PhyneCRM',
+    summary: 'Receive engagement lifecycle events from PhyndCRM',
     description:
-      'Upserts the Engagement projection. HMAC-SHA256 signed via x-phynecrm-signature header.',
+      'Upserts the Engagement projection. HMAC-SHA256 signed via x-phyndcrm-signature header.',
   })
   @ApiOkResponse({ description: 'Webhook processed' })
   @ApiUnauthorizedResponse({ description: 'Invalid signature' })
   async handle(
     @Req() req: RawBodyRequest<Request>,
-    @Headers('x-phynecrm-signature') signature: string,
+    @Headers('x-phyndcrm-signature') signature: string,
     @Body() payload: PhynecrmEngagementWebhookPayload,
   ): Promise<{ received: boolean; event?: string; action?: string }> {
     const rawBody = req.rawBody?.toString() || JSON.stringify(payload);
@@ -101,7 +101,7 @@ export class PhynecrmEngagementsWebhookController {
         case PhynecrmEngagementEventType.UPDATED:
           await this.engagements.upsert({
             tenantId: payload.tenant_id,
-            phynecrmEngagementId: payload.engagement_id,
+            phyndcrmEngagementId: payload.engagement_id,
             projectName: payload.data?.project_name ?? null,
             status: payload.data?.status ?? 'active',
             contactId: payload.data?.contact_id ?? null,
@@ -115,16 +115,16 @@ export class PhynecrmEngagementsWebhookController {
           return { received: true, event: eventType, action: 'archived' };
 
         default:
-          // Acknowledge unknown event types so PhyneCRM can expand the
+          // Acknowledge unknown event types so PhyndCRM can expand the
           // taxonomy without breaking this contract.
           this.logger.log(`ignoring unknown event type: ${eventType}`);
           return { received: true, event: eventType, action: 'ignored' };
       }
     } catch (err) {
-      // Log and rethrow 5xx so PhyneCRM retries; auth/bad-request already
+      // Log and rethrow 5xx so PhyndCRM retries; auth/bad-request already
       // threw above and reach here only on persistence failures.
       this.logger.error(
-        `failed to process PhyneCRM engagement webhook (${eventType}): ${err instanceof Error ? err.message : String(err)}`,
+        `failed to process PhyndCRM engagement webhook (${eventType}): ${err instanceof Error ? err.message : String(err)}`,
         err instanceof Error ? err.stack : undefined,
       );
       throw err;

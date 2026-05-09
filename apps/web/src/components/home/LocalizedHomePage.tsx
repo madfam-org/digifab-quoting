@@ -84,7 +84,7 @@ const FEATURE_ICONS: Record<(typeof FEATURE_KEYS)[number], JSX.Element> = {
   dfm: <Wrench className="w-5 h-5" />,
 };
 
-const TRUST_KEYS = ['karafiel', 'dhanam', 'pravara', 'phynecrm', 'forgesight'] as const;
+const TRUST_KEYS = ['karafiel', 'dhanam', 'pravara', 'phyndcrm', 'forgesight'] as const;
 
 export function LocalizedHomePage() {
   const { t } = useTranslation('common');

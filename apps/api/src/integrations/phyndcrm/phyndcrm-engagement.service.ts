@@ -1,18 +1,18 @@
 /**
- * PhyneCRM Engagement Integration
+ * PhyndCRM Engagement Integration
  *
- * Writes quote lifecycle events into PhyneCRM's `engagement_events` via
+ * Writes quote lifecycle events into PhyndCRM's `engagement_events` via
  * the `POST /api/v1/engagements/events` HMAC-signed webhook. Also lets
  * Cotiza announce the signed-proposal artifact PDF into the client's
  * portal view.
  *
- * Kept fire-and-forget — PhyneCRM being offline must never break the
+ * Kept fire-and-forget — PhyndCRM being offline must never break the
  * Cotiza quote pipeline; on error we log and move on.
  *
  * Environment:
- *   PHYNECRM_API_URL              Base URL (e.g. https://phyne-crm.madfam.io)
+ *   PHYNECRM_API_URL              Base URL (e.g. https://phynd-crm.madfam.io)
  *   PHYNECRM_ENGAGEMENT_SECRET    HMAC-SHA256 shared secret (matches
- *                                 PhyneCRM's PHYNE_ENGAGEMENT_EVENTS_SECRET)
+ *                                 PhyndCRM's PHYNE_ENGAGEMENT_EVENTS_SECRET)
  *   PHYNECRM_WEBHOOK_TIMEOUT      HTTP timeout in ms (default: 10000)
  */
 import { Injectable, Logger } from '@nestjs/common';
@@ -54,13 +54,13 @@ export class PhyneCrmEngagementService {
   }
 
   // Resolve the engagement ID for a given Cotiza quote. Cotiza doesn't
-  // own the engagement aggregate — PhyneCRM does — so the link is
-  // expected to live in quote.metadata.phynecrmEngagementId. When
+  // own the engagement aggregate — PhyndCRM does — so the link is
+  // expected to live in quote.metadata.phyndcrmEngagementId. When
   // absent, the webhook is skipped (quote isn't tied to an engagement
   // yet; staff will link it manually).
   getEngagementId(metadata: Record<string, unknown> | null | undefined): string | null {
     if (!metadata) return null;
-    const id = metadata.phynecrmEngagementId;
+    const id = metadata.phyndcrmEngagementId;
     return typeof id === 'string' && id.length > 0 ? id : null;
   }
 
@@ -88,7 +88,7 @@ export class PhyneCrmEngagementService {
   ): Promise<void> {
     if (!this.apiUrl || !this.secret) {
       this.logger.debug(
-        'PhyneCRM webhook skipped: PHYNECRM_API_URL or PHYNECRM_ENGAGEMENT_SECRET not configured',
+        'PhyndCRM webhook skipped: PHYNECRM_API_URL or PHYNECRM_ENGAGEMENT_SECRET not configured',
       );
       return;
     }
@@ -117,7 +117,7 @@ export class PhyneCrmEngagementService {
 
       if (!response.ok) {
         this.logger.warn(
-          'PhyneCRM webhook %s returned %d for engagement=%s event=%s',
+          'PhyndCRM webhook %s returned %d for engagement=%s event=%s',
           path,
           response.status,
           logCtx.engagement_id,
@@ -125,7 +125,7 @@ export class PhyneCrmEngagementService {
         );
       } else {
         this.logger.log(
-          'PhyneCRM webhook %s delivered: engagement=%s event=%s',
+          'PhyndCRM webhook %s delivered: engagement=%s event=%s',
           path,
           logCtx.engagement_id,
           logCtx.event_type,
@@ -134,7 +134,7 @@ export class PhyneCrmEngagementService {
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        'PhyneCRM webhook %s failed (engagement=%s event=%s): %s',
+        'PhyndCRM webhook %s failed (engagement=%s event=%s): %s',
         path,
         logCtx.engagement_id,
         logCtx.event_type,
@@ -143,7 +143,7 @@ export class PhyneCrmEngagementService {
     }
   }
 
-  // Format matches PhyneCRM's shared handleWebhook() signature
+  // Format matches PhyndCRM's shared handleWebhook() signature
   // validator: "t=<ts>,v1=<hex>" with the HMAC computed over the raw
   // body. The timestamp header is already sent separately; signing
   // includes only the body so replay still needs the timestamp window.

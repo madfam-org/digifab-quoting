@@ -30,7 +30,7 @@
       "karafiel": "CFDI 4.0 + NOM-151 vía Karafiel",
       "dhanam": "Stripe + SPEI + OXXO vía Dhanam",
       "pravara": "Despacho MES vía Pravara",
-      "phynecrm": "Sincronía de engagements vía PhyneCRM",
+      "phyndcrm": "Sincronía de engagements vía PhyndCRM",
       "forgesight": "Precios de mercado en vivo vía Forgesight"
     }
   },
@@ -113,7 +113,7 @@
       "description": "Cotizas revisiones de DFM, diseño de fixtures, corridas de prototipo, ingeniería de producto completa. Facturas en horas, cuotas fijas e hitos. Tu CRM, tu facturación y tus proveedores de fabricación no se hablan.",
       "fixes": [
         "Modo-servicios: por hora, cuota fija, por hito — tipos de facturación de primera clase",
-        "Agrupa cotizaciones de fabricación + servicios bajo un mismo engagement (sincroniza con PhyneCRM)",
+        "Agrupa cotizaciones de fabricación + servicios bajo un mismo engagement (sincroniza con PhyndCRM)",
         "Facturación por hito sale a Dhanam automáticamente",
         "DFM corre en cada subida CAD — incluido en cada cotización de servicios",
         "Forgesight market pricing en vivo — para que tu DFM cite números reales"
@@ -168,7 +168,7 @@
     },
     "ecosystem": {
       "title": "Fan-out de ecosistema pre-cableado",
-      "description": "En cada orden: CFDI Karafiel, facturación Dhanam, despacho MES Pravara, update de engagement PhyneCRM, webhook Yantra4D. Sin código de pegamento."
+      "description": "En cada orden: CFDI Karafiel, facturación Dhanam, despacho MES Pravara, update de engagement PhyndCRM, webhook Yantra4D. Sin código de pegamento."
     },
     "intelligence": {
       "title": "Precios de mercado en vivo",
@@ -238,7 +238,7 @@
   },
   "footer": {
     "tagline": "Inteligencia de manufactura que antes costaba $50K/año. Ahora $0–$499/mes.",
-    "ecosystem": "Parte de la plataforma MADFAM — Karafiel · Dhanam · Pravara · PhyneCRM · Forgesight",
+    "ecosystem": "Parte de la plataforma MADFAM — Karafiel · Dhanam · Pravara · PhyndCRM · Forgesight",
     "joinCommunity": "Construido en abierto. Operado con transparencia."
   }
 }

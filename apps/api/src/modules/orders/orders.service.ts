@@ -139,7 +139,7 @@ export class OrdersService {
     // order-creation response. handleOrdered internally uses
     // Promise.allSettled so one failing integration can't affect others.
     // orderId is stamped onto Stripe PI metadata so Dhanam's ecosystem
-    // extractor can pass it through to PhyneCRM's engagement timeline.
+    // extractor can pass it through to PhyndCRM's engagement timeline.
     void this.quotesService.handleOrdered(tenantId, quoteId, order.id);
 
     this.logger.log(`Created order ${order.orderNumber} from quote ${quoteId}`);

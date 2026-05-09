@@ -39,12 +39,12 @@ describe('EngagementsService', () => {
       prisma.engagement.upsert.mockResolvedValue({ id: 'eng_1' });
       await service.upsert({
         tenantId: 't1',
-        phynecrmEngagementId: 'pcrm_1',
+        phyndcrmEngagementId: 'pcrm_1',
         projectName: 'Tablaco build',
         synced: true,
       });
       const call = prisma.engagement.upsert.mock.calls[0][0];
-      expect(call.where).toEqual({ phynecrmEngagementId: 'pcrm_1' });
+      expect(call.where).toEqual({ phyndcrmEngagementId: 'pcrm_1' });
       expect(call.create.lastSyncedAt).toBeInstanceOf(Date);
       expect(call.update.lastSyncedAt).toBeInstanceOf(Date);
     });
@@ -53,7 +53,7 @@ describe('EngagementsService', () => {
       prisma.engagement.upsert.mockResolvedValue({ id: 'eng_1' });
       await service.upsert({
         tenantId: 't1',
-        phynecrmEngagementId: 'pcrm_1',
+        phyndcrmEngagementId: 'pcrm_1',
         synced: false,
       });
       const call = prisma.engagement.upsert.mock.calls[0][0];
@@ -100,7 +100,7 @@ describe('EngagementsService', () => {
       prisma.engagement.updateMany.mockResolvedValue({ count: 1 });
       await service.softDelete('pcrm_1');
       const call = prisma.engagement.updateMany.mock.calls[0][0];
-      expect(call.where).toEqual({ phynecrmEngagementId: 'pcrm_1', deletedAt: null });
+      expect(call.where).toEqual({ phyndcrmEngagementId: 'pcrm_1', deletedAt: null });
       expect(call.data.status).toBe('archived');
       expect(call.data.deletedAt).toBeInstanceOf(Date);
     });
@@ -111,7 +111,7 @@ describe('EngagementsService', () => {
       prisma.engagement.findFirst.mockResolvedValue({
         id: 'eng_1',
         tenantId: 't1',
-        phynecrmEngagementId: 'pcrm_1',
+        phyndcrmEngagementId: 'pcrm_1',
         projectName: 'Tablaco',
         status: 'active',
         contactId: null,
@@ -189,7 +189,7 @@ describe('EngagementsService', () => {
       // First caller: sees no existing row → upserts → returns new id.
       // Second caller: arrives after the first findUnique, before the row
       // is visible to it (simulated by the second findUnique returning
-      // null) → also upserts. Because phynecrmEngagementId is UNIQUE and
+      // null) → also upserts. Because phyndcrmEngagementId is UNIQUE and
       // we use upsert (not create), the DB-level race resolves to the
       // same canonical row on both sides.
       prisma.engagement.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
@@ -206,7 +206,7 @@ describe('EngagementsService', () => {
       expect(b).toBe('eng_race_winner');
       // Both callers reach the upsert path — this is expected; upsert is
       // the race guard at the DB layer. The unique index on
-      // phynecrmEngagementId makes the second upsert a no-op update.
+      // phyndcrmEngagementId makes the second upsert a no-op update.
       expect(prisma.engagement.upsert).toHaveBeenCalledTimes(2);
       // And neither call clobbers lastSyncedAt (synced=false ⇒ undefined
       // in update to preserve prior webhook stamps).

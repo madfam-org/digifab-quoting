@@ -78,7 +78,7 @@ const features = [
       'REST API + webhooks',
       'Stripe payments via Dhanam',
       'CFDI invoicing via Karafiel',
-      'PhyneCRM engagement sync',
+      'PhyndCRM engagement sync',
     ],
   },
 ];

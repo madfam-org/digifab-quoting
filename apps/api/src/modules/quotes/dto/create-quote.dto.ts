@@ -102,9 +102,9 @@ export class CreateQuoteDto {
 
   @ApiPropertyOptional({
     description:
-      'PhyneCRM engagement ID this quote belongs to. If the projection ' +
+      'PhyndCRM engagement ID this quote belongs to. If the projection ' +
       'does not yet exist in Cotiza, one is auto-materialized and will ' +
-      'be reconciled when PhyneCRM next emits an engagement webhook. ' +
+      'be reconciled when PhyndCRM next emits an engagement webhook. ' +
       'Two quotes can share the same engagementId — e.g. a physical-build ' +
       'fab quote + a digital-app services quote under one client engagement.',
     example: 'eng_01HXK3D...',

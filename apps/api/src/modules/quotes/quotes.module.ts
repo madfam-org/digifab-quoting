@@ -3,7 +3,7 @@ import { QuotesService } from './quotes.service';
 import { QuotesController } from './quotes.controller';
 import { Yantra4dImportController } from './yantra4d-import.controller';
 import { Yantra4dImportService } from './services/yantra4d-import.service';
-import { PhyneCrmEngagementService } from '../../integrations/phynecrm/phynecrm-engagement.service';
+import { PhyneCrmEngagementService } from '../../integrations/phyndcrm/phyndcrm-engagement.service';
 import { KarafielComplianceService } from '../../integrations/karafiel/karafiel-compliance.service';
 import { DhanamMilestoneService } from '../../integrations/dhanam/dhanam-milestone.service';
 import { PravaraDispatchService } from '../../integrations/pravara/pravara-dispatch.service';
