@@ -22,7 +22,7 @@ import { TenantCacheService } from '../tenants/services/tenant-cache.service';
 import { JobsService } from '../jobs/jobs.service';
 import { JobType } from '../jobs/interfaces/job.interface';
 import { FilesService } from '../files/files.service';
-import { PhyneCrmEngagementService } from '../../integrations/phyndcrm/phyndcrm-engagement.service';
+import { PhyndCrmEngagementService } from '../../integrations/phyndcrm/phyndcrm-engagement.service';
 import { KarafielComplianceService } from '../../integrations/karafiel/karafiel-compliance.service';
 import {
   DhanamMilestoneService,
@@ -48,7 +48,7 @@ export class QuotesService {
     private tenantCacheService: TenantCacheService,
     private jobsService: JobsService,
     private filesService: FilesService,
-    private phyndcrmEngagement: PhyneCrmEngagementService,
+    private phyndcrmEngagement: PhyndCrmEngagementService,
     private karafielCompliance: KarafielComplianceService,
     private dhanamMilestone: DhanamMilestoneService,
     private pravaraDispatch: PravaraDispatchService,

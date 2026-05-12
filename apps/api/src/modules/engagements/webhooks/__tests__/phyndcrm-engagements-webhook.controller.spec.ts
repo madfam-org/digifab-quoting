@@ -1,5 +1,5 @@
 /**
- * PhynecrmEngagementsWebhookController — signature verification + event
+ * PhyndcrmEngagementsWebhookController — signature verification + event
  * dispatch. Service is mocked; we're testing the controller's gates,
  * not the projection logic.
  */
@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 
 import { EngagementsService } from '../../engagements.service';
-import { PhynecrmEngagementsWebhookController } from '../phyndcrm-engagements-webhook.controller';
+import { PhyndcrmEngagementsWebhookController } from '../phyndcrm-engagements-webhook.controller';
 
 const SECRET = 'test-inbound-secret';
 
@@ -25,8 +25,8 @@ function mkRequest(body: object): any {
   };
 }
 
-describe('PhynecrmEngagementsWebhookController', () => {
-  let controller: PhynecrmEngagementsWebhookController;
+describe('PhyndcrmEngagementsWebhookController', () => {
+  let controller: PhyndcrmEngagementsWebhookController;
   let service: jest.Mocked<Pick<EngagementsService, 'upsert' | 'softDelete'>>;
 
   beforeEach(async () => {
@@ -35,18 +35,18 @@ describe('PhynecrmEngagementsWebhookController', () => {
       softDelete: jest.fn().mockResolvedValue(undefined),
     };
     const module = await Test.createTestingModule({
-      controllers: [PhynecrmEngagementsWebhookController],
+      controllers: [PhyndcrmEngagementsWebhookController],
       providers: [
         {
           provide: ConfigService,
           useValue: {
-            get: (k: string, def: unknown) => (k === 'PHYNECRM_INBOUND_SECRET' ? SECRET : def),
+            get: (k: string, def: unknown) => (k === 'PHYNDCRM_INBOUND_SECRET' ? SECRET : def),
           },
         },
         { provide: EngagementsService, useValue: service },
       ],
     }).compile();
-    controller = module.get(PhynecrmEngagementsWebhookController);
+    controller = module.get(PhyndcrmEngagementsWebhookController);
   });
 
   it('rejects a missing signature', async () => {

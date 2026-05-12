@@ -188,7 +188,7 @@ First-class projection of PhyndCRM's engagement aggregate. Groups quotes under o
 | Method | Path                                    | Description                                                  | Auth | Signature                                                          |
 | ------ | --------------------------------------- | ------------------------------------------------------------ | ---- | ------------------------------------------------------------------ |
 | POST   | `/api/v1/webhooks/forgesight`           | Forgesight price update relay                                | HMAC | `x-forgesight-signature` (SHA-256)                                 |
-| POST   | `/api/v1/webhooks/phyndcrm/engagements` | PhyndCRM engagement lifecycle (created / updated / archived) | HMAC | `x-phyndcrm-signature` (SHA-256), secret `PHYNECRM_INBOUND_SECRET` |
+| POST   | `/api/v1/webhooks/phyndcrm/engagements` | PhyndCRM engagement lifecycle (created / updated / archived) | HMAC | `x-phyndcrm-signature` (SHA-256), secret `PHYNDCRM_INBOUND_SECRET` |
 
 ## Frontend Routes
 

@@ -10,10 +10,10 @@
  * Cotiza quote pipeline; on error we log and move on.
  *
  * Environment:
- *   PHYNECRM_API_URL              Base URL (e.g. https://phynd-crm.madfam.io)
- *   PHYNECRM_ENGAGEMENT_SECRET    HMAC-SHA256 shared secret (matches
- *                                 PhyndCRM's PHYNE_ENGAGEMENT_EVENTS_SECRET)
- *   PHYNECRM_WEBHOOK_TIMEOUT      HTTP timeout in ms (default: 10000)
+ *   PHYNDCRM_API_URL              Base URL (e.g. https://phynd-crm.madfam.io)
+ *   PHYNDCRM_ENGAGEMENT_SECRET    HMAC-SHA256 shared secret (matches
+ *                                 PhyndCRM's PHYND_ENGAGEMENT_EVENTS_SECRET)
+ *   PHYNDCRM_WEBHOOK_TIMEOUT      HTTP timeout in ms (default: 10000)
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -41,16 +41,16 @@ export interface EngagementArtifactPayload {
 }
 
 @Injectable()
-export class PhyneCrmEngagementService {
-  private readonly logger = new Logger(PhyneCrmEngagementService.name);
+export class PhyndCrmEngagementService {
+  private readonly logger = new Logger(PhyndCrmEngagementService.name);
   private readonly apiUrl: string;
   private readonly secret: string;
   private readonly timeout: number;
 
   constructor(private readonly config: ConfigService) {
-    this.apiUrl = this.config.get<string>('PHYNECRM_API_URL', '');
-    this.secret = this.config.get<string>('PHYNECRM_ENGAGEMENT_SECRET', '');
-    this.timeout = this.config.get<number>('PHYNECRM_WEBHOOK_TIMEOUT', 10000);
+    this.apiUrl = this.config.get<string>('PHYNDCRM_API_URL', '');
+    this.secret = this.config.get<string>('PHYNDCRM_ENGAGEMENT_SECRET', '');
+    this.timeout = this.config.get<number>('PHYNDCRM_WEBHOOK_TIMEOUT', 10000);
   }
 
   // Resolve the engagement ID for a given Cotiza quote. Cotiza doesn't
@@ -88,7 +88,7 @@ export class PhyneCrmEngagementService {
   ): Promise<void> {
     if (!this.apiUrl || !this.secret) {
       this.logger.debug(
-        'PhyndCRM webhook skipped: PHYNECRM_API_URL or PHYNECRM_ENGAGEMENT_SECRET not configured',
+        'PhyndCRM webhook skipped: PHYNDCRM_API_URL or PHYNDCRM_ENGAGEMENT_SECRET not configured',
       );
       return;
     }

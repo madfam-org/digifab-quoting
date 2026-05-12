@@ -4,7 +4,7 @@ import * as crypto from 'crypto';
 import {
   EngagementArtifactPayload,
   EngagementEventPayload,
-  PhyneCrmEngagementService,
+  PhyndCrmEngagementService,
 } from '../phyndcrm-engagement.service';
 
 // ---------------------------------------------------------------------------
@@ -16,9 +16,9 @@ const SECRET = 'test-phyndcrm-engagement-secret-256';
 
 function mockConfigService(overrides: Record<string, unknown> = {}): Partial<ConfigService> {
   const defaults: Record<string, unknown> = {
-    PHYNECRM_API_URL: API_URL,
-    PHYNECRM_ENGAGEMENT_SECRET: SECRET,
-    PHYNECRM_WEBHOOK_TIMEOUT: 10000,
+    PHYNDCRM_API_URL: API_URL,
+    PHYNDCRM_ENGAGEMENT_SECRET: SECRET,
+    PHYNDCRM_WEBHOOK_TIMEOUT: 10000,
     ...overrides,
   };
   return {
@@ -64,19 +64,19 @@ function expectedSignature(body: string): string {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('PhyneCrmEngagementService', () => {
-  let service: PhyneCrmEngagementService;
+describe('PhyndCrmEngagementService', () => {
+  let service: PhyndCrmEngagementService;
   let fetchSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PhyneCrmEngagementService,
+        PhyndCrmEngagementService,
         { provide: ConfigService, useValue: mockConfigService() },
       ],
     }).compile();
 
-    service = module.get<PhyneCrmEngagementService>(PhyneCrmEngagementService);
+    service = module.get<PhyndCrmEngagementService>(PhyndCrmEngagementService);
 
     fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
@@ -130,33 +130,33 @@ describe('PhyneCrmEngagementService', () => {
       expect(headers['x-webhook-timestamp']).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     });
 
-    it('skips fetch when PHYNECRM_API_URL is unset', async () => {
+    it('skips fetch when PHYNDCRM_API_URL is unset', async () => {
       const module = await Test.createTestingModule({
         providers: [
-          PhyneCrmEngagementService,
+          PhyndCrmEngagementService,
           {
             provide: ConfigService,
-            useValue: mockConfigService({ PHYNECRM_API_URL: '' }),
+            useValue: mockConfigService({ PHYNDCRM_API_URL: '' }),
           },
         ],
       }).compile();
-      const s = module.get<PhyneCrmEngagementService>(PhyneCrmEngagementService);
+      const s = module.get<PhyndCrmEngagementService>(PhyndCrmEngagementService);
 
       await s.recordEvent(sampleEvent());
       expect(fetchSpy).not.toHaveBeenCalled();
     });
 
-    it('skips fetch when PHYNECRM_ENGAGEMENT_SECRET is unset', async () => {
+    it('skips fetch when PHYNDCRM_ENGAGEMENT_SECRET is unset', async () => {
       const module = await Test.createTestingModule({
         providers: [
-          PhyneCrmEngagementService,
+          PhyndCrmEngagementService,
           {
             provide: ConfigService,
-            useValue: mockConfigService({ PHYNECRM_ENGAGEMENT_SECRET: '' }),
+            useValue: mockConfigService({ PHYNDCRM_ENGAGEMENT_SECRET: '' }),
           },
         ],
       }).compile();
-      const s = module.get<PhyneCrmEngagementService>(PhyneCrmEngagementService);
+      const s = module.get<PhyndCrmEngagementService>(PhyndCrmEngagementService);
 
       await s.recordEvent(sampleEvent());
       expect(fetchSpy).not.toHaveBeenCalled();

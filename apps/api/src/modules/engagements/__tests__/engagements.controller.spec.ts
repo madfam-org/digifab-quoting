@@ -22,12 +22,12 @@ import { EngagementsService } from '../engagements.service';
 describe('EngagementsController', () => {
   let controller: EngagementsController;
   let service: jest.Mocked<
-    Pick<EngagementsService, 'findByPhynecrmId' | 'listQuotesForEngagement'>
+    Pick<EngagementsService, 'findByPhyndcrmId' | 'listQuotesForEngagement'>
   >;
 
   beforeEach(async () => {
     service = {
-      findByPhynecrmId: jest.fn().mockResolvedValue({
+      findByPhyndcrmId: jest.fn().mockResolvedValue({
         id: 'eng_1',
         tenantId: 't1',
         phyndcrmEngagementId: 'pcrm_1',
@@ -55,7 +55,7 @@ describe('EngagementsController', () => {
   it('findOne — forwards tenantId from req.user + phyndcrmEngagementId from path', async () => {
     const req = { user: { tenantId: 't1' } } as any;
     const result = await controller.findOne(req, 'pcrm_1');
-    expect(service.findByPhynecrmId).toHaveBeenCalledWith('t1', 'pcrm_1');
+    expect(service.findByPhyndcrmId).toHaveBeenCalledWith('t1', 'pcrm_1');
     expect(result.quoteCountsByType).toEqual({ fab: 1, services: 1 });
   });
 
@@ -69,6 +69,6 @@ describe('EngagementsController', () => {
   it('isolates across tenants (service receives caller tenantId, not the path id)', async () => {
     const req = { user: { tenantId: 't_caller' } } as any;
     await controller.findOne(req, 'pcrm_belongs_to_other');
-    expect(service.findByPhynecrmId).toHaveBeenCalledWith('t_caller', 'pcrm_belongs_to_other');
+    expect(service.findByPhyndcrmId).toHaveBeenCalledWith('t_caller', 'pcrm_belongs_to_other');
   });
 });

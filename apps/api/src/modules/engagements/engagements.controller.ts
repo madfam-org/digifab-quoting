@@ -45,7 +45,7 @@ export class EngagementsController {
     @Req() req: AuthenticatedRequest,
     @Param('phyndcrmEngagementId') phyndcrmEngagementId: string,
   ) {
-    return this.engagements.findByPhynecrmId(req.user.tenantId, phyndcrmEngagementId);
+    return this.engagements.findByPhyndcrmId(req.user.tenantId, phyndcrmEngagementId);
   }
 
   @Get(':phyndcrmEngagementId/quotes')

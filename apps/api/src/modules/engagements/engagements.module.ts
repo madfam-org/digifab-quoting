@@ -5,11 +5,11 @@ import { PrismaModule } from '../../prisma/prisma.module';
 
 import { EngagementsController } from './engagements.controller';
 import { EngagementsService } from './engagements.service';
-import { PhynecrmEngagementsWebhookController } from './webhooks/phyndcrm-engagements-webhook.controller';
+import { PhyndcrmEngagementsWebhookController } from './webhooks/phyndcrm-engagements-webhook.controller';
 
 @Module({
   imports: [PrismaModule, AuthModule],
-  controllers: [EngagementsController, PhynecrmEngagementsWebhookController],
+  controllers: [EngagementsController, PhyndcrmEngagementsWebhookController],
   providers: [EngagementsService],
   exports: [EngagementsService],
 })

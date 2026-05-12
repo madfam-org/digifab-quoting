@@ -2,7 +2,7 @@
  * POST /api/v1/webhooks/phyndcrm/engagements
  *
  * Inbound webhook from PhyndCRM announcing engagement lifecycle events.
- * HMAC-SHA256 signed with `PHYNECRM_INBOUND_SECRET`. Idempotent — same
+ * HMAC-SHA256 signed with `PHYNDCRM_INBOUND_SECRET`. Idempotent — same
  * `engagement_id` + `event_type` + `timestamp` is a no-op on second
  * delivery (PhyndCRM may retry).
  *
@@ -34,13 +34,13 @@ import { ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@
 
 import { EngagementsService } from '../engagements.service';
 
-export enum PhynecrmEngagementEventType {
+export enum PhyndcrmEngagementEventType {
   CREATED = 'engagement.created',
   UPDATED = 'engagement.updated',
   ARCHIVED = 'engagement.archived',
 }
 
-export interface PhynecrmEngagementWebhookPayload {
+export interface PhyndcrmEngagementWebhookPayload {
   engagement_id: string;
   event_type: string;
   tenant_id: string;
@@ -55,18 +55,18 @@ export interface PhynecrmEngagementWebhookPayload {
 
 @ApiTags('Webhooks')
 @Controller('webhooks/phyndcrm/engagements')
-export class PhynecrmEngagementsWebhookController {
-  private readonly logger = new Logger(PhynecrmEngagementsWebhookController.name);
+export class PhyndcrmEngagementsWebhookController {
+  private readonly logger = new Logger(PhyndcrmEngagementsWebhookController.name);
   private readonly secret: string;
 
   constructor(
     private readonly config: ConfigService,
     private readonly engagements: EngagementsService,
   ) {
-    this.secret = this.config.get<string>('PHYNECRM_INBOUND_SECRET', '');
+    this.secret = this.config.get<string>('PHYNDCRM_INBOUND_SECRET', '');
     if (!this.secret) {
       this.logger.warn(
-        'PHYNECRM_INBOUND_SECRET not configured — PhyndCRM engagement webhook will reject all requests',
+        'PHYNDCRM_INBOUND_SECRET not configured — PhyndCRM engagement webhook will reject all requests',
       );
     }
   }
@@ -83,7 +83,7 @@ export class PhynecrmEngagementsWebhookController {
   async handle(
     @Req() req: RawBodyRequest<Request>,
     @Headers('x-phyndcrm-signature') signature: string,
-    @Body() payload: PhynecrmEngagementWebhookPayload,
+    @Body() payload: PhyndcrmEngagementWebhookPayload,
   ): Promise<{ received: boolean; event?: string; action?: string }> {
     const rawBody = req.rawBody?.toString() || JSON.stringify(payload);
     if (!this.verifySignature(rawBody, signature)) {
@@ -97,8 +97,8 @@ export class PhynecrmEngagementsWebhookController {
 
     try {
       switch (eventType) {
-        case PhynecrmEngagementEventType.CREATED:
-        case PhynecrmEngagementEventType.UPDATED:
+        case PhyndcrmEngagementEventType.CREATED:
+        case PhyndcrmEngagementEventType.UPDATED:
           await this.engagements.upsert({
             tenantId: payload.tenant_id,
             phyndcrmEngagementId: payload.engagement_id,
@@ -110,7 +110,7 @@ export class PhynecrmEngagementsWebhookController {
           });
           return { received: true, event: eventType, action: 'upserted' };
 
-        case PhynecrmEngagementEventType.ARCHIVED:
+        case PhyndcrmEngagementEventType.ARCHIVED:
           await this.engagements.softDelete(payload.engagement_id);
           return { received: true, event: eventType, action: 'archived' };
 

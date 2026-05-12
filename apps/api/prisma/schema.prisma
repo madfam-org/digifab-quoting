@@ -225,7 +225,7 @@ model Quote {
   origin         String    @default("authenticated")
   guestSessionId String?
   // First-class engagement linkage. Nullable — a quote doesn't have to
-  // belong to an engagement. Backfilled from metadata.phynecrmEngagementId
+  // belong to an engagement. Backfilled from metadata.phyndcrmEngagementId
   // in migration 20260419100000. See also Engagement model below.
   engagementId   String?
   createdAt      DateTime  @default(now())
@@ -249,23 +249,23 @@ model Quote {
   @@index([engagementId])
 }
 
-// Projection of PhyneCRM's engagement aggregate. PhyneCRM is the source
+// Projection of PhyndCRM's engagement aggregate. PhyndCRM is the source
 // of truth (owns the engagement lifecycle). Cotiza stores enough to
 // group quotes by engagement + render portal summaries. Kept in sync
-// by the inbound PhyneCRM webhook (later phase) + auto-materialized on
+// by the inbound PhyndCRM webhook (later phase) + auto-materialized on
 // first use via EngagementsService.ensureProjection.
 model Engagement {
   id                   String    @id @default(cuid())
   tenantId             String
-  // The ID issued by PhyneCRM — canonical join key across ecosystem.
-  phynecrmEngagementId String    @unique
+  // The ID issued by PhyndCRM — canonical join key across ecosystem.
+  phyndcrmEngagementId String    @unique
   projectName          String?
   status               String    @default("active")
   contactId            String?
   metadata             Json      @default("{}")
-  // Timestamp of the most recent PhyneCRM webhook sync. NULL when the
+  // Timestamp of the most recent PhyndCRM webhook sync. NULL when the
   // projection was auto-created by Cotiza and hasn't been confirmed
-  // back from PhyneCRM yet.
+  // back from PhyndCRM yet.
   lastSyncedAt         DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt

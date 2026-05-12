@@ -199,11 +199,11 @@ Lifecycle:
 - `GET /api/v1/engagements/:phyndcrmEngagementId/quotes` — quotes
   grouped by `quoteType` for the portal's side-by-side card layout.
 
-Env: `PHYNECRM_INBOUND_SECRET` (separate from outbound `PHYNECRM_ENGAGEMENT_SECRET`).
+Env: `PHYNDCRM_INBOUND_SECRET` (separate from outbound `PHYNDCRM_ENGAGEMENT_SECRET`).
 
 ### Services-mode quoting
 
-Services-mode (`Quote.quoteType === 'services'`) is feature-flag gated per tenant via `Tenant.features.servicesQuotes`. The `QuoteItem.servicesDetails` Json column carries the per-line billable shape (`hourly` / `fixed_fee` / `milestone`). Schema in `packages/shared/src/schemas/services-quote.ts`; types in `packages/shared/src/types/services-quote.ts`. The services-mode branch in `QuotesService.calculate()` sidesteps the fab pricing engine entirely. See `PhyneCrmEngagementService` for how the quote-approval flow pushes lifecycle events + the signed proposal PDF into the client's PhyndCRM engagement timeline.
+Services-mode (`Quote.quoteType === 'services'`) is feature-flag gated per tenant via `Tenant.features.servicesQuotes`. The `QuoteItem.servicesDetails` Json column carries the per-line billable shape (`hourly` / `fixed_fee` / `milestone`). Schema in `packages/shared/src/schemas/services-quote.ts`; types in `packages/shared/src/types/services-quote.ts`. The services-mode branch in `QuotesService.calculate()` sidesteps the fab pricing engine entirely. See `PhyndCrmEngagementService` for how the quote-approval flow pushes lifecycle events + the signed proposal PDF into the client's PhyndCRM engagement timeline.
 
 On ORDERED (post-payment) transitions, `QuotesService.handleOrdered(tenantId, quoteId)` fans out three fire-and-forget outbound integrations via `Promise.allSettled` from `OrdersService.createOrderFromQuote`:
 

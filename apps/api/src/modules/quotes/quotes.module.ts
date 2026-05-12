@@ -3,7 +3,7 @@ import { QuotesService } from './quotes.service';
 import { QuotesController } from './quotes.controller';
 import { Yantra4dImportController } from './yantra4d-import.controller';
 import { Yantra4dImportService } from './services/yantra4d-import.service';
-import { PhyneCrmEngagementService } from '../../integrations/phyndcrm/phyndcrm-engagement.service';
+import { PhyndCrmEngagementService } from '../../integrations/phyndcrm/phyndcrm-engagement.service';
 import { KarafielComplianceService } from '../../integrations/karafiel/karafiel-compliance.service';
 import { DhanamMilestoneService } from '../../integrations/dhanam/dhanam-milestone.service';
 import { PravaraDispatchService } from '../../integrations/pravara/pravara-dispatch.service';
@@ -35,7 +35,7 @@ import { BillingModule } from '../billing/billing.module';
   providers: [
     QuotesService,
     Yantra4dImportService,
-    PhyneCrmEngagementService,
+    PhyndCrmEngagementService,
     KarafielComplianceService,
     DhanamMilestoneService,
     PravaraDispatchService,

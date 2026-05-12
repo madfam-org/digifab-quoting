@@ -106,7 +106,7 @@ describe('EngagementsService', () => {
     });
   });
 
-  describe('findByPhynecrmId', () => {
+  describe('findByPhyndcrmId', () => {
     it('returns projection with quote type counts', async () => {
       prisma.engagement.findFirst.mockResolvedValue({
         id: 'eng_1',
@@ -124,20 +124,20 @@ describe('EngagementsService', () => {
           { id: 'q3', quoteType: 'services' },
         ],
       });
-      const result = await service.findByPhynecrmId('t1', 'pcrm_1');
+      const result = await service.findByPhyndcrmId('t1', 'pcrm_1');
       expect(result.quoteCountsByType).toEqual({ fab: 1, services: 2 });
     });
 
     it('404s when missing', async () => {
       prisma.engagement.findFirst.mockResolvedValue(null);
-      await expect(service.findByPhynecrmId('t1', 'pcrm_missing')).rejects.toBeInstanceOf(
+      await expect(service.findByPhyndcrmId('t1', 'pcrm_missing')).rejects.toBeInstanceOf(
         NotFoundException,
       );
     });
 
     it('excludes soft-deleted engagements', async () => {
       prisma.engagement.findFirst.mockResolvedValue(null);
-      await expect(service.findByPhynecrmId('t1', 'pcrm_deleted')).rejects.toBeInstanceOf(
+      await expect(service.findByPhyndcrmId('t1', 'pcrm_deleted')).rejects.toBeInstanceOf(
         NotFoundException,
       );
       const where = prisma.engagement.findFirst.mock.calls[0][0].where;

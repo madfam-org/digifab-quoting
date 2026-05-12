@@ -123,7 +123,7 @@ export class EngagementsService {
     });
   }
 
-  async findByPhynecrmId(
+  async findByPhyndcrmId(
     tenantId: string,
     phyndcrmEngagementId: string,
   ): Promise<EngagementWithQuoteCounts> {
