@@ -7,6 +7,7 @@ import { ProcessType, QuoteStatus, Currency } from '@cotiza/shared';
 import { Prisma } from '@prisma/client';
 import { Decimal } from 'decimal.js';
 import { Yantra4dImportDto, Yantra4dImportResponseDto } from '../dto/yantra4d-import.dto';
+import { PricingProvenance } from '../../pricing/forgesight.service';
 
 /**
  * Service responsible for importing Yantra4D geometry exports into Cotiza quotes.
@@ -141,7 +142,15 @@ export class Yantra4dImportService {
     let unitPrice = 0;
     let totalPrice = 0;
     let leadDays = 5;
-    let costBreakdown: Record<string, number> = {};
+    let costBreakdown: Record<string, unknown> = {};
+    let marketContext: PricingProvenance = {
+      source: 'internal_fallback',
+      sample_count: 0,
+      updated_at: null,
+      confidence: 0,
+      fallback_reason: 'pricing_not_calculated',
+      market_verified: false,
+    };
 
     try {
       const geometryMetrics = {
@@ -152,7 +161,7 @@ export class Yantra4dImportService {
 
       // Only run pricing engine if we have both material and machine
       if (material && machine) {
-        const pricingResult = await this.pricingService.calculateQuoteItem(
+        const pricingResult = await this.pricingService.calculateQuoteItemWithMarketIntelligence(
           tenantId,
           process,
           geometryMetrics,
@@ -167,6 +176,7 @@ export class Yantra4dImportService {
         totalPrice = pricingResult.totalPrice;
         leadDays = pricingResult.leadDays;
         costBreakdown = pricingResult.costBreakdown;
+        marketContext = pricingResult.market_context;
       } else {
         // Fallback: estimate pricing from geometry volume
         const estimatedUnitCost = this.estimateFallbackPrice(
@@ -177,6 +187,19 @@ export class Yantra4dImportService {
         unitPrice = estimatedUnitCost;
         totalPrice = estimatedUnitCost * dto.item.quantity;
         costBreakdown = { estimated: totalPrice };
+        marketContext = {
+          source: 'internal_fallback',
+          sample_count: 0,
+          updated_at: null,
+          confidence: 0,
+          fallback_reason:
+            !material && !machine
+              ? 'missing_material_and_machine_configuration'
+              : !material
+                ? 'missing_material_configuration'
+                : 'missing_machine_configuration',
+          market_verified: false,
+        };
         warnings.push(
           'Pricing is estimated due to missing material/machine configuration. ' +
             'Review and adjust before sending to customer.',
@@ -186,6 +209,21 @@ export class Yantra4dImportService {
       const msg = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Pricing calculation failed for Yantra4D import: ${msg}`);
       warnings.push(`Pricing engine error: ${msg}. Quote created without pricing.`);
+      marketContext = {
+        source: 'unpriced',
+        sample_count: 0,
+        updated_at: null,
+        confidence: 0,
+        fallback_reason: `pricing_engine_error: ${msg}`,
+        market_verified: false,
+      };
+    }
+
+    if (dto.require_market_verified && !marketContext.market_verified) {
+      warnings.push(
+        'Market-verified ForgeSight pricing was requested but unavailable. ' +
+          'Quote requires human review before customer use.',
+      );
     }
 
     // -----------------------------------------------------------------------
@@ -197,7 +235,10 @@ export class Yantra4dImportService {
         unitPrice,
         totalPrice,
         leadDays,
-        costBreakdown: costBreakdown as Prisma.InputJsonValue,
+        costBreakdown: {
+          ...costBreakdown,
+          pricing_provenance: marketContext,
+        } as unknown as Prisma.InputJsonValue,
         flags: warnings.length > 0 ? ['needs_review'] : [],
       },
     });
@@ -232,6 +273,14 @@ export class Yantra4dImportService {
           grandTotal: grandTotal.toNumber(),
           currency,
         } as unknown as Prisma.InputJsonValue,
+        metadata: {
+          source: 'yantra4d',
+          yantra4dProject: dto.project.slug,
+          yantra4dProjectName: dto.project.name,
+          notes: dto.notes || '',
+          market_context: marketContext,
+          pricing_provenance: marketContext,
+        } as unknown as Prisma.InputJsonValue,
       },
     });
 
@@ -257,6 +306,7 @@ export class Yantra4dImportService {
         },
       ],
       warnings: warnings.length > 0 ? warnings : undefined,
+      market_context: marketContext,
     };
   }
 

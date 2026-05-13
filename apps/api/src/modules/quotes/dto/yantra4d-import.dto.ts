@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsObject,
   IsOptional,
+  IsBoolean,
   Min,
   Max,
   ValidateNested,
@@ -194,11 +195,61 @@ export class Yantra4dImportDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Requester intent: quote must expose whether ForgeSight market verification succeeded.',
+    default: false,
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  require_market_verified?: boolean;
 }
 
 // ---------------------------------------------------------------------------
 // Response DTO
 // ---------------------------------------------------------------------------
+
+export class MarketContextDto {
+  @ApiProperty({
+    description: 'Pricing or market provenance source',
+    example: 'internal_pricing',
+  })
+  source!: string;
+
+  @ApiProperty({
+    description: 'Number of ForgeSight market samples used for verification',
+    example: 0,
+  })
+  sample_count!: number;
+
+  @ApiProperty({
+    description: 'ForgeSight market data update timestamp, or null when unavailable',
+    example: null,
+    nullable: true,
+  })
+  updated_at!: string | null;
+
+  @ApiProperty({
+    description: 'ForgeSight market confidence, or 0 when unverified/internal',
+    example: 0,
+  })
+  confidence!: number;
+
+  @ApiProperty({
+    description: 'Reason market verification fell back to internal pricing',
+    example: 'forgesight_not_configured',
+    nullable: true,
+  })
+  fallback_reason!: string | null;
+
+  @ApiProperty({
+    description: 'True only when ForgeSight returned verified market data with samples',
+    example: false,
+  })
+  market_verified!: boolean;
+}
 
 export class Yantra4dImportResponseDto {
   @ApiProperty({
@@ -254,4 +305,10 @@ export class Yantra4dImportResponseDto {
     description: 'Validation warnings (non-blocking)',
   })
   warnings?: string[];
+
+  @ApiPropertyOptional({
+    description: 'Market/pricing provenance for the quote',
+    type: MarketContextDto,
+  })
+  market_context?: MarketContextDto;
 }

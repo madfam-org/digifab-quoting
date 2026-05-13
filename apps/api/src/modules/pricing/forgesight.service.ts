@@ -18,7 +18,22 @@ import { ProcessType } from '@cotiza/shared';
  * - Price trend analysis
  */
 
-interface MarketPricingContext {
+export type PricingProvenanceSource =
+  | 'forgesight'
+  | 'internal_pricing'
+  | 'internal_fallback'
+  | 'unpriced';
+
+export interface PricingProvenance {
+  source: PricingProvenanceSource;
+  sample_count: number;
+  updated_at: string | null;
+  confidence: number;
+  fallback_reason: string | null;
+  market_verified: boolean;
+}
+
+export interface MarketPricingContext {
   materialCost: number;
   serviceCost: number;
   totalCost: number;
@@ -30,6 +45,7 @@ interface MarketPricingContext {
     setupFee: number;
     processingCost: number;
   };
+  market_context: PricingProvenance;
 }
 
 interface PriceBenchmark {
@@ -39,6 +55,7 @@ interface PriceBenchmark {
   ourPosition: 'below_market' | 'at_market' | 'above_market';
   competitiveIndex: number; // 0-100, higher = more competitive
   recommendation: 'price_increase' | 'maintain' | 'price_decrease';
+  market_context: PricingProvenance;
 }
 
 // Exported so consumers that embed `getMaterialTrends()` results in their own
@@ -109,6 +126,41 @@ export class ForgeSightService implements OnModuleInit {
     return mapping[process] || 'fdm_printing';
   }
 
+  private normalizeMarketContext(result: {
+    confidence?: number;
+    sampleCount?: number;
+    sample_count?: number;
+    updatedAt?: string;
+    updated_at?: string;
+    marketVerified?: boolean;
+    market_verified?: boolean;
+    fallbackReason?: string;
+    fallback_reason?: string;
+  }): PricingProvenance {
+    const sampleCount =
+      typeof result.sample_count === 'number'
+        ? result.sample_count
+        : typeof result.sampleCount === 'number'
+          ? result.sampleCount
+          : 0;
+    const updatedAt = result.updated_at || result.updatedAt || null;
+    const confidence = typeof result.confidence === 'number' ? result.confidence : 0;
+    const upstreamAllowsVerification = (result.market_verified ?? result.marketVerified) !== false;
+    const marketVerified =
+      upstreamAllowsVerification && sampleCount > 0 && Boolean(updatedAt) && confidence > 0;
+
+    return {
+      source: marketVerified ? 'forgesight' : 'internal_pricing',
+      sample_count: sampleCount,
+      updated_at: updatedAt,
+      confidence,
+      fallback_reason: marketVerified
+        ? null
+        : result.fallback_reason || result.fallbackReason || 'forgesight_unverified_market_data',
+      market_verified: marketVerified,
+    };
+  }
+
   /**
    * Get market pricing context for a quote item
    *
@@ -138,7 +190,10 @@ export class ForgeSightService implements OnModuleInit {
         region: params.region || 'MX', // Default to Mexico
       });
 
-      return result;
+      return {
+        ...result,
+        market_context: this.normalizeMarketContext(result),
+      };
     } catch (error) {
       this.logger.warn(
         `ForgeSight pricing fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -167,7 +222,7 @@ export class ForgeSightService implements OnModuleInit {
       region: params.region,
     });
 
-    if (!marketPricing) {
+    if (!marketPricing?.market_context.market_verified) {
       return null;
     }
 
@@ -209,6 +264,7 @@ export class ForgeSightService implements OnModuleInit {
       ourPosition,
       competitiveIndex: Math.round(competitiveIndex),
       recommendation,
+      market_context: marketPricing.market_context,
     };
   }
 

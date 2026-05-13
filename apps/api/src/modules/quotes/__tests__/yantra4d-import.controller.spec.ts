@@ -69,6 +69,14 @@ interface Yantra4dImportResponseDto {
     leadDays: number;
   }>;
   warnings?: string[];
+  market_context?: {
+    source: string;
+    sample_count: number;
+    updated_at: string | null;
+    confidence: number;
+    fallback_reason: string | null;
+    market_verified: boolean;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -120,6 +128,14 @@ function buildResponse(): Yantra4dImportResponseDto {
         leadDays: 5,
       },
     ],
+    market_context: {
+      source: 'internal_pricing',
+      sample_count: 0,
+      updated_at: null,
+      confidence: 0,
+      fallback_reason: 'forgesight_not_configured',
+      market_verified: false,
+    },
   };
 }
 
@@ -192,6 +208,22 @@ describe('Yantra4dImportController', () => {
 
       expect(result.warnings).toContain('Material not found in tenant catalog.');
       expect(result.status).toBe('needs_review');
+    });
+
+    it('should return market context provenance when present', async () => {
+      const response = buildResponse();
+      importService.createQuoteFromYantra4d.mockResolvedValue(response);
+
+      const result = await controller.importFromYantra4d(buildRequest(), buildDto() as any);
+
+      expect(result.market_context).toEqual({
+        source: 'internal_pricing',
+        sample_count: 0,
+        updated_at: null,
+        confidence: 0,
+        fallback_reason: 'forgesight_not_configured',
+        market_verified: false,
+      });
     });
   });
 

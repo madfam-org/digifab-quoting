@@ -140,6 +140,15 @@ export interface QuotePricingResult {
   };
   confidence: number;
   benchmarkPosition: 'low' | 'average' | 'high';
+  sampleCount?: number;
+  sample_count?: number;
+  updatedAt?: string;
+  updated_at?: string;
+  marketVerified?: boolean;
+  market_verified?: boolean;
+  fallbackReason?: string;
+  fallback_reason?: string;
+  source?: string;
 }
 
 export interface BatchQuotePricingParams {

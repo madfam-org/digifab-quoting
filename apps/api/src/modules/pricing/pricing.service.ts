@@ -8,7 +8,7 @@ import {
   GeometryMetrics as PricingGeometryMetrics,
 } from '@cotiza/pricing-engine';
 import { Decimal } from 'decimal.js';
-import { ForgeSightService } from './forgesight.service';
+import { ForgeSightService, PricingProvenance } from './forgesight.service';
 
 interface GeometryMetrics {
   volumeCm3?: number;
@@ -46,6 +46,20 @@ export class PricingService {
     private forgeSightService: ForgeSightService,
   ) {
     this.pricingEngine = new PricingEngine();
+  }
+
+  private buildInternalMarketContext(
+    fallbackReason: string,
+    source: PricingProvenance['source'] = 'internal_pricing',
+  ): PricingProvenance {
+    return {
+      source,
+      sample_count: 0,
+      updated_at: null,
+      confidence: 0,
+      fallback_reason: fallbackReason,
+      market_verified: false,
+    };
   }
 
   async calculateQuoteItem(
@@ -117,6 +131,8 @@ export class PricingService {
       // this.logger.warn('Pricing warnings:', pricingResult.warnings);
     }
 
+    const pricingProvenance = this.buildInternalMarketContext('forgesight_not_requested');
+
     return {
       unitPrice: pricingResult.unitPrice.toNumber(),
       totalPrice: pricingResult.totalPrice.toNumber(),
@@ -136,6 +152,8 @@ export class PricingService {
         recycledPercent: pricingResult.sustainability.recycledPercent,
         wastePercent: pricingResult.sustainability.wastePercent,
       },
+      market_context: pricingProvenance,
+      pricing_provenance: pricingProvenance,
     };
   }
 
@@ -230,35 +248,41 @@ export class PricingService {
     // Enhance with ForgeSight market intelligence (if available)
     let marketIntelligence = null;
     let benchmark = null;
+    let marketContext = this.buildInternalMarketContext(
+      this.forgeSightService.isEnabled() ? 'forgesight_no_market_data' : 'forgesight_not_configured',
+    );
 
     if (this.forgeSightService.isEnabled()) {
       try {
-        // Fetch market pricing in parallel with benchmark
-        const [marketPricing, priceBenchmark] = await Promise.all([
-          this.forgeSightService.getMarketPricing({
-            materialId,
-            process,
-            quantity,
-            volumeCm3: geometryMetrics.volumeCm3,
-          }),
-          this.forgeSightService.getBenchmark({
+        const marketPricing = await this.forgeSightService.getMarketPricing({
+          materialId,
+          process,
+          quantity,
+          volumeCm3: geometryMetrics.volumeCm3,
+        });
+
+        if (marketPricing?.market_context) {
+          marketContext = marketPricing.market_context;
+        }
+
+        if (marketPricing?.market_context.market_verified) {
+          marketIntelligence = marketPricing;
+          benchmark = await this.forgeSightService.getBenchmark({
             materialId,
             process,
             quantity,
             ourPrice: basePricing.totalPrice,
-          }),
-        ]);
-
-        marketIntelligence = marketPricing;
-        benchmark = priceBenchmark;
+          });
+        }
 
         // Log market positioning for analytics
-        if (priceBenchmark) {
+        if (benchmark) {
           this.logger.debug(
-            `Quote pricing: ${priceBenchmark.ourPosition} (index: ${priceBenchmark.competitiveIndex})`,
+            `Quote pricing: ${benchmark.ourPosition} (index: ${benchmark.competitiveIndex})`,
           );
         }
       } catch (error) {
+        marketContext = this.buildInternalMarketContext('forgesight_unavailable');
         this.logger.warn(
           `ForgeSight market intelligence unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`,
         );
@@ -273,6 +297,7 @@ export class PricingService {
             confidence: marketIntelligence.confidence,
             benchmarkPosition: marketIntelligence.benchmarkPosition,
             breakdown: marketIntelligence.breakdown,
+            market_context: marketContext,
           }
         : null,
       benchmark: benchmark
@@ -283,8 +308,11 @@ export class PricingService {
             ourPosition: benchmark.ourPosition,
             competitiveIndex: benchmark.competitiveIndex,
             recommendation: benchmark.recommendation,
+            market_context: benchmark.market_context,
           }
         : null,
+      market_context: marketContext,
+      pricing_provenance: marketContext,
     };
   }
 
