@@ -1,0 +1,36 @@
+name: Deploy API Only
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - ".github/workflows/deploy-api-only.yml"
+      - "infra/k8s/production/api-*.yaml"
+      - "infra/k8s/production/kustomization.yaml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api-only-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-publish-api:
+    uses: madfam-org/enclii/.github/workflows/build-publish.yml@main
+    with:
+      image_prefix: ghcr.io/madfam-org/digifab-quoting
+      kustomization_path: infra/k8s/production
+      services: |
+        [
+          {"name":"api", "dockerfile":"apps/api/Dockerfile"}
+        ]
+    secrets: inherit
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
