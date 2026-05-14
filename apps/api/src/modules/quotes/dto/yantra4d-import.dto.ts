@@ -219,6 +219,12 @@ export class MarketContextDto {
   source!: string;
 
   @ApiProperty({
+    description: 'Client-facing alias for the pricing provenance source',
+    example: 'internal_pricing',
+  })
+  pricing_source!: string;
+
+  @ApiProperty({
     description: 'Number of ForgeSight market samples used for verification',
     example: 0,
   })
@@ -249,6 +255,19 @@ export class MarketContextDto {
     example: false,
   })
   market_verified!: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Raw pricing provenance used to decide market verification',
+    example: {
+      source: 'internal_pricing',
+      sample_count: 0,
+      updated_at: null,
+      confidence: 0,
+      fallback_reason: 'forgesight_not_configured',
+      market_verified: false,
+    },
+  })
+  provenance?: Record<string, unknown>;
 }
 
 export class Yantra4dImportResponseDto {

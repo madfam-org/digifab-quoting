@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { PricingService } from '../../pricing/pricing.service';
 import { TenantCacheService } from '../../tenants/services/tenant-cache.service';
@@ -8,6 +8,11 @@ import { Prisma } from '@prisma/client';
 import { Decimal } from 'decimal.js';
 import { Yantra4dImportDto, Yantra4dImportResponseDto } from '../dto/yantra4d-import.dto';
 import { PricingProvenance } from '../../pricing/forgesight.service';
+
+type Yantra4dMarketContextResponse = PricingProvenance & {
+  pricing_source: PricingProvenance['source'];
+  provenance: Record<string, unknown>;
+};
 
 /**
  * Service responsible for importing Yantra4D geometry exports into Cotiza quotes.
@@ -30,6 +35,45 @@ export class Yantra4dImportService {
     private readonly tenantCacheService: TenantCacheService,
     private readonly quoteCacheService: QuoteCacheService,
   ) {}
+
+  private buildResponseMarketContext(
+    marketContext: PricingProvenance,
+  ): Yantra4dMarketContextResponse {
+    const provenance: Record<string, unknown> = { ...marketContext };
+    return {
+      ...marketContext,
+      pricing_source: marketContext.source,
+      provenance,
+    };
+  }
+
+  private buildInternalMarketContext(
+    fallbackReason: string,
+    source: PricingProvenance['source'] = 'internal_pricing',
+  ): PricingProvenance {
+    return {
+      source,
+      sample_count: 0,
+      updated_at: null,
+      confidence: 0,
+      fallback_reason: fallbackReason,
+      market_verified: false,
+    };
+  }
+
+  private marketDataUnavailableException(marketContext: PricingProvenance): HttpException {
+    return new HttpException(
+      {
+        statusCode: HttpStatus.FAILED_DEPENDENCY,
+        error: 'market_data_unavailable',
+        message:
+          'Market-verified ForgeSight pricing is required but unavailable. ' +
+          'No client-ready quote was created.',
+        market_context: this.buildResponseMarketContext(marketContext),
+      },
+      HttpStatus.FAILED_DEPENDENCY,
+    );
+  }
 
   async createQuoteFromYantra4d(
     tenantId: string,
@@ -88,7 +132,90 @@ export class Yantra4dImportService {
     const quoteNumber = await this.generateQuoteNumber(tenantId);
 
     // -----------------------------------------------------------------------
-    // 4. Create the quote record
+    // 4. Run pricing engine before persisting a quote. Strict market
+    //    verification must fail closed without creating a client-ready quote.
+    // -----------------------------------------------------------------------
+    let unitPrice = 0;
+    let totalPrice = 0;
+    let leadDays = 5;
+    let costBreakdown: Record<string, unknown> = {};
+    let marketContext: PricingProvenance = this.buildInternalMarketContext(
+      'pricing_not_calculated',
+      'internal_fallback',
+    );
+
+    try {
+      const geometryMetrics = {
+        volumeCm3: dto.geometry.volume_cm3,
+        surfaceAreaCm2: dto.geometry.surface_area_cm2,
+        boundingBox: dto.geometry.bounding_box_mm,
+      };
+
+      // Only run pricing engine if we have both material and machine
+      if (material && machine) {
+        const pricingResult = await this.pricingService.calculateQuoteItemWithMarketIntelligence(
+          tenantId,
+          process,
+          geometryMetrics,
+          material.id,
+          machine.id,
+          { material: dto.item.material, finish: dto.item.finish || 'standard' },
+          dto.item.quantity,
+          { cost: 0.5, lead: 0.3, green: 0.2 },
+        );
+
+        unitPrice = pricingResult.unitPrice;
+        totalPrice = pricingResult.totalPrice;
+        leadDays = pricingResult.leadDays;
+        costBreakdown = pricingResult.costBreakdown;
+        marketContext =
+          pricingResult.market_context ||
+          pricingResult.pricing_provenance ||
+          this.buildInternalMarketContext('forgesight_no_market_data');
+      } else {
+        // Fallback: estimate pricing from geometry volume
+        const estimatedUnitCost = this.estimateFallbackPrice(
+          dto.geometry.volume_cm3,
+          process,
+          dto.item.material,
+        );
+        unitPrice = estimatedUnitCost;
+        totalPrice = estimatedUnitCost * dto.item.quantity;
+        costBreakdown = { estimated: totalPrice };
+        marketContext = this.buildInternalMarketContext(
+          !material && !machine
+            ? 'missing_material_and_machine_configuration'
+            : !material
+              ? 'missing_material_configuration'
+              : 'missing_machine_configuration',
+          'internal_fallback',
+        );
+        warnings.push(
+          'Pricing is estimated due to missing material/machine configuration. ' +
+            'Review and adjust before sending to customer.',
+        );
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Pricing calculation failed for Yantra4D import: ${msg}`);
+      warnings.push(`Pricing engine error: ${msg}. Quote created without pricing.`);
+      marketContext = this.buildInternalMarketContext(`pricing_engine_error: ${msg}`, 'unpriced');
+    }
+
+    if (dto.require_market_verified && !marketContext.market_verified) {
+      throw this.marketDataUnavailableException(marketContext);
+    }
+
+    if (!marketContext.market_verified) {
+      warnings.push(
+        'ForgeSight market verification unavailable. Quote is review-only and must not be sent to the customer until approved.',
+      );
+    }
+
+    const responseMarketContext = this.buildResponseMarketContext(marketContext);
+
+    // -----------------------------------------------------------------------
+    // 5. Create the quote record only after strict market verification passes.
     // -----------------------------------------------------------------------
     const quote = await this.prisma.quote.create({
       data: {
@@ -109,7 +236,7 @@ export class Yantra4dImportService {
     });
 
     // -----------------------------------------------------------------------
-    // 5. Create the quote item
+    // 6. Create the quote item
     // -----------------------------------------------------------------------
     const quoteItem = await this.prisma.quoteItem.create({
       data: {
@@ -137,96 +264,6 @@ export class Yantra4dImportService {
     });
 
     // -----------------------------------------------------------------------
-    // 6. Run pricing engine
-    // -----------------------------------------------------------------------
-    let unitPrice = 0;
-    let totalPrice = 0;
-    let leadDays = 5;
-    let costBreakdown: Record<string, unknown> = {};
-    let marketContext: PricingProvenance = {
-      source: 'internal_fallback',
-      sample_count: 0,
-      updated_at: null,
-      confidence: 0,
-      fallback_reason: 'pricing_not_calculated',
-      market_verified: false,
-    };
-
-    try {
-      const geometryMetrics = {
-        volumeCm3: dto.geometry.volume_cm3,
-        surfaceAreaCm2: dto.geometry.surface_area_cm2,
-        boundingBox: dto.geometry.bounding_box_mm,
-      };
-
-      // Only run pricing engine if we have both material and machine
-      if (material && machine) {
-        const pricingResult = await this.pricingService.calculateQuoteItemWithMarketIntelligence(
-          tenantId,
-          process,
-          geometryMetrics,
-          material.id,
-          machine.id,
-          { material: dto.item.material, finish: dto.item.finish || 'standard' },
-          dto.item.quantity,
-          { cost: 0.5, lead: 0.3, green: 0.2 },
-        );
-
-        unitPrice = pricingResult.unitPrice;
-        totalPrice = pricingResult.totalPrice;
-        leadDays = pricingResult.leadDays;
-        costBreakdown = pricingResult.costBreakdown;
-        marketContext = pricingResult.market_context;
-      } else {
-        // Fallback: estimate pricing from geometry volume
-        const estimatedUnitCost = this.estimateFallbackPrice(
-          dto.geometry.volume_cm3,
-          process,
-          dto.item.material,
-        );
-        unitPrice = estimatedUnitCost;
-        totalPrice = estimatedUnitCost * dto.item.quantity;
-        costBreakdown = { estimated: totalPrice };
-        marketContext = {
-          source: 'internal_fallback',
-          sample_count: 0,
-          updated_at: null,
-          confidence: 0,
-          fallback_reason:
-            !material && !machine
-              ? 'missing_material_and_machine_configuration'
-              : !material
-                ? 'missing_material_configuration'
-                : 'missing_machine_configuration',
-          market_verified: false,
-        };
-        warnings.push(
-          'Pricing is estimated due to missing material/machine configuration. ' +
-            'Review and adjust before sending to customer.',
-        );
-      }
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(`Pricing calculation failed for Yantra4D import: ${msg}`);
-      warnings.push(`Pricing engine error: ${msg}. Quote created without pricing.`);
-      marketContext = {
-        source: 'unpriced',
-        sample_count: 0,
-        updated_at: null,
-        confidence: 0,
-        fallback_reason: `pricing_engine_error: ${msg}`,
-        market_verified: false,
-      };
-    }
-
-    if (dto.require_market_verified && !marketContext.market_verified) {
-      warnings.push(
-        'Market-verified ForgeSight pricing was requested but unavailable. ' +
-          'Quote requires human review before customer use.',
-      );
-    }
-
-    // -----------------------------------------------------------------------
     // 7. Update quote item with pricing results
     // -----------------------------------------------------------------------
     await this.prisma.quoteItem.update({
@@ -237,7 +274,7 @@ export class Yantra4dImportService {
         leadDays,
         costBreakdown: {
           ...costBreakdown,
-          pricing_provenance: marketContext,
+          pricing_provenance: responseMarketContext,
         } as unknown as Prisma.InputJsonValue,
         flags: warnings.length > 0 ? ['needs_review'] : [],
       },
@@ -278,8 +315,8 @@ export class Yantra4dImportService {
           yantra4dProject: dto.project.slug,
           yantra4dProjectName: dto.project.name,
           notes: dto.notes || '',
-          market_context: marketContext,
-          pricing_provenance: marketContext,
+          market_context: responseMarketContext,
+          pricing_provenance: responseMarketContext,
         } as unknown as Prisma.InputJsonValue,
       },
     });
@@ -306,7 +343,7 @@ export class Yantra4dImportService {
         },
       ],
       warnings: warnings.length > 0 ? warnings : undefined,
-      market_context: marketContext,
+      market_context: responseMarketContext,
     };
   }
 

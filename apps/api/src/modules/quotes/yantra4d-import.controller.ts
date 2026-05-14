@@ -62,6 +62,11 @@ export class Yantra4dImportController {
     description: 'Quote successfully created from Yantra4D data',
     type: Yantra4dImportResponseDto,
   })
+  @ApiResponse({
+    status: 424,
+    description:
+      'Market-verified ForgeSight pricing was required but unavailable; no client-ready quote was created',
+  })
   @ApiBadRequestResponse({
     description: 'Invalid import payload or unsupported process/material',
     type: ValidationErrorResponseDto,

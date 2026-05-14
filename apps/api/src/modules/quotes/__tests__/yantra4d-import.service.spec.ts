@@ -1,3 +1,4 @@
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { Yantra4dImportService } from '../services/yantra4d-import.service';
 
 const marketContext = {
@@ -7,6 +8,21 @@ const marketContext = {
   confidence: 0,
   fallback_reason: 'forgesight_not_configured',
   market_verified: false,
+};
+
+const responseMarketContext = {
+  ...marketContext,
+  pricing_source: marketContext.source,
+  provenance: marketContext,
+};
+
+const verifiedMarketContext = {
+  source: 'forgesight',
+  sample_count: 7,
+  updated_at: '2026-05-13T12:00:00.000Z',
+  confidence: 0.86,
+  fallback_reason: null,
+  market_verified: true,
 };
 
 function buildDto() {
@@ -87,16 +103,23 @@ describe('Yantra4dImportService pricing provenance', () => {
     jest.restoreAllMocks();
   });
 
-  it('stores and exposes unverified internal pricing provenance from Yantra4D imports', async () => {
+  it('stores and exposes review-only unverified pricing provenance from Yantra4D imports', async () => {
     const result = await service.createQuoteFromYantra4d('tenant-1', 'user-1', buildDto() as any);
 
-    expect(result.market_context).toEqual(marketContext);
+    expect(result.status).toBe('needs_review');
+    expect(result.market_context).toEqual(responseMarketContext);
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        'ForgeSight market verification unavailable. Quote is review-only and must not be sent to the customer until approved.',
+      ]),
+    );
     expect(prisma.quoteItem.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           costBreakdown: expect.objectContaining({
-            pricing_provenance: marketContext,
+            pricing_provenance: responseMarketContext,
           }),
+          flags: ['needs_review'],
         }),
       }),
     );
@@ -104,8 +127,8 @@ describe('Yantra4dImportService pricing provenance', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           metadata: expect.objectContaining({
-            market_context: marketContext,
-            pricing_provenance: marketContext,
+            market_context: responseMarketContext,
+            pricing_provenance: responseMarketContext,
           }),
         }),
       }),
@@ -121,6 +144,7 @@ describe('Yantra4dImportService pricing provenance', () => {
     expect(pricingService.calculateQuoteItemWithMarketIntelligence).not.toHaveBeenCalled();
     expect(result.market_context).toMatchObject({
       source: 'internal_fallback',
+      pricing_source: 'internal_fallback',
       sample_count: 0,
       updated_at: null,
       confidence: 0,
@@ -129,23 +153,49 @@ describe('Yantra4dImportService pricing provenance', () => {
     });
   });
 
-  it('marks quotes for review when market verification is required but unavailable', async () => {
+  it('fails closed with 424 and does not create a quote when strict market verification is unavailable', async () => {
+    try {
+      await service.createQuoteFromYantra4d('tenant-1', 'user-1', {
+        ...buildDto(),
+        require_market_verified: true,
+      } as any);
+      throw new Error('expected strict market verification to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(HttpException);
+      expect((error as HttpException).getStatus()).toBe(HttpStatus.FAILED_DEPENDENCY);
+      expect((error as HttpException).getResponse()).toMatchObject({
+        statusCode: HttpStatus.FAILED_DEPENDENCY,
+        error: 'market_data_unavailable',
+        market_context: responseMarketContext,
+      });
+    }
+
+    expect(prisma.quote.create).not.toHaveBeenCalled();
+    expect(prisma.quoteItem.create).not.toHaveBeenCalled();
+    expect(prisma.quote.update).not.toHaveBeenCalled();
+    expect(prisma.quoteItem.update).not.toHaveBeenCalled();
+  });
+
+  it('creates an auto-quoted response when strict market verification succeeds', async () => {
+    pricingService.calculateQuoteItemWithMarketIntelligence.mockResolvedValueOnce({
+      unitPrice: 100,
+      totalPrice: 500,
+      leadDays: 5,
+      costBreakdown: { material: 120, machine: 80, labor: 50, overhead: 30, margin: 220 },
+      market_context: verifiedMarketContext,
+    });
+
     const result = await service.createQuoteFromYantra4d('tenant-1', 'user-1', {
       ...buildDto(),
       require_market_verified: true,
     } as any);
 
-    expect(result.warnings).toEqual(
-      expect.arrayContaining([
-        'Market-verified ForgeSight pricing was requested but unavailable. Quote requires human review before customer use.',
-      ]),
-    );
-    expect(prisma.quoteItem.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          flags: ['needs_review'],
-        }),
-      }),
-    );
+    expect(result.status).toBe('auto_quoted');
+    expect(result.warnings).toBeUndefined();
+    expect(result.market_context).toEqual({
+      ...verifiedMarketContext,
+      pricing_source: 'forgesight',
+      provenance: verifiedMarketContext,
+    });
   });
 });
