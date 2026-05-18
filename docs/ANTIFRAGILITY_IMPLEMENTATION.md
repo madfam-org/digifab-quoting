@@ -7,7 +7,6 @@
 > access as platform bootstrap or documented break-glass only, and record any
 > missing Enclii adapter gap.
 
-
 ## Achieving 10/10 Resilience for Cotiza Studio
 
 ### 📋 Implementation Status

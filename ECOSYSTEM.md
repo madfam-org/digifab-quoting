@@ -7,7 +7,6 @@
 > access as platform bootstrap or documented break-glass only, and record any
 > missing Enclii adapter gap.
 
-
 > **Cotiza Studio — MADFAM's universal quoting engine (fabrication + services).**
 
 This file is self-contained: a Claude session on a fresh machine can operate

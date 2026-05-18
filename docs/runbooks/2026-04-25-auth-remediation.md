@@ -7,7 +7,6 @@
 > access as platform bootstrap or documented break-glass only, and record any
 > missing Enclii adapter gap.
 
-
 ## Symptoms (browser audit)
 
 Loading https://cotiza.studio/ produces the following console errors:

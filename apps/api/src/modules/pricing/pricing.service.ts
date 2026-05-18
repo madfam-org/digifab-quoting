@@ -249,7 +249,9 @@ export class PricingService {
     let marketIntelligence = null;
     let benchmark = null;
     let marketContext = this.buildInternalMarketContext(
-      this.forgeSightService.isEnabled() ? 'forgesight_no_market_data' : 'forgesight_not_configured',
+      this.forgeSightService.isEnabled()
+        ? 'forgesight_no_market_data'
+        : 'forgesight_not_configured',
     );
 
     if (this.forgeSightService.isEnabled()) {

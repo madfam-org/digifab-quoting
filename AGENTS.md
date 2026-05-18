@@ -7,7 +7,6 @@
 > access as platform bootstrap or documented break-glass only, and record any
 > missing Enclii adapter gap.
 
-
 <!-- MADFAM-AGENTS-CANONICAL v1 -->
 
 This is the canonical instruction file for Claude, Codex, and any other LLM
