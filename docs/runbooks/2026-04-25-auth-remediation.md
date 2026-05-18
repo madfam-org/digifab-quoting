@@ -49,6 +49,28 @@ Missing:
 
 ## Remediation — operator steps
 
+### 2026-05-18 runtime secret recovery note
+
+During the Vault/ESO recovery, `digifab-quoting-secrets` was recreated with
+only the Dhanam bridge keys. The API rollout then failed validation because
+`DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, and `S3_BUCKET` were absent.
+
+The live remediation is managed from Enclii's
+`ecosystem-service-auth` bridge. Keep these runtime properties populated there:
+
+- `digifab_database_url`
+- `digifab_redis_url`
+- `digifab_jwt_secret`
+- `digifab_s3_bucket`
+
+Then refresh `ExternalSecret/digifab-quoting-dhanam-auth`; it merges both the
+runtime keys and the Dhanam bridge keys into `digifab-quoting-secrets`. Before
+shipping production manifest changes, run:
+
+```bash
+python3 scripts/check-production-runtime-secrets.py
+```
+
 ### 1. Generate `NEXTAUTH_SECRET`
 
 ```bash
