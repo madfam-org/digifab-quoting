@@ -305,7 +305,7 @@ interface CurrencyConversionResponse {
 ### 3.3 Quote Multicurrency Support
 
 ```typescript
-// GET /api/v1/quotes/{id}?currency=USD
+// GET /quotes/{id}?currency=USD
 interface QuoteResponse {
   // ... existing fields
   pricing: {
@@ -325,7 +325,7 @@ interface QuoteResponse {
   }>;
 }
 
-// POST /api/v1/quotes
+// POST /quotes
 interface CreateQuoteRequest {
   // ... existing fields
   currency?: Currency; // Defaults to user preference or geo-detected

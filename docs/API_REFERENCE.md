@@ -132,7 +132,7 @@ GET /quotes/123?fields=id,projectName,totalPrice,status
 Include related data:
 
 ```http
-GET /quotes/123?expand=items,customer,payments
+GET /quotes/123?expand=items,customer
 ```
 
 ## API Endpoints
@@ -308,17 +308,18 @@ Authorization: Bearer {token}
 }
 ```
 
-#### Update Quote Item
+#### Add Quote Item
 
 ```http
-PATCH /quotes/{quoteId}/items/{itemId}
+POST /quotes/{quoteId}/items
 Authorization: Bearer {token}
 Content-Type: application/json
 
 {
-  "quantity": 50,
-  "material": "ALUMINUM_7075",
-  "finishType": "POWDER_COAT"
+  "fileId": "file_ghi789",
+  "technology": "FFF",
+  "material": "PLA",
+  "quantity": 2
 }
 ```
 
@@ -466,18 +467,17 @@ GET /api/v1/geo/detect
 
 ### Payment Processing
 
-#### Create Checkout Session
+#### Accept Quote (Checkout Session)
 
 ```http
-POST /payments/quotes/{quoteId}/checkout
+POST /quotes/{quoteId}/accept
 Authorization: Bearer {token}
 Content-Type: application/json
 
 {
   "successUrl": "https://app.cotiza.studio/success",
   "cancelUrl": "https://app.cotiza.studio/quotes/{quoteId}",
-  "paymentMethod": "card",
-  "customerEmail": "user@example.com"
+  "invoiceLanguage": "en"
 }
 ```
 
@@ -485,7 +485,8 @@ Content-Type: application/json
 
 ```json
 {
-  "checkoutUrl": "https://checkout.stripe.com/pay/cs_live_...",
+  "quoteId": "quote_def456",
+  "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_live_...",
   "sessionId": "cs_live_...",
   "expiresAt": "2025-01-26T11:00:00Z"
 }
@@ -790,9 +791,8 @@ Import our Postman collection for easy API testing:
 
 ### Version Strategy
 
-- Current version: `v1`
-- Version in URL path: `/api/v1/`
-- Header-based version override: `X-API-Version: 2`
+- No global API version prefix is currently applied.
+- Per-route versioning and compatibility are handled by explicit endpoint design.
 
 ### Deprecation Policy
 
@@ -827,13 +827,12 @@ Link: <https://docs.cotiza.studio/migrations/v2>; rel="migration"
 }
 ```
 
-### Test Card Numbers (Stripe)
+### Billing Test Notes
 
-| Card Number         | Scenario           |
-| ------------------- | ------------------ |
-| 4242 4242 4242 4242 | Successful payment |
-| 4000 0000 0000 0002 | Card declined      |
-| 4000 0000 0000 9995 | Insufficient funds |
+Use your configured payment provider test environment to validate:
+
+- `POST /quotes/{quoteId}/accept` returns a checkout URL.
+- `POST /billing/invoice/{invoiceId}/pay` transitions invoice states.
 
 ## Support
 

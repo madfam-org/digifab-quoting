@@ -343,7 +343,7 @@ curl -I https://www.cotiza.studio
 # Test each locale
 for locale in es en pt-BR; do
   curl -H "Accept-Language: $locale" \
-    https://api.cotiza.studio/api/v1/test
+    https://api.cotiza.studio/health
 done
 ```
 
@@ -508,9 +508,10 @@ For migration assistance:
 
 | Old Endpoint | New Endpoint | Changes |
 |-------------|--------------|---------||
-| /api/v1/_ | /api/v1/_ | No change |
-| - | /api/v1/user/preferences | New endpoint |
-| - | /api/v1/guest/\* | New guest endpoints |
+| `/api/v1/quotes/*` | `/quotes/*` | Core quote routes are not globally prefixed |
+| `/api/v1/files/*` | `/files/*` | File routes are not globally prefixed |
+| - | `/api/v1/geo/preferences` | Active preference endpoint exposed in prod |
+| - | `/api/v1/guest/*` | Guest quote endpoints retain explicit prefix |
 
 ### C. Database Schema Changes
 

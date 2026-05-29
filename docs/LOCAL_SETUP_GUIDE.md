@@ -35,7 +35,7 @@ JWT_SECRET="your-super-secret-jwt-key-change-in-production"
 JWT_ACCESS_TOKEN_EXPIRY="15m"
 JWT_REFRESH_TOKEN_EXPIRY="7d"
 
-# AWS (for local development)
+# AWS (for file services)
 AWS_REGION="us-east-1"
 S3_BUCKET="madfam-quoting-dev"
 
@@ -43,14 +43,14 @@ S3_BUCKET="madfam-quoting-dev"
 GEOMETRY_SERVICE_URL="http://localhost:8000"
 
 # CORS
-ALLOWED_ORIGINS="http://localhost:3000,http://localhost:4000"
+ALLOWED_ORIGINS="http://localhost:3002,http://localhost:4000"
 ```
 
 3. **Web .env file** (`apps/web/.env`):
 
 ```env
-NEXT_PUBLIC_API_URL="http://localhost:4000/api/v1"
-NEXTAUTH_URL="http://localhost:3000"
+NEXT_PUBLIC_API_URL="http://localhost:4000"
+NEXTAUTH_URL="http://localhost:3002"
 NEXTAUTH_SECRET="your-super-secret-nextauth-key-change-in-production"
 ```
 
@@ -116,7 +116,7 @@ python -m uvicorn main:app --reload
 
 ### Step 7: Access Applications
 
-- Web App: http://localhost:3000
+- Web App: http://localhost:3002
 - API: http://localhost:4000
 - API Docs: http://localhost:4000/api/docs
 - Worker: http://localhost:8000
@@ -186,6 +186,13 @@ python -m uvicorn main:app --reload
 
 ## Deployment Issues (404 Error)
 
+## Billing & Checkout Notes
+
+- The API has no global version prefix. Core routes are at `/quotes`, `/files`,
+  `/billing`, etc.; `geo`, `currency`, `users`, and guest quote routes keep
+  explicit `/api/v1/...` controller prefixes.
+- Checkout/session integration uses Janua/Dhanam; do not use Stripe keys in local API env.
+
 ### Root Causes of 404 on Vercel
 
 1. **Missing Environment Variables**
@@ -223,7 +230,7 @@ Choose one:
 In Vercel dashboard, set:
 
 ```
-NEXT_PUBLIC_API_URL=https://your-api-domain.com/api/v1
+NEXT_PUBLIC_API_URL=https://your-api-domain.com
 NEXTAUTH_URL=https://your-app.vercel.app
 NEXTAUTH_SECRET=<generate-secure-secret>
 ```
@@ -234,7 +241,7 @@ Update API's `main.ts`:
 
 ```typescript
 app.enableCors({
-  origin: ['https://your-app.vercel.app', 'http://localhost:3000'],
+  origin: ['https://your-app.vercel.app', 'http://localhost:3002'],
   credentials: true,
 });
 ```
@@ -274,7 +281,7 @@ curl http://localhost:4000/health
 
 ```bash
 # Login
-curl -X POST http://localhost:4000/api/v1/auth/login \
+curl -X POST http://localhost:4000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@cotiza.studio","password":"admin123"}'
 ```

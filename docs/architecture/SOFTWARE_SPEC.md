@@ -18,7 +18,7 @@ _Audience: Founders, PM, Tech Lead, Ops, Finance. Goal: ship a secure, multi‑t
 - Processes: 3D (FFF, SLA), CNC 3‑axis (Al, steel, plastics), 2D laser cut.
 - Journeys: Drop‑and‑Quote Autopilot, Guided Wizard.
 - Regions: MX & US; Currencies: MXN & USD; Languages: ES & EN.
-- Payments: Card (Stripe). Bank transfer (SPEI) as manual instructions + back‑office reconciliation.
+- Billing: checkout through Janua/Dhanam provider routing. Cotiza does not hold direct Stripe keys.
 - DFM basics, Audit logs, Quote PDF, Role‑based admin, FX daily snapshot.
 
 **Out‑of‑Scope (Push to P1+)**
@@ -89,7 +89,7 @@ _Audience: Founders, PM, Tech Lead, Ops, Finance. Goal: ship a secure, multi‑t
 - **Cache/Queue**: Redis (cache), AWS SQS (jobs).
 - **Object Storage**: S3 (file uploads, PDFs).
 - **Auth**: NextAuth (email/password + Google OAuth), JWT + rotating refresh tokens.
-- **Payments**: Stripe (cards) + manual bank transfer workflow for SPEI.
+- **Billing**: Janua/Dhanam checkout orchestration with provider-specific payment methods.
 - **Infra**: AWS (ECS Fargate or EKS P1), CloudFront CDN, Route 53, SES for email.
 - **Observability**: OpenTelemetry, CloudWatch logs, Sentry.
 
@@ -102,7 +102,7 @@ _Audience: Founders, PM, Tech Lead, Ops, Finance. Goal: ship a secure, multi‑t
 
 ### 3.3 Services
 
-- **API Gateway** → **Auth** → **Quote Service** (pricing, state machine) → **DFM Service** (files → geometry metrics) → **PDF Service** (quote docs) → **Payment Service** → **Notification Service**.
+- **API Gateway** → **Auth** → **Quote Service** (pricing, state machine) → **DFM Service** (files → geometry metrics) → **PDF Service** (quote docs) → **Billing Service** (Janua/Dhanam) → **Notification Service**.
 
 ---
 
@@ -228,7 +228,7 @@ servers: [{ url: https://api.{tenant}.madfam.app/v1 }]
 paths:
   /auth/login:
     post: { summary: Login }
-  /files:
+  /files/presign:
     post:
       summary: Upload file (pre-signed URL)
       requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/FileInit' } } } }
@@ -241,15 +241,15 @@ paths:
     patch: { summary: Update objective/notes }
   /quotes/{id}/items:
     post: { summary: Add item with file refs and options }
-  /quotes/{id}/price:
+  /quotes/{id}/calculate:
     post: { summary: Compute price; returns Auto-Quoted or Needs-Review }
-  /quotes/{id}/actions/approve:
-    post: { summary: Customer approves }
-  /quotes/{id}/payment-intents:
-    post: { summary: Create Stripe intent }
-  /admin/materials: { get: { }, post: { } }
-  /admin/machines: { get: { }, post: { } }
-  /admin/process-options: { get: { }, post: { } }
+  /quotes/{id}/accept:
+    post: { summary: Customer accepts quote and receives checkout URL }
+  /billing/webhook/janua:
+    post: { summary: Billing webhook from Janua/Dhanam }
+  /pricing/materials: { get: { } }
+  /pricing/machines: { get: { } }
+  /pricing/process-options: { get: { } }
 components:
   schemas:
     FileInit: { type: object, properties: { filename: {type: string}, kind: {enum: [stl, step, iges, dxf, dwg, pdf]}, size: {type: integer} } }
@@ -344,7 +344,8 @@ components:
 
 ```
 NODE_ENV, DATABASE_URL, REDIS_URL, S3_BUCKET, S3_REGION, KMS_KEY_ID,
-JWT_SECRET, NEXTAUTH_SECRET, STRIPE_KEY, STRIPE_WEBHOOK_SECRET,
+JWT_SECRET, NEXTAUTH_SECRET, DHANAM_API_URL, DHANAM_BILLING_SECRET,
+DHANAM_WEBHOOK_URL, DHANAM_WEBHOOK_SECRET,
 DEFAULT_CURRENCY=MXN, SUPPORTED_CURRENCIES=MXN,USD,
 DEFAULT_LOCALES=es,en, FX_SOURCE=openexchangerates
 ```
@@ -386,7 +387,7 @@ DEFAULT_LOCALES=es,en, FX_SOURCE=openexchangerates
 **Integration Tests**
 
 - File upload → DFM → pricing pipeline (mock S3).
-- Payments: Stripe intent create & webhook handling.
+- Billing: Janua/Dhanam checkout creation and webhook handling.
 - Admin config versioning (effective dates).
 
 **E2E (Playwright)**
@@ -414,7 +415,7 @@ DEFAULT_LOCALES=es,en, FX_SOURCE=openexchangerates
 ## 16) Delivery Plan (suggested)
 
 **Week 1–2**: Data model, auth, uploads, DFM stub, pricing v0 (FFF/SLA), Autopilot UI.
-**Week 3–4**: CNC & laser pricing, Wizard UI, Quote PDF, Stripe.
+**Week 3–4**: CNC & laser pricing, Wizard UI, Quote PDF, billing checkout.
 **Week 5**: Admin configs, audit logs, sustainability score, i18n.
 **Week 6**: Hardening, tests, observability, staging UAT → prod.
 

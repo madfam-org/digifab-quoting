@@ -134,7 +134,7 @@ This roadmap outlines the 6-week implementation plan for adding comprehensive mu
 
 - [ ] **Payment Integration**
   ```typescript
-  // Stripe multi-currency support:
+  // Janua/Dhanam multi-currency checkout support:
   - Currency-specific payment methods
   - Real-time conversion at checkout
   - Multi-currency receipt generation

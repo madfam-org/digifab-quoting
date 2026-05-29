@@ -1,6 +1,6 @@
 # Yantra4D Quote Import Pricing Provenance
 
-Cotiza can create a quote from `POST /api/v1/quotes/from-yantra4d`, but the
+Cotiza can create a quote from `POST /quotes/from-yantra4d`, but the
 quote is only market verified when ForgeSight returns usable market evidence.
 
 ## Truth contract

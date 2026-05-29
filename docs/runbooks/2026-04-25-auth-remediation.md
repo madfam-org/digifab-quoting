@@ -27,6 +27,10 @@ User flow: landing page → "Sign In" → "Sign in with Janua" → redirected to
 
 The `digifab-quoting-secrets` Kubernetes Secret is missing 3 required keys:
 
+> Historical note: the Stripe keys shown below were observed during the
+> 2026-04-25 incident. Cotiza no longer restores or manages direct Stripe keys;
+> billing now routes through Janua/Dhanam.
+
 ```
 $ kubectl describe secret -n digifab-quoting digifab-quoting-secrets
 # (current keys)
@@ -44,7 +48,7 @@ Missing:
 - `NEXTAUTH_SECRET` — without this, every next-auth API call returns 500 + `CLIENT_FETCH_ERROR`.
 - `JANUA_CLIENT_ID` — the OIDC client ID for cotiza's Janua registration. Without this, the OAuth handshake fails before redirecting to Janua.
 - `JANUA_CLIENT_SECRET` — pairs with `JANUA_CLIENT_ID`.
-- (Optional) `OPENEXCHANGERATES_APP_ID` — would unblock `/api/v1/currency/rates` legacy path; better to wire dhanam funnel instead (see "Currency funnel" below).
+- (Optional) `OPENEXCHANGERATES_APP_ID` — supports `/api/v1/currency/rates`, which remains an explicitly prefixed currency route.
 
 ## Remediation — operator steps
 

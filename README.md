@@ -18,17 +18,17 @@ docker-compose up -d
 npm run dev
 
 # Access applications
-# Frontend: http://localhost:3030
-# API: http://localhost:4030
-# API Docs: http://localhost:4030/api/docs
-# Admin Panel: http://localhost:3030/admin
+# Frontend: http://localhost:3002
+# API: http://localhost:4000
+# API Docs: http://localhost:4000/api/docs
+# Admin Panel: https://cotiza.studio/admin
 ```
 
 ## ✨ Key Features
 
 ### 🌍 Multilingual Platform
 
-- **Full Localization**: Spanish (default), English, and Portuguese (Brazil)
+- **Full Localization**: Spanish (default), English
 - **Smart Detection**: Automatic language detection from browser/user preferences
 - **Localized Content**: All UI, emails, and PDFs in user's preferred language
 - **SEO Optimized**: Multilingual meta tags and structured data
@@ -142,11 +142,10 @@ AWS_SECRET_ACCESS_KEY=your-secret
 # Auth
 JWT_SECRET=your-secret-key-min-32-chars
 NEXTAUTH_SECRET=your-nextauth-secret-min-32-chars
-NEXTAUTH_URL=http://localhost:3030
+NEXTAUTH_URL=http://localhost:3002
 
-# Stripe (Optional for payments)
-STRIPE_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
+# Dhanam / Janua billing integration
+# STRIPE_* is no longer used directly in the default runtime
 
 # Localization
 DEFAULT_LOCALE=es
@@ -273,8 +272,8 @@ All project documentation is organized in the `/docs` directory. See [**docs/IND
 ### Base URL
 
 ```
-Development: http://localhost:4030/api/v1
-Production: https://api.cotiza.studio/v1
+Development: http://localhost:4000
+Production: https://api.cotiza.studio
 ```
 
 ### Authentication
@@ -283,13 +282,13 @@ JWT Bearer token authentication:
 
 ```bash
 # Login
-curl -X POST http://localhost:4030/api/v1/auth/login \
+curl -X POST http://localhost:4000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "user@example.com", "password": "password"}'
 
 # Use token
 curl -H "Authorization: Bearer <token>" \
-  http://localhost:4000/api/v1/quotes
+  http://localhost:4000/quotes
 ```
 
 ### Key Endpoints
@@ -302,47 +301,35 @@ curl -H "Authorization: Bearer <token>" \
 
 #### Quotes
 
-- `POST /quotes/upload` - Upload files for quoting
 - `POST /quotes` - Create quote from uploaded files
 - `GET /quotes` - List quotes (paginated)
 - `GET /quotes/{id}` - Get quote details
 - `POST /quotes/{id}/accept` - Accept quote
 - `GET /quotes/{id}/pdf` - Download quote PDF
+- `POST /quotes/{id}/calculate` - Recalculate current quote
 
 #### Quote Items
 
-- `GET /quotes/{id}/items` - List quote items
-- `PUT /quotes/{id}/items/{itemId}` - Update item selections
-- `POST /quotes/{id}/items/{itemId}/recalculate` - Recalculate pricing
+- `POST /quotes/{id}/items` - Add quote item
+- `PATCH /quotes/{id}` - Update quote metadata or item selections
 
 #### Orders
 
 - `GET /orders` - List orders
 - `GET /orders/{id}` - Get order details
-- `PUT /orders/{id}/status` - Update order status
-- `GET /orders/{id}/tracking` - Get tracking info
+- `PATCH /orders/{id}/status` - Update order status
 
-#### Payment
+#### Billing
 
-- `POST /payment/session` - Create Stripe checkout session
-- `POST /payment/webhook` - Stripe webhook handler
-- `GET /payment/history` - Payment history
+- `GET /billing/usage` - Current tenant usage
+- `GET /billing/invoices` - Billing invoices
+- `POST /billing/invoice/:invoiceId/pay` - Invoice payment kickoff
 
 #### Files
 
-- `POST /files/upload` - Get presigned upload URL
-- `GET /files/{id}/download` - Get presigned download URL
+- `POST /files/presign` - Get presigned upload URL
+- `GET /files/{id}/url` - Get presigned URL
 - `DELETE /files/{id}` - Delete file
-
-#### Admin
-
-- `GET /admin/materials` - List materials
-- `POST /admin/materials` - Create material
-- `PUT /admin/materials/{id}` - Update material
-- `GET /admin/machines` - List machines
-- `POST /admin/machines` - Create machine
-- `PUT /admin/machines/{id}` - Update machine
-- `GET /admin/reports` - Generate reports
 
 ### Rate Limiting
 
@@ -454,7 +441,7 @@ GitHub Actions workflow:
 - [ ] Configure production database
 - [ ] Set up Redis cluster
 - [ ] Configure S3 bucket and KMS
-- [ ] Set Stripe production keys
+- [ ] Confirm Dhanam/Janua billing webhooks in Dhanam
 - [ ] Configure domain and SSL
 - [ ] Set up CloudWatch monitoring
 - [ ] Configure backup strategy

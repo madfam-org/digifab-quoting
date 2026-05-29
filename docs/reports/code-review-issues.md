@@ -169,8 +169,8 @@ None found.
 
 1. **Circular dependency risk**
 
-   - **Location**: `apps/api/src/modules/payment/payment.service.ts:6`
-   - **Issue**: Comment indicates circular dependency with OrdersService
+   - **Location**: legacy `apps/api/src/modules/payment/payment.service.ts:6`
+   - **Issue**: Historical direct-payment service had a circular dependency with OrdersService
    - **Impact**: Compilation issues, tight coupling
    - **Fix**: Use events or refactor to break dependency
 

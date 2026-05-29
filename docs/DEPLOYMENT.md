@@ -4,8 +4,10 @@
 
 This guide covers deploying the Cotiza Studio platform to production environments using Docker containers, AWS ECS Fargate, and supporting cloud services. The deployment supports multiple environments (dev, staging, production) with full automation through Terraform and CI/CD pipelines.
 
+> Routine production operations should be executed with the approved Enclii path; direct AWS workflows below are legacy/infra-reference.
+
 **Production URL**: https://www.cotiza.studio  
-**API Endpoint**: https://api.cotiza.studio/v1  
+**API Endpoint**: https://api.cotiza.studio  
 **Admin Panel**: https://admin.cotiza.studio
 
 ## Architecture Overview
@@ -63,7 +65,7 @@ graph TB
 
 ### Third-Party Services
 
-- Stripe account with API keys
+- Janua / Dhanam billing provider integration
 - SendGrid/SES for email
 - Monitoring service (DataDog/New Relic)
 
@@ -390,8 +392,9 @@ aws secretsmanager create-secret \
   --secret-string '{
     "DATABASE_URL": "postgresql://...",
     "JWT_SECRET": "...",
-    "STRIPE_KEY": "sk_live_...",
-    "STRIPE_WEBHOOK_SECRET": "whsec_...",
+    "DHANAM_WEBHOOK_SECRET": "....",
+    "FORGESIGHT_WEBHOOK_SECRET": "...",
+    "JANUA_JWT_PRIVATE_KEY": "...",
     "SENDGRID_API_KEY": "..."
   }'
 
@@ -412,7 +415,6 @@ aws secretsmanager create-secret \
 # API Environment
 NODE_ENV=production
 PORT=4000
-API_PREFIX=api/v1
 CORS_ORIGINS=https://app.cotiza.studio
 
 # Database

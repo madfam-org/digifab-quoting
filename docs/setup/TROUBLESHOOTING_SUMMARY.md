@@ -112,7 +112,7 @@ After implementing fixes:
 
    ```bash
    # Test path traversal prevention
-   curl -X POST http://localhost:4000/api/v1/files/upload \
+   curl -X POST http://localhost:4000/files/presign \
      -H "Content-Type: application/json" \
      -d '{"filename": "../../etc/passwd"}'
    # Should return 400 Bad Request
@@ -122,7 +122,7 @@ After implementing fixes:
 
    ```bash
    # Load test with autocannon
-   npx autocannon -c 100 -d 30 http://localhost:4000/api/v1/quotes
+   npx autocannon -c 100 -d 30 http://localhost:4000/quotes
    ```
 
 3. **Type Safety Check**

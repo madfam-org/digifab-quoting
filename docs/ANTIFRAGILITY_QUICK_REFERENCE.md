@@ -94,7 +94,11 @@ const history = chaos.getHistory();
 // Returns: [{ experiment, success, learnings, recommendations }]
 ```
 
-### 🚨 Emergency Commands
+### Emergency Commands
+
+> These historical admin endpoint examples are not exposed by the current
+> production API. Use Enclii web/API/CLI for routine remediation and document
+> any missing adapter before adding new raw admin routes.
 
 ```bash
 # Reset all circuit breakers

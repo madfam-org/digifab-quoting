@@ -28,7 +28,7 @@ graph TB
     end
 
     subgraph "External Services"
-        STRIPE[Stripe]
+        BILLING[Janua / Dhanam]
         EMAIL[SES]
         MONITORING[CloudWatch]
     end
@@ -43,7 +43,7 @@ graph TB
     QUEUE --> WORKER
     WORKER --> S3
     WORKER --> PG
-    API --> STRIPE
+    API --> BILLING
     API --> EMAIL
     API --> MONITORING
 ```
@@ -72,7 +72,7 @@ graph TB
 
 ### 4. Scalability First
 
-- Horizontal scaling via ECS Fargate
+- Container autoscaling in production (ECS Fargate-backed deployments)
 - Database read replicas
 - CDN for static assets
 - Queue-based load leveling
@@ -110,13 +110,23 @@ apps/web/
 ```
 apps/api/src/
 ├── modules/
+│   ├── admin/            # Admin dashboard module (routes intentionally disabled in API)
 │   ├── auth/             # Authentication
-│   ├── quotes/           # Quote management
-│   ├── orders/           # Order processing
-│   ├── payment/          # Payment integration
+│   ├── audit/            # Audit log APIs
+│   ├── billing/          # Billing orchestration + Janua/Dhanam
+│   ├── engagements/      # PhyndCRM engagement projection
 │   ├── files/            # File management
-│   ├── admin/            # Admin functions
-│   └── jobs/             # Background jobs
+│   ├── geo/              # Geo + currency endpoints
+│   ├── guest/            # Guest quote flow
+│   ├── health/           # Health checks
+│   ├── jobs/             # Background jobs
+│   ├── link-processing/  # Quote conversion from links
+│   ├── orders/           # Order processing
+│   ├── pricing/          # Pricing APIs
+│   ├── quotes/           # Quote management
+│   ├── redis/            # Cache and rate limit operations
+│   ├── tenant/           # Tenant context + settings
+│   └── users/            # User profile and preferences
 ├── common/
 │   ├── guards/           # Auth guards
 │   ├── interceptors/     # Request interceptors
@@ -205,7 +215,7 @@ quotes
 │   └── quote_item_files
 ├── orders
 │   └── order_items
-└── payments
+└── payment_intents
 
 -- Configuration
 materials
@@ -232,9 +242,9 @@ discount_rules
    ```
    Accept Quote → Create Order
          ↓
-   Payment Session → Stripe Checkout
+   Checkout Request → Janua/Dhanam checkout URL
          ↓
-   Webhook → Update Order Status
+   Billing Webhook (/billing/webhook/janua) → Update Order Status
          ↓
    Generate Work Order → Production
    ```

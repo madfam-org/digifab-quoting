@@ -74,7 +74,7 @@ Cotiza Studio will become the **"Bloomberg Terminal for Digital Manufacturing"**
 ### Strategic Partnerships
 
 - **Autodesk Integration**: Native plugin for Fusion 360
-- **Stripe Partnership**: Embedded financing for orders
+- **Billing Platform Partnership**: Janua/Dhanam-powered checkout and financing paths
 - **AWS Partnership**: Co-sell to manufacturing customers
 
 ---
@@ -169,7 +169,7 @@ Cotiza Studio will become the **"Bloomberg Terminal for Digital Manufacturing"**
 **Q1 2025 Deliverables**
 
 - [ ] Multi-tenant production launch with 3 pilot customers
-- [ ] Stripe Connect payment integration (MXN, USD, BRL)
+- [ ] Janua/Dhanam checkout integration (MXN, USD, BRL)
 - [ ] Complete tenant isolation and per-tenant analytics
 
 ### PHASE 2: MARKET EXPANSION (Q2-Q3 2025)
@@ -220,7 +220,7 @@ Target State: Distributed Microservices
 - Quote Service (Node.js)
 - Pricing Engine (Rust)
 - Supplier Service (Node.js)
-- Payment Service (Node.js)
+- Billing Service (Node.js)
 - Analytics Pipeline (Python/Spark)
 ```
 

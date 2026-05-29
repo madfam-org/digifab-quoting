@@ -96,17 +96,13 @@ JWT_SECRET=your-super-secret-jwt-key-change-in-production
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
-# AWS (use LocalStack for development)
+# AWS
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=test
 AWS_SECRET_ACCESS_KEY=test
 S3_BUCKET=madfam-quoting-dev
-S3_ENDPOINT=http://localhost:4566  # LocalStack
 
-# Stripe (test keys)
-STRIPE_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRICE_ID=price_...
+# Billing integration keys should use Dhanam/Janua runtime credentials
 
 # Email (use MailHog for development)
 SMTP_HOST=localhost
@@ -125,14 +121,11 @@ ENABLE_WORKER_PROCESSING=true
 
 ```env
 # API URL
-NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+NEXT_PUBLIC_API_URL=http://localhost:4000
 
 # Auth
 NEXTAUTH_URL=http://localhost:3002
 NEXTAUTH_SECRET=your-nextauth-secret-change-in-production
-
-# Stripe
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 
 # Feature Flags
 NEXT_PUBLIC_ENABLE_PAYMENT=true
@@ -141,11 +134,8 @@ NEXT_PUBLIC_ENABLE_PAYMENT=true
 ### 5. Start Development Services
 
 ```bash
-# Start PostgreSQL, Redis, and LocalStack
-docker-compose up -d postgres redis localstack mailhog
-
-# Create S3 bucket in LocalStack
-aws --endpoint-url=http://localhost:4566 s3 mb s3://madfam-quoting-dev
+# Start PostgreSQL and Redis
+docker-compose up -d postgres redis
 
 # Run database migrations
 npm run db:migrate
@@ -182,7 +172,6 @@ python geometry_analyzer.py
 - **API Docs**: http://localhost:4000/api/docs
 - **Worker**: http://localhost:8000
 - **MailHog**: http://localhost:8025
-- **LocalStack**: http://localhost:4566
 
 ## Project Structure
 
@@ -918,4 +907,3 @@ lsof -i :3002  # Web
 - [Prisma Studio](http://localhost:5555) - Database GUI
 - [Swagger UI](http://localhost:4000/api/docs) - API Explorer
 - [MailHog](http://localhost:8025) - Email Testing
-- [LocalStack](http://localhost:4566) - AWS Services

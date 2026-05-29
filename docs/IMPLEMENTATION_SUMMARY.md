@@ -201,7 +201,7 @@ This document summarizes the critical features and development gap closures impl
 
 2. **Implement Remaining Features**
 
-   - Stripe payment integration
+   - Janua/Dhanam billing checkout integration
    - Email notifications (SES)
    - File encryption (KMS)
    - Internationalization (i18n)

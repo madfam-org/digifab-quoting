@@ -30,8 +30,8 @@ psql $DATABASE_URL -c "SELECT version()"
 # Test Redis connection
 redis-cli ping
 
-# Check AWS services (LocalStack in dev)
-aws --endpoint-url=http://localhost:4566 s3 ls
+# Check object storage access (if configured in your dev stack)
+aws s3 ls
 ```
 
 ## Development Issues
@@ -572,49 +572,35 @@ redis-cli INFO keyspace
 redis-cli MONITOR | grep sess
 ```
 
-### Payment Processing
+### Billing/Webhook Processing
 
-#### Stripe Integration Issues
+#### Checkout / Janua Webhook Issues
 
 **Symptoms:**
 
-- Payment webhooks failing
-- Checkout sessions not created
-- Payment status not updating
+- Checkout/session endpoint fails
+- `/billing/webhook/janua` not receiving events
+- Invoice status not advancing
 
 **Diagnostics:**
 
 ```bash
-# Check Stripe webhook deliveries
-curl -X GET https://api.stripe.com/v1/webhook_endpoints/we_xxx/delivery_attempts \
-  -H "Authorization: Bearer $STRIPE_KEY"
-
-# Verify webhook signature
-# Check application logs for signature verification errors
-
 # Test webhook endpoint
-curl -X POST http://localhost:4000/payment/webhook \
+curl -X POST http://localhost:4000/billing/webhook/janua \
   -H "Content-Type: application/json" \
-  -H "Stripe-Signature: t=xxx,v1=xxx" \
-  -d '{"type":"payment_intent.succeeded"}'
+  -H "x-cotiza-signature: t=xxx,v1=xxx" \
+  -d '{"event":"checkout.completed","invoiceId":"inv_123"}'
 ```
 
 **Solutions:**
 
 ```bash
-# 1. Re-register webhook endpoint
-stripe listen --forward-to localhost:4000/payment/webhook
+# 1. Confirm the webhook secret is set for DHANAM/JANUA in Secrets Manager
+# 2. Re-register endpoint in billing provider dashboard (`/billing/webhook/janua`)
+# 3. Confirm webhook handler logs signature and body parsing
+# 4. Retry webhook event from provider dashboard
 
-# 2. Update webhook secret
-aws secretsmanager update-secret \
-  --secret-id madfam/prod/api \
-  --secret-string '{"STRIPE_WEBHOOK_SECRET":"whsec_new_secret"}'
-
-# 3. Retry failed webhooks
-# Use Stripe dashboard to resend failed webhooks
-
-# 4. Implement webhook retry logic
-# Add exponential backoff in webhook handler
+# 5. Validate idempotency handling so duplicate events are safe
 ```
 
 ### File Processing
@@ -936,7 +922,7 @@ alias mf-restart='aws ecs update-service --cluster madfam-prod --service madfam-
 
 2. **Third-Party Services:**
 
-   - Stripe Dashboard for payment issues
+   - Janua/Dhanam provider support for checkout issues
    - SendGrid logs for email delivery
 
 3. **Community Resources:**
@@ -949,7 +935,7 @@ alias mf-restart='aws ecs update-service --cluster madfam-prod --service madfam-
 1. **Level 1:** Check this troubleshooting guide
 2. **Level 2:** Review logs and metrics
 3. **Level 3:** Contact team lead or senior developer
-4. **Level 4:** Engage external support (AWS, Stripe, etc.)
+4. **Level 4:** Engage external support (AWS, billing provider, etc.)
 
 ---
 

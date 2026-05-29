@@ -452,16 +452,16 @@ Implement comprehensive multicurrency support and automatic geo-detection for Co
   - [ ] Multi-currency quote display
   - [ ] Historical rate tracking
 
-### Payment Integration
+### Billing Integration
 
-- [ ] **Update Payment Service**
+- [ ] **Update Billing Service**
   ```typescript
-  // apps/api/src/modules/payment/payment.service.ts
-  // Multi-currency payment support
+  // apps/api/src/modules/billing/billing.service.ts
+  // Multi-currency checkout support through Janua/Dhanam
   ```
   - [ ] Currency-specific payment methods
   - [ ] Real-time conversion at checkout
-  - [ ] Multi-currency Stripe integration
+  - [ ] Multi-currency Janua/Dhanam integration
   - [ ] Receipt generation with rates
 
 ---

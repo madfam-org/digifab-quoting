@@ -7,9 +7,9 @@ The Cotiza Studio API provides programmatic access to digital fabrication quotin
 ## Base URL
 
 ```
-Development: http://localhost:4000/api/v1
-Staging: https://api-staging.cotiza.studio/v1
-Production: https://api.cotiza.studio/v1
+Development: http://localhost:4000
+Staging: https://api-staging.cotiza.studio
+Production: https://api.cotiza.studio
 ```
 
 ## Authentication
@@ -29,6 +29,9 @@ Content-Type: application/json
 ```
 
 **Response:**
+
+The checkout URL is minted by Janua/Dhanam. The provider host may vary by tenant
+or country.
 
 ```json
 {
@@ -100,7 +103,7 @@ All errors follow a consistent format:
   "meta": {
     "timestamp": "2024-01-20T10:30:00Z",
     "requestId": "req_123456",
-    "path": "/api/v1/quotes"
+    "path": "/quotes"
   }
 }
 ```
@@ -122,10 +125,10 @@ All errors follow a consistent format:
 
 #### Upload File
 
-Get a presigned URL for direct file upload to S3.
+Get a presigned POST payload for direct file upload to S3.
 
 ```http
-POST /files/upload
+POST /files/presign
 Content-Type: application/json
 Authorization: Bearer <token>
 
@@ -361,33 +364,21 @@ Authorization: Bearer <token>
 
 ### Quote Items
 
-#### Update Item Selections
+#### Add Quote Item
 
-Modify selections for a quote item (triggers recalculation).
+Add an additional item to an in-progress quote.
 
 ```http
-PUT /quotes/{quoteId}/items/{itemId}
+POST /quotes/{id}/items
 Content-Type: application/json
 Authorization: Bearer <token>
 
 {
-  "material": "ABS",
-  "selections": {
-    "layerHeight": 0.15,
-    "infill": 30,
-    "color": "red"
-  },
-  "quantity": 25
+  "fileId": "file_345678",
+  "technology": "FFF",
+  "material": "PLA",
+  "quantity": 2
 }
-```
-
-#### Recalculate Item
-
-Force recalculation of an item's pricing.
-
-```http
-POST /quotes/{quoteId}/items/{itemId}/recalculate
-Authorization: Bearer <token>
 ```
 
 ### Orders
@@ -452,17 +443,21 @@ Authorization: Bearer <token>
 
 ### Payment
 
-#### Create Payment Session
+#### Billing and Checkout
 
-Create a Stripe checkout session for quote payment.
+Billing flows are handled by Janua/Dhanam integration:
+
+- `POST /quotes/{id}/accept` mints checkout and returns a checkout URL.
+- `GET /billing/usage` returns tenant usage summary.
+- `GET /billing/invoices` returns invoices.
+- `POST /billing/invoice/{invoiceId}/pay` triggers invoice payment flow.
 
 ```http
-POST /payment/session
+POST /quotes/{id}/accept
 Content-Type: application/json
 Authorization: Bearer <token>
 
 {
-  "quoteId": "quote_789012",
   "successUrl": "https://app.cotiza.studio/orders/success",
   "cancelUrl": "https://app.cotiza.studio/quotes/quote_789012"
 }
@@ -474,144 +469,23 @@ Authorization: Bearer <token>
 {
   "success": true,
   "data": {
+    "quoteId": "quote_789012",
     "sessionId": "cs_test_a1b2c3d4",
     "checkoutUrl": "https://checkout.stripe.com/pay/cs_test_a1b2c3d4"
   }
 }
 ```
 
-#### Payment History
-
-Get payment history for the authenticated user.
-
-```http
-GET /payment/history?page=1&limit=20
-Authorization: Bearer <token>
-```
-
-### Admin Endpoints
-
-Admin endpoints require `admin` or `manager` role.
-
-#### Materials Management
-
-**List Materials:**
-
-```http
-GET /admin/materials?process=FFF&active=true
-Authorization: Bearer <token>
-```
-
-**Create Material:**
-
-```http
-POST /admin/materials
-Content-Type: application/json
-Authorization: Bearer <token>
-
-{
-  "process": "FFF",
-  "name": "PETG",
-  "code": "PETG-001",
-  "density": 1.27,
-  "pricePerKg": 35.00,
-  "co2eFactor": 3.2,
-  "colors": ["clear", "black", "white", "blue"],
-  "properties": {
-    "printTemp": "230-250°C",
-    "bedTemp": "70-80°C",
-    "chemical_resistant": true
-  }
-}
-```
-
-**Update Material:**
-
-```http
-PUT /admin/materials/{id}
-Content-Type: application/json
-Authorization: Bearer <token>
-
-{
-  "pricePerKg": 32.00,
-  "active": true
-}
-```
-
-#### Machine Management
-
-**List Machines:**
-
-```http
-GET /admin/machines?process=CNC_3AXIS&active=true
-Authorization: Bearer <token>
-```
-
-**Update Machine:**
-
-```http
-PUT /admin/machines/{id}
-Content-Type: application/json
-Authorization: Bearer <token>
-
-{
-  "hourlyRate": 85.00,
-  "setupMinutes": 30,
-  "active": true
-}
-```
-
-#### Reports
-
-Generate various reports (CSV, Excel, or PDF).
-
-```http
-POST /admin/reports
-Content-Type: application/json
-Authorization: Bearer <token>
-
-{
-  "type": "quotes",
-  "format": "excel",
-  "dateFrom": "2024-01-01",
-  "dateTo": "2024-01-31",
-  "filters": {
-    "status": ["quoted", "accepted"],
-    "process": ["FFF", "SLA"]
-  }
-}
-```
-
-**Report Types:**
-
-- `quotes` - Quote summary report
-- `orders` - Order fulfillment report
-- `revenue` - Revenue analysis
-- `materials` - Material usage report
-- `customers` - Customer activity report
-
 ## Webhooks
 
-### Stripe Payment Webhook
+### Janua Billing Webhook
 
-Endpoint for Stripe payment notifications.
+Endpoint for Janua/Dhanam billing notifications.
 
 ```http
-POST /payment/webhook
+POST /billing/webhook/janua
 Content-Type: application/json
-Stripe-Signature: t=1234567890,v1=...
-
-{
-  "type": "checkout.session.completed",
-  "data": {
-    "object": {
-      "id": "cs_test_a1b2c3d4",
-      "metadata": {
-        "quoteId": "quote_789012"
-      }
-    }
-  }
-}
+x-cotiza-signature: t=1234567890,v1=...
 ```
 
 ## Health Checks
@@ -676,7 +550,7 @@ GET /health/ready
 // Using axios
 import axios from 'axios';
 
-const API_BASE = 'https://api.cotiza.studio/v1';
+const API_BASE = 'https://api.cotiza.studio';
 let accessToken: string;
 
 // Login
@@ -708,7 +582,7 @@ async function createQuote(items: QuoteItem[]) {
 async function uploadFile(file: File) {
   // Get presigned URL
   const urlResponse = await axios.post(
-    `${API_BASE}/files/upload`,
+    `${API_BASE}/files/presign`,
     {
       filename: file.name,
       contentType: file.type,
@@ -739,7 +613,7 @@ import requests
 from typing import Dict, List
 
 class Cotiza StudioClient:
-    def __init__(self, base_url: str = "https://api.cotiza.studio/v1"):
+    def __init__(self, base_url: str = "https://api.cotiza.studio"):
         self.base_url = base_url
         self.access_token = None
 
@@ -795,7 +669,7 @@ print(f"Quote ID: {quote['data']['id']}")
 
 ```bash
 # Login
-curl -X POST https://api.cotiza.studio/v1/auth/login \
+curl -X POST https://api.cotiza.studio/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password123"}'
 
@@ -803,7 +677,7 @@ curl -X POST https://api.cotiza.studio/v1/auth/login \
 TOKEN="eyJhbGciOiJIUzI1NiIs..."
 
 # Create quote
-curl -X POST https://api.cotiza.studio/v1/quotes \
+curl -X POST https://api.cotiza.studio/quotes \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -820,7 +694,7 @@ curl -X POST https://api.cotiza.studio/v1/quotes \
   }'
 
 # Get quote
-curl -X GET https://api.cotiza.studio/v1/quotes/quote_789012 \
+curl -X GET https://api.cotiza.studio/quotes/quote_789012 \
   -H "Authorization: Bearer $TOKEN"
 ```
 

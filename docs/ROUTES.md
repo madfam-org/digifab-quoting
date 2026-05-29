@@ -1,7 +1,7 @@
 # Cotiza Studio Routes Documentation
 
 > Complete route documentation for frontend and backend navigation audit
-> Last Updated: 2025-01-26
+> Last Updated: 2026-05-28
 
 ## Table of Contents
 
@@ -139,13 +139,15 @@ curl -X POST http://localhost:4000/quotes \
 | GET    | `/api/v1/guest/quotes/:id`    | View quote   | 50/hour    | Required |
 | GET    | `/api/v1/guest/quotes`        | List quotes  | 20/hour    | Required |
 
-### Payment Routes (`/payments`)
+### Billing Routes (`/billing`, `/quotes/{id}/accept`)
 
-| Method | Path                            | Description     | Auth      | Security   |
-| ------ | ------------------------------- | --------------- | --------- | ---------- |
-| POST   | `/payments/quotes/:id/checkout` | Create checkout | Bearer    | PCI DSS    |
-| GET    | `/payments/quotes/:id/status`   | Payment status  | Bearer    | Encrypted  |
-| POST   | `/payments/webhooks/stripe`     | Stripe webhook  | Signature | HTTPS only |
+| Method | Path                               | Description                               | Auth      | Security |
+| ------ | ---------------------------------- | ----------------------------------------- | --------- | -------- |
+| POST   | `/quotes/{id}/accept`              | Accept quote and mint checkout session    | Bearer    | Bearer   |
+| GET    | `/billing/usage`                   | Tenant billing usage                      | Bearer    | Bearer   |
+| GET    | `/billing/invoices`                | Billing invoices                          | Bearer    | Bearer   |
+| POST   | `/billing/invoice/{invoiceId}/pay` | Start invoice payment flow                | Bearer    | Bearer   |
+| GET    | `/billing/webhook/janua`           | Janua billing webhook (internal callback) | Signature | HMAC     |
 
 ### Order Management Routes (`/orders`)
 
@@ -174,21 +176,21 @@ curl -X POST http://localhost:4000/quotes \
 | GET    | `/health/ready`    | Readiness check | None | <200ms        |
 | GET    | `/health/detailed` | Detailed health | None | <500ms        |
 
-### Engagements (`/api/v1/engagements`)
+### Engagements (`/engagements`)
 
 First-class projection of PhyndCRM's engagement aggregate. Groups quotes under one engagement (e.g. tablaco's physical + digital quotes). See [Engagement projection](../CLAUDE.md#engagement-projection-phase-b-consumer) in CLAUDE.md.
 
-| Method | Path                                               | Description                    | Auth   | Notes                                     |
-| ------ | -------------------------------------------------- | ------------------------------ | ------ | ----------------------------------------- |
-| GET    | `/api/v1/engagements/:phyndcrmEngagementId`        | Projection + quote type counts | Bearer | Tenant-scoped via JWT                     |
-| GET    | `/api/v1/engagements/:phyndcrmEngagementId/quotes` | Quotes grouped by quoteType    | Bearer | Returns `{ fab: [...], services: [...] }` |
+| Method | Path                                        | Description                    | Auth   | Notes                                     |
+| ------ | ------------------------------------------- | ------------------------------ | ------ | ----------------------------------------- |
+| GET    | `/engagements/:phyndcrmEngagementId`        | Projection + quote type counts | Bearer | Tenant-scoped via JWT                     |
+| GET    | `/engagements/:phyndcrmEngagementId/quotes` | Quotes grouped by quoteType    | Bearer | Returns `{ fab: [...], services: [...] }` |
 
-### Webhooks (`/api/v1/webhooks`)
+### Webhooks (`/webhooks`)
 
-| Method | Path                                    | Description                                                  | Auth | Signature                                                          |
-| ------ | --------------------------------------- | ------------------------------------------------------------ | ---- | ------------------------------------------------------------------ |
-| POST   | `/api/v1/webhooks/forgesight`           | Forgesight price update relay                                | HMAC | `x-forgesight-signature` (SHA-256)                                 |
-| POST   | `/api/v1/webhooks/phyndcrm/engagements` | PhyndCRM engagement lifecycle (created / updated / archived) | HMAC | `x-phyndcrm-signature` (SHA-256), secret `PHYNDCRM_INBOUND_SECRET` |
+| Method | Path                             | Description                                                  | Auth | Signature                                                          |
+| ------ | -------------------------------- | ------------------------------------------------------------ | ---- | ------------------------------------------------------------------ |
+| POST   | `/webhooks/forgesight`           | Forgesight price update relay                                | HMAC | `x-forgesight-signature` (SHA-256)                                 |
+| POST   | `/webhooks/phyndcrm/engagements` | PhyndCRM engagement lifecycle (created / updated / archived) | HMAC | `x-phyndcrm-signature` (SHA-256), secret `PHYNDCRM_INBOUND_SECRET` |
 
 ## Frontend Routes
 
@@ -241,12 +243,12 @@ First-class projection of PhyndCRM's engagement aggregate. Groups quotes under o
 
 ### Role Permissions Matrix
 
-| Role     | Quotes | Orders | Payments | Admin   | Files |
-| -------- | ------ | ------ | -------- | ------- | ----- |
-| Customer | Own    | Own    | Own      | ❌      | Own   |
-| Operator | All    | All    | View     | ❌      | All   |
-| Manager  | All    | All    | All      | Partial | All   |
-| Admin    | All    | All    | All      | Full    | All   |
+| Role     | Quotes | Orders | Billing | Admin   | Files |
+| -------- | ------ | ------ | ------- | ------- | ----- |
+| Customer | Own    | Own    | Own     | ❌      | Own   |
+| Operator | All    | All    | View    | ❌      | All   |
+| Manager  | All    | All    | All     | Partial | All   |
+| Admin    | All    | All    | All     | Full    | All   |
 
 ### Session Management
 
@@ -266,7 +268,7 @@ First-class projection of PhyndCRM's engagement aggregate. Groups quotes under o
 | AuthController     | ✅         | ✅          | ✅  | 95%      |
 | QuotesController   | ✅         | ✅          | ⚠️  | 88%      |
 | FilesController    | ✅         | ⚠️          | ⚠️  | 75%      |
-| PaymentsController | ✅         | ✅          | ❌  | 82%      |
+| BillingController  | ✅         | ✅          | ❌  | 82%      |
 | OrdersController   | ✅         | ⚠️          | ❌  | 70%      |
 | GeoController      | ✅         | ✅          | ✅  | 92%      |
 | CurrencyController | ✅         | ✅          | ✅  | 90%      |
@@ -328,9 +330,13 @@ First-class projection of PhyndCRM's engagement aggregate. Groups quotes under o
         → /quotes (Create)
           → /quote/[id] (View)
             → /quote/[id]/configure (Configure)
-              → /payments/checkout (Pay)
+              → /quotes/{id}/accept (Pay)
                 → /orders/[id] (Track)
 ```
+
+### Notes
+
+- Billing and webhook paths above are validated against `apps/api/src/app.module.ts` and live `https://api.cotiza.studio/api/docs-json/` exports.
 
 ### Admin Flow
 
@@ -382,7 +388,7 @@ export async function middleware(request: NextRequest) {
 | Response Time p99    | >1000ms   | Warning  |
 | Auth Failures        | >10/min   | Warning  |
 | File Upload Failures | >10%      | Critical |
-| Payment Failures     | >5%       | Critical |
+| Billing Failures     | >5%       | Critical |
 | Cache Hit Rate       | <80%      | Info     |
 
 ### Logging Standards
