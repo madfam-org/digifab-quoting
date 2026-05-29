@@ -122,8 +122,8 @@ SUPPORTED_CURRENCIES=MXN,USD
 DEFAULT_LOCALE=es
 SUPPORTED_LOCALES=es,en,pt-BR
 EMAIL_FROM=noreply@cotiza.studio
-FRONTEND_URL=https://www.cotiza.studio
-ADMIN_URL=https://admin.cotiza.studio
+FRONTEND_URL=https://cotiza.studio
+# ADMIN_URL is not currently exposed as a verified production route
 ```
 
 #### 2.2 Update AWS Resources
@@ -300,7 +300,7 @@ aws cloudfront update-distribution \
   --id $DISTRIBUTION_ID \
   --if-match $ETAG \
   --distribution-config '{
-    "Aliases": {"Items": ["www.cotiza.studio", "cotiza.studio"]}
+    "Aliases": {"Items": ["cotiza.studio"]}
   }'
 ```
 
@@ -338,7 +338,7 @@ redis-cli KEYS "i18n:*" | head -10
 curl https://api.cotiza.studio/health
 
 # Frontend
-curl -I https://www.cotiza.studio
+curl -I https://cotiza.studio
 
 # Test each locale
 for locale in es en pt-BR; do
@@ -450,7 +450,7 @@ git push origin v1.0.0-final
 # Check middleware
 curl -H "Accept-Language: en" \
   -H "X-Debug: true" \
-  https://api.cotiza.studio/test
+  https://api.cotiza.studio/health
 
 # Verify Redis cache
 redis-cli GET "i18n:en:common"
@@ -472,10 +472,8 @@ WHERE session_token IS NULL;
 ### Issue: Email templates in wrong language
 
 ```bash
-# Test email service
-curl -X POST https://api.cotiza.studio/test/email \
-  -H "Content-Type: application/json" \
-  -d '{"locale": "en", "template": "welcome"}'
+# No production email-test endpoint is exposed in the current OpenAPI surface.
+# Verify localized email behavior through an application flow or service logs.
 
 # Check user preferences
 SELECT email, preferred_locale

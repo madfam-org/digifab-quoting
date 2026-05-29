@@ -222,9 +222,9 @@ Generates:
 #### URL Structure
 
 ```
-https://www.cotiza.studio/es/        # Spanish
-https://www.cotiza.studio/en/        # English
-https://www.cotiza.studio/pt-BR/     # Portuguese
+https://cotiza.studio/es/        # Spanish, verified in production
+https://cotiza.studio/en/        # English, intended route
+https://cotiza.studio/pt-BR/     # Portuguese, intended route
 ```
 
 ## API Usage
@@ -234,19 +234,19 @@ https://www.cotiza.studio/pt-BR/     # Portuguese
 #### Method 1: Query Parameter
 
 ```bash
-curl https://api.cotiza.studio/v1/quotes?locale=en
+curl https://api.cotiza.studio/quotes?locale=en
 ```
 
 #### Method 2: Custom Header
 
 ```bash
-curl -H "X-Locale: en" https://api.cotiza.studio/v1/quotes
+curl -H "X-Locale: en" https://api.cotiza.studio/quotes
 ```
 
 #### Method 3: Accept-Language Header
 
 ```bash
-curl -H "Accept-Language: en-US,en;q=0.9" https://api.cotiza.studio/v1/quotes
+curl -H "Accept-Language: en-US,en;q=0.9" https://api.cotiza.studio/quotes
 ```
 
 ### Response Example

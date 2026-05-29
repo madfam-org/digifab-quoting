@@ -6,9 +6,9 @@ This guide covers deploying the Cotiza Studio platform to production environment
 
 > Routine production operations should be executed with the approved Enclii path; direct AWS workflows below are legacy/infra-reference.
 
-**Production URL**: https://www.cotiza.studio  
+**Production URL**: https://cotiza.studio  
 **API Endpoint**: https://api.cotiza.studio  
-**Admin Panel**: https://admin.cotiza.studio
+**Admin Panel**: not currently exposed as a verified production route
 
 ## Architecture Overview
 

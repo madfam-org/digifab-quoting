@@ -1,7 +1,8 @@
 # Session Wrap-Up: Documentation Sync
 
 **Date:** 2026-05-29  
-**Commit:** `699a2d3 docs: sync Cotiza API and billing references`  
+**Documentation sync commit:** `699a2d3 docs: sync Cotiza API and billing references`  
+**Wrap-up report commit:** `65cf051 docs: add documentation sync session wrap-up`  
 **Branch:** `main`
 
 ## Scope
@@ -26,8 +27,24 @@ explicit `/api/v1/...` prefixes.
   - `apps/api/src/main.ts` has Swagger at `/api/docs` and no global API prefix.
   - `apps/api/src/app.module.ts` shows active modules and disabled
     `ConversionModule` / `EnterpriseModule`.
-  - Active Nest controllers under `apps/api/src/modules/*` define route-level
-    prefixes, including explicit `/api/v1` only where controller paths include it.
+  - Registered production OpenAPI paths align with active Nest route-level
+    prefixes: core routes are unversioned, while `geo`, `currency`, and guest
+    quote controllers retain explicit `/api/v1/...` prefixes.
+
+## Production Domain Verification
+
+Additional verification on 2026-05-29 found:
+
+- `https://api.cotiza.studio/health` returns HTTP 200.
+- `https://api.cotiza.studio/api/docs-json/` returns the live OpenAPI document.
+- `https://cotiza.studio` returns HTTP 200.
+- `https://cotiza.studio/es/` returns HTTP 200.
+- `https://www.cotiza.studio` did not resolve during verification.
+- `https://admin.cotiza.studio` returned Cloudflare 502 during verification.
+- `https://cotiza.studio/admin` returned HTTP 404 during verification.
+
+Follow-up docs now use the verified apex URL and mark admin as not currently
+exposed as a verified production route.
 
 ## Documentation Updated
 

@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/madfam-org/digifab-quoting/workflows/CI/badge.svg)](https://github.com/madfam-org/digifab-quoting/actions)
 [![Security Score](https://img.shields.io/badge/Security-A-green)](docs/SECURITY.md)
 [![License](https://img.shields.io/badge/License-Proprietary-blue.svg)](LICENSE)
-[![Website](https://img.shields.io/badge/Website-cotiza.studio-purple)](https://www.cotiza.studio)
+[![Website](https://img.shields.io/badge/Website-cotiza.studio-purple)](https://cotiza.studio)
 
 > 🚀 Enterprise-grade multi-tenant quoting system for digital fabrication services. Get instant quotes for 3D printing, CNC machining, and laser cutting with AI-powered optimization and multilingual support.
 
@@ -21,7 +21,7 @@ npm run dev
 # Frontend: http://localhost:3002
 # API: http://localhost:4000
 # API Docs: http://localhost:4000/api/docs
-# Admin Panel: https://cotiza.studio/admin
+# Admin Panel: not exposed by default in the current production deployment
 ```
 
 ## ✨ Key Features
