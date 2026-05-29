@@ -63,6 +63,12 @@
 - [**DEPLOYMENT.md**](./DEPLOYMENT.md) - Production deployment guide
 - [**MIGRATION_GUIDE.md**](./MIGRATION_GUIDE.md) - Database and system migration procedures
 
+### Reports
+
+- [**SESSION_WRAP_2026-05-29.md**](./reports/SESSION_WRAP_2026-05-29.md) - Documentation sync session summary with production API evidence
+- [**IMPROVEMENTS.md**](./reports/IMPROVEMENTS.md) - Improvement backlog and observations
+- [**TODO_SUMMARY.md**](./reports/TODO_SUMMARY.md) - Outstanding work summary
+
 ---
 
 ## 📚 DOCUMENTATION BY CATEGORY
@@ -126,8 +132,8 @@
 
 ### Last Updated
 
-- Most Recent: November 2025
-- Next Review: Q1 2026
+- Most Recent: May 29, 2026
+- Next Review: Q3 2026
 
 ---
 
