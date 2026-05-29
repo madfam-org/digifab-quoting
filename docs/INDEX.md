@@ -20,6 +20,7 @@
 
 - [**BUSINESS_PLAN.md**](./BUSINESS_PLAN.md) - Three-year strategic growth plan and vision
 - [**IMPLEMENTATION_SUMMARY.md**](./IMPLEMENTATION_SUMMARY.md) - High-level implementation roadmap
+- [**TULANA_SKU_EVIDENCE_CONTRACT_2026-05-29.md**](./TULANA_SKU_EVIDENCE_CONTRACT_2026-05-29.md) - Tulana readiness contract for Cotiza SKU evidence and quote-truth guardrails
 
 ---
 
