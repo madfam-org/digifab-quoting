@@ -29,7 +29,7 @@ spec:
       - name: ghcr-credentials
       containers:
       - name: digifab-quoting-web
-        image: ghcr.io/madfam-org/digifab-quoting/web:latest
+        image: ghcr.io/madfam-org/digifab-quoting/web@sha256:30d424e173695b206f67b9aff878328894fabf8fd3e262ad82f41c0cab173450
         ports:
         - containerPort: 3000
           name: http
@@ -68,8 +68,10 @@ spec:
             path: /
             port: 3000
           periodSeconds: 10
+          timeoutSeconds: 5
         livenessProbe:
           httpGet:
             path: /
             port: 3000
           periodSeconds: 30
+          timeoutSeconds: 5
