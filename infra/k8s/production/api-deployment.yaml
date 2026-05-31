@@ -29,7 +29,7 @@ spec:
       - name: ghcr-credentials
       containers:
       - name: digifab-quoting-api
-        image: ghcr.io/madfam-org/digifab-quoting/api:latest
+        image: ghcr.io/madfam-org/digifab-quoting/api@sha256:f187056b38952e7b84d585b64265d53f2d3ee78ed36c9163e450cd9468f91cea
         ports:
         - containerPort: 4000
           name: http
