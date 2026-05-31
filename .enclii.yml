@@ -30,15 +30,17 @@ spec:
         cpu: "2000m"
         memory: "2Gi"
 
-    healthCheck: /api/health
+    healthCheck: /health
     readinessProbe:
-      path: /api/health
+      path: /health
       initialDelaySeconds: 15
       periodSeconds: 5
+      timeoutSeconds: 5
     livenessProbe:
-      path: /api/health
+      path: /health
       initialDelaySeconds: 30
       periodSeconds: 10
+      timeoutSeconds: 5
 
   env:
     - name: PORT
