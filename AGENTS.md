@@ -27,6 +27,18 @@ redirect and should not become the source of truth again.
   emergencies when Enclii is unavailable or lacks an implemented adapter.
 - Record any missing Enclii adapter gap instead of normalizing raw production
   access in docs or runbooks.
+- Treat this repository as revenue- and fulfillment-affecting quoting software.
+  Do not change pricing formulas, margins, discounts, quote validity,
+  fabrication constraints, accepted-quote transitions, or billing/fabrication
+  handoffs without preserving tests or documenting the business assumption.
+- Do not run database pushes, migrations, seeds, Prisma Studio, pricing
+  backfills, quote recalculations, webhook replays, or accepted-quote handoff
+  scripts against production or tenant data unless the user explicitly asks and
+  the target environment is named.
+- Keep environment examples placeholder-only. Do not add live credentials,
+  token-shaped examples, customer quote data, uploaded design references,
+  pricing spreadsheets, production webhook URLs, or fabrication job payloads to
+  docs, templates, workflow logs, issues, PRs, or LLM chat.
 
 ## Repo entrypoints
 

@@ -16,8 +16,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-api-only-${{ github.ref }}
-  cancel-in-progress: true
+  group: digifab-quoting-kustomization-${{ github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   build-publish-api:

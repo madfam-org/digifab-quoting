@@ -2,9 +2,14 @@
 
 ## Overview
 
-This guide covers deploying the Cotiza Studio platform to production environments using Docker containers, AWS ECS Fargate, and supporting cloud services. The deployment supports multiple environments (dev, staging, production) with full automation through Terraform and CI/CD pipelines.
+This guide covers historical deployment references for Cotiza Studio. Current
+routine production operations must use Enclii; direct AWS, Terraform, raw
+Docker, or direct database operations below are legacy/infra-reference or
+documented break-glass only.
 
-> Routine production operations should be executed with the approved Enclii path; direct AWS workflows below are legacy/infra-reference.
+Do not paste live credentials, production database URLs, customer quote data,
+uploaded design references, pricing spreadsheets, billing tokens, or webhook
+secrets into this file, issues, PRs, CI logs, or LLM chat.
 
 **Production URL**: https://cotiza.studio  
 **API Endpoint**: https://api.cotiza.studio  
@@ -74,10 +79,10 @@ graph TB
 ### 1. AWS Account Preparation
 
 ```bash
-# Configure AWS CLI
+# Legacy/break-glass only: configure AWS CLI
 aws configure
-# AWS Access Key ID: <your-key>
-# AWS Secret Access Key: <your-secret>
+# AWS Access Key ID: <secret-store value>
+# AWS Secret Access Key: <secret-store value>
 # Default region: us-east-1
 # Default output format: json
 
@@ -209,11 +214,12 @@ docker push $ECR_REGISTRY/cotiza-worker:latest
 # Get RDS endpoint
 export DB_HOST=$(terraform output -raw rds_endpoint)
 
-# Run migrations
+# Break-glass only: run migrations after confirming the target environment.
+# Preferred routine path is Enclii/GitOps-controlled rollout.
 DATABASE_URL="postgresql://cotiza:$DB_PASSWORD@$DB_HOST/cotiza_studio" \
   npm run db:migrate:deploy
 
-# Seed production data (optional)
+# Break-glass only: seeding production requires explicit operator approval.
 DATABASE_URL="postgresql://cotiza:$DB_PASSWORD@$DB_HOST/cotiza_studio" \
   npm run db:seed:prod
 ```

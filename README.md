@@ -11,11 +11,11 @@
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Start development environment
 docker-compose up -d
-npm run dev
+pnpm dev
 
 # Access applications
 # Frontend: http://localhost:3002
@@ -113,7 +113,7 @@ npm run dev
 ```bash
 git clone https://github.com/madfam-org/digifab-quoting.git
 cd digifab-quoting
-npm install
+pnpm install
 ```
 
 2. **Configure environment**:
@@ -127,8 +127,11 @@ cp apps/web/.env.example apps/web/.env
 3. **Required environment variables**:
 
 ```env
+# Placeholder-only examples. Production/staging values must come from Enclii
+# secrets backed by Lockbox/Vault/ESO.
+
 # Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/cotiza_studio
+DATABASE_URL=replace-with-local-or-secret-store-database-url
 
 # Redis
 REDIS_URL=redis://localhost:6379
@@ -136,12 +139,12 @@ REDIS_URL=redis://localhost:6379
 # AWS (Optional for local dev)
 S3_BUCKET=cotiza-studio-dev
 S3_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-key
-AWS_SECRET_ACCESS_KEY=your-secret
+AWS_ACCESS_KEY_ID=replace-with-local-aws-access-key-id
+AWS_SECRET_ACCESS_KEY=replace-with-local-aws-secret-access-key
 
 # Auth
-JWT_SECRET=your-secret-key-min-32-chars
-NEXTAUTH_SECRET=your-nextauth-secret-min-32-chars
+JWT_SECRET=replace-with-local-jwt-secret
+NEXTAUTH_SECRET=replace-with-local-nextauth-secret
 NEXTAUTH_URL=http://localhost:3002
 
 # Dhanam / Janua billing integration
@@ -161,50 +164,48 @@ SUPPORTED_CURRENCIES=MXN,USD,BRL
 docker-compose up -d postgres redis
 
 # Run migrations
-npm run db:migrate
+LOCAL_DB=yes pnpm db:migrate
 
 # Seed initial data
-npm run db:seed
+LOCAL_DB=yes pnpm db:seed
 ```
 
 ### Development Commands
 
 ```bash
 # Start all services
-npm run dev
+pnpm dev
 
 # Run specific app
-npm run dev -- --filter=@cotiza/api
-npm run dev -- --filter=@cotiza/web
+pnpm dev -- --filter=@cotiza/api
+pnpm dev -- --filter=@cotiza/web
 
 # Database operations
-npm run db:generate    # Generate Prisma client
-npm run db:push       # Push schema changes (dev)
-npm run db:migrate    # Run migrations
-npm run db:studio     # Open Prisma Studio
-npm run db:seed       # Seed initial data
+pnpm db:generate              # Generate Prisma client
+LOCAL_DB=yes pnpm db:push     # Push schema changes (dev)
+LOCAL_DB=yes pnpm db:migrate  # Run migrations
+LOCAL_DB=yes pnpm db:seed     # Seed initial data
 
 # Testing
-npm test              # Run all tests
-npm run test:watch    # Watch mode
-npm run test:cov      # Coverage report
-npm run test:e2e      # E2E tests
+pnpm test              # Run all tests
+pnpm test:watch        # Watch mode
+pnpm test:cov          # Coverage report
+pnpm test:e2e          # E2E tests
 
 # Code quality
-npm run lint          # ESLint
-npm run format        # Prettier
-npm run typecheck     # TypeScript check
+pnpm lint              # ESLint
+pnpm format            # Prettier
+pnpm typecheck         # TypeScript check
 
 # Build
-npm run build         # Build all packages
-npm run clean         # Clean build artifacts
+pnpm build             # Build all packages
+pnpm clean             # Clean build artifacts
 ```
 
 ### Default Test Users
 
-- **Admin**: `admin@cotiza.studio` / `Admin123!`
-- **Manager**: `manager@cotiza.studio` / `Manager123!`
-- **Customer**: `customer@example.com` / `Customer123!`
+Seeded local users must use generated or operator-supplied passwords. Do not
+document reusable default credentials in this repo.
 
 ## 🧪 Testing
 
