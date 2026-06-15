@@ -5,6 +5,7 @@ import { Providers } from './providers';
 import { Navbar } from '@/components/layout/navbar';
 import { Toaster } from '@/components/ui/toaster';
 import { PmfWidgetMount } from '@/components/pmf/PmfWidgetMount';
+import { EcosystemBannerClient } from '@/components/EcosystemBannerClient';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,12 +20,13 @@ export const dynamic = 'force-dynamic';
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} pb-8`}>
         <Providers>
           <Navbar />
           <main>{children}</main>
           <Toaster />
           <PmfWidgetMount />
+          <EcosystemBannerClient />
         </Providers>
       </body>
     </html>
