@@ -206,7 +206,9 @@ describe('PricingResolverService', () => {
     });
 
     it('returns null when no analysis exists at all', () => {
-      expect(resolver.resolveGeometry({ files: [{ id: 'f', fileAnalysis: null }] } as never)).toBeNull();
+      expect(
+        resolver.resolveGeometry({ files: [{ id: 'f', fileAnalysis: null }] } as never),
+      ).toBeNull();
       expect(resolver.resolveGeometry({ files: [] } as never)).toBeNull();
       expect(resolver.resolveGeometry({} as never)).toBeNull();
     });

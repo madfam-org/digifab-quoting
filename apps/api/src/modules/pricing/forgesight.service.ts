@@ -1,6 +1,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ForgesightClient, ForgesightError, ServiceType, Currency } from '../../integrations/forgesight';
+import {
+  ForgesightClient,
+  ForgesightError,
+  ServiceType,
+  Currency,
+} from '../../integrations/forgesight';
 import { Cacheable } from '../redis/decorators/cache.decorator';
 import { ProcessType } from '@cotiza/shared';
 
