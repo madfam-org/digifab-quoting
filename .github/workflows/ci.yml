@@ -72,7 +72,9 @@ jobs:
         run: pnpm run lint
 
       - name: Check formatting
-        run: npx prettier --check "**/*.{ts,tsx,js,jsx,json,css,md}"
+        # pnpm exec resolves the lockfile-pinned prettier; npx can drift to a
+        # newer release with different formatting output.
+        run: pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json,css,md}"
 
   test-unit:
     name: Unit Tests
