@@ -248,10 +248,11 @@ export class PricingService {
     // Enhance with ForgeSight market intelligence (if available)
     let marketIntelligence = null;
     let benchmark = null;
+    // Truth-preserving default: if ForgeSight is configured but returns no
+    // fresh, verifiable benchmark (424, outage, timeout), the pricing-engine
+    // result stands alone and is explicitly labeled as NOT market-verified.
     let marketContext = this.buildInternalMarketContext(
-      this.forgeSightService.isEnabled()
-        ? 'forgesight_no_market_data'
-        : 'forgesight_not_configured',
+      this.forgeSightService.isEnabled() ? 'market_data_unavailable' : 'forgesight_not_configured',
     );
 
     if (this.forgeSightService.isEnabled()) {
@@ -284,7 +285,9 @@ export class PricingService {
           );
         }
       } catch (error) {
-        marketContext = this.buildInternalMarketContext('forgesight_unavailable');
+        // ForgeSight being down (or refusing to fabricate a benchmark via
+        // 424) must never fail the quote — internal pricing stands alone.
+        marketContext = this.buildInternalMarketContext('market_data_unavailable');
         this.logger.warn(
           `ForgeSight market intelligence unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`,
         );

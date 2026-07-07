@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ForgesightClient, ServiceType, Currency } from '../../integrations/forgesight';
+import { ForgesightClient, ForgesightError, ServiceType, Currency } from '../../integrations/forgesight';
 import { Cacheable } from '../redis/decorators/cache.decorator';
 import { ProcessType } from '@cotiza/shared';
 
@@ -195,6 +195,17 @@ export class ForgeSightService implements OnModuleInit {
         market_context: this.normalizeMarketContext(result),
       };
     } catch (error) {
+      // ForgeSight's truth-preserving contract returns 424 (+
+      // market_verified:false) when no fresh benchmark exists. That is a
+      // normal fallback, not an outage: callers degrade to internal pricing
+      // with provenance `market_data_unavailable` and must never fail the
+      // quote because of it.
+      if (error instanceof ForgesightError && error.statusCode === 424) {
+        this.logger.debug(
+          `ForgeSight has no fresh benchmark for ${params.materialId}/${params.process} (424): ${error.message}`,
+        );
+        return null;
+      }
       this.logger.warn(
         `ForgeSight pricing fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
