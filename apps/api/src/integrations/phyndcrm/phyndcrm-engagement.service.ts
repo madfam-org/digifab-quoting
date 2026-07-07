@@ -20,7 +20,11 @@ import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 
 export interface EngagementEventPayload {
-  engagement_id: string;
+  // Optional: lifecycle events are emitted even when the quote isn't
+  // linked to a PhyndCRM engagement yet. In that case the metadata
+  // carries contact_email + cotiza_customer_id so PhyndCRM can resolve
+  // the engagement/contact on its side.
+  engagement_id?: string;
   source: 'cotiza';
   event_type: string;
   status?: string;
@@ -66,7 +70,7 @@ export class PhyndCrmEngagementService {
 
   async recordEvent(payload: EngagementEventPayload): Promise<void> {
     return this.post('/api/v1/engagements/events', payload, {
-      engagement_id: payload.engagement_id,
+      engagement_id: payload.engagement_id ?? '<unlinked>',
       event_type: payload.event_type,
     });
   }

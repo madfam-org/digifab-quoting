@@ -53,17 +53,25 @@ export class OrdersService {
       throw new NotFoundException('Quote not found');
     }
 
-    if (quote.status !== QuoteStatus.APPROVED) {
-      throw new BadRequestException('Quote must be approved before creating an order');
-    }
-
-    // Check if order already exists
+    // Idempotency FIRST: a replayed payment.succeeded webhook arrives
+    // after the quote already flipped to ORDERED — the existing-order
+    // check must run before the status gate or the replay throws
+    // instead of no-oping. Returning the existing order also means
+    // handleOrdered fan-out (CFDI, milestones, MES, PhyndCRM
+    // quote_ordered) only ever fires once per quote.
     const existingOrder = await this.prisma.order.findFirst({
       where: { quoteId, tenantId },
     });
 
     if (existingOrder) {
+      this.logger.log(
+        `createOrderFromQuote: order ${existingOrder.orderNumber} already exists for quote ${quoteId} — idempotent return`,
+      );
       return existingOrder;
+    }
+
+    if (quote.status !== QuoteStatus.APPROVED) {
+      throw new BadRequestException('Quote must be approved before creating an order');
     }
 
     // Create order number
@@ -126,13 +134,24 @@ export class OrdersService {
       return newOrder;
     });
 
-    // Queue invoice generation
-    await this.jobsService.addJob(JobType.EMAIL_NOTIFICATION, {
-      tenantId,
-      type: 'order-shipped',
-      recipientEmail: 'customer@example.com',
-      templateData: { orderId: order.id },
-    });
+    // Order-confirmation email to the real customer (was previously a
+    // placeholder 'order-shipped' to customer@example.com). Skipped when
+    // the quote has no customer email (e.g. unconverted guest quotes).
+    if (quote.customer?.email) {
+      await this.jobsService.addJob(JobType.EMAIL_NOTIFICATION, {
+        tenantId,
+        type: 'quote-accepted',
+        recipientEmail: quote.customer.email,
+        recipientName: quote.customer.name ?? undefined,
+        templateData: {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          quoteNumber: quote.number,
+          currency: quote.currency,
+          totalPaid: Number(quote.totalPrice ?? quote.total ?? 0),
+        },
+      });
+    }
 
     // Phase D: fire outbound integrations (CFDI stamping, milestone
     // invoicing, MES dispatch) — fire-and-forget, never blocks the
