@@ -320,8 +320,13 @@ export class JanuaEmailService implements OnModuleInit {
     currency: string,
     validUntil?: string,
     itemCount?: number,
+    quoteUrl?: string,
   ): Promise<JanuaEmailResponse> {
-    const viewUrl = `${this.configService.get('WEB_URL', 'https://app.digifab.mx')}/quotes/${quoteNumber}`;
+    // Callers that know the quote id pass the canonical frontend quote
+    // page URL; fall back to the legacy number-based path otherwise.
+    const viewUrl =
+      quoteUrl ??
+      `${this.configService.get('WEB_URL', 'https://app.digifab.mx')}/quotes/${quoteNumber}`;
 
     return this.sendTemplateEmail(
       {

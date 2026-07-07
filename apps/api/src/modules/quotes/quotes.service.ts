@@ -23,6 +23,8 @@ import { JobsService } from '../jobs/jobs.service';
 import { JobType } from '../jobs/interfaces/job.interface';
 import { FilesService } from '../files/files.service';
 import { PhyndCrmEngagementService } from '../../integrations/phyndcrm/phyndcrm-engagement.service';
+import { QuoteLifecycleEventsService } from '../../integrations/phyndcrm/quote-lifecycle-events.service';
+import { JanuaEmailService } from '../email/janua-email.service';
 import { KarafielComplianceService } from '../../integrations/karafiel/karafiel-compliance.service';
 import {
   DhanamMilestoneService,
@@ -49,6 +51,8 @@ export class QuotesService {
     private jobsService: JobsService,
     private filesService: FilesService,
     private phyndcrmEngagement: PhyndCrmEngagementService,
+    private quoteLifecycle: QuoteLifecycleEventsService,
+    private januaEmail: JanuaEmailService,
     private karafielCompliance: KarafielComplianceService,
     private dhanamMilestone: DhanamMilestoneService,
     private pravaraDispatch: PravaraDispatchService,
@@ -391,6 +395,13 @@ export class QuotesService {
       },
     });
 
+    // Quote reached AUTO_QUOTED — deliver it to the customer (email +
+    // PhyndCRM `cotiza:quote_sent` event + quote artifact). Fire-and-
+    // forget: delivery failures never break the calculate response.
+    if (errors.length === 0) {
+      void this.dispatchQuoteReady(tenantId, quoteId);
+    }
+
     return {
       quote: updatedQuote,
       errors: errors.length > 0 ? errors : undefined,
@@ -455,6 +466,10 @@ export class QuotesService {
       },
     });
 
+    // Quote reached QUOTED — deliver it (email + PhyndCRM
+    // `cotiza:quote_sent` + quote artifact). Fire-and-forget.
+    void this.dispatchQuoteReady(tenantId, quoteId);
+
     return { quote: updated };
   }
 
@@ -467,6 +482,8 @@ export class QuotesService {
     sessionId?: string;
     checkoutUrl?: string;
     paymentUrl?: string;
+    checkoutUnavailable?: boolean;
+    checkoutUnavailableReason?: string;
   }> {
     const quote = await this.findOne(tenantId, quoteId);
 
@@ -508,6 +525,8 @@ export class QuotesService {
 
     let checkoutUrl: string | undefined;
     let sessionId: string | undefined;
+    let checkoutUnavailable = false;
+    let checkoutUnavailableReason: string | undefined;
     if (this.januaBilling.isDhanamCheckoutEnabled()) {
       const session = await this.januaBilling.createCheckoutSession(
         quoteId,
@@ -519,8 +538,15 @@ export class QuotesService {
       checkoutUrl = session.checkoutUrl;
       sessionId = session.sessionId;
     } else {
-      this.logger.warn(
-        `approve(): Dhanam checkout client disabled — returning approved quote without checkout URL (quote=${quoteId})`,
+      // LOUD degradation: the quote still flips to APPROVED (approval
+      // state must never depend on billing config), but the response
+      // carries an explicit flag + reason so the frontend/ops can react
+      // instead of silently dropping the customer on a dead end.
+      checkoutUnavailable = true;
+      checkoutUnavailableReason =
+        'Dhanam checkout is not configured (DHANAM_API_URL / DHANAM_API_TOKEN not set); no checkout URL could be minted';
+      this.logger.error(
+        `approve(): checkout unavailable for quote=${quoteId} — ${checkoutUnavailableReason}`,
       );
     }
 
@@ -539,36 +565,35 @@ export class QuotesService {
       },
     });
 
-    // Fire-and-forget: announce the approval into the client's PhyndCRM
-    // portal timeline + push the signed-proposal PDF as an artifact so
-    // the client can open it from the portal. Failures never block the
-    // approve flow; the integration service logs its own errors.
+    // Fire-and-forget: announce the approval into PhyndCRM. Emits the
+    // canonical lifecycle event `cotiza:quote_approved` (dedup
+    // cotiza:<quoteId>:approved) plus the milestone alias
+    // `quote_approved` (dedup cotiza:<quoteId>:milestone:quote_approved).
+    // Replaces the legacy `quote.approved` event_type. Emitted even
+    // when the quote has no engagement link — metadata carries
+    // contact_email + cotiza_customer_id so PhyndCRM can resolve.
+    // Failures never block the approve flow.
+    const quoteTypeLabel =
+      (updatedQuote as unknown as { quoteType?: string }).quoteType === QuoteType.SERVICES
+        ? 'services'
+        : 'fabrication';
+    this.quoteLifecycle.emit('approved', updatedQuote, {
+      contactEmail: (quote as unknown as { customer?: { email?: string } }).customer?.email,
+      message: `${quoteTypeLabel === 'services' ? 'Services' : 'Fabrication'} proposal approved`,
+      metadata: {
+        quote_type: quoteTypeLabel,
+        ...(sessionId && { session_id: sessionId }),
+        ...(checkoutUnavailable && {
+          checkout_unavailable: true,
+          checkout_unavailable_reason: checkoutUnavailableReason,
+        }),
+      },
+    });
+
     const engagementId = this.phyndcrmEngagement.getEngagementId(
       updatedQuote.metadata as Record<string, unknown> | null,
     );
     if (engagementId) {
-      const quoteTypeLabel =
-        (updatedQuote as unknown as { quoteType?: string }).quoteType === QuoteType.SERVICES
-          ? 'services'
-          : 'fabrication';
-
-      void this.phyndcrmEngagement.recordEvent({
-        engagement_id: engagementId,
-        source: 'cotiza',
-        event_type: 'quote.approved',
-        status: 'in_progress',
-        message: `${quoteTypeLabel === 'services' ? 'Services' : 'Fabrication'} proposal approved`,
-        timestamp: new Date().toISOString(),
-        dedup_key: `cotiza:quote.approved:${updatedQuote.id}`,
-        metadata: {
-          quote_id: updatedQuote.id,
-          quote_number: updatedQuote.number,
-          quote_type: quoteTypeLabel,
-          total: (updatedQuote.total ?? updatedQuote.totalPrice ?? 0).toString(),
-          currency: updatedQuote.currency,
-        },
-      });
-
       // Push the signed-proposal artifact. generatePdf() either returns
       // a fresh 7-day presigned S3 URL (when an existing PDF is on hand)
       // or a placeholder status URL (when generation is queued). Either
@@ -576,7 +601,12 @@ export class QuotesService {
       void this.pushProposalArtifact(tenantId, engagementId, updatedQuote);
     }
 
-    return { quote: updatedQuote, checkoutUrl, sessionId };
+    return {
+      quote: updatedQuote,
+      checkoutUrl,
+      sessionId,
+      ...(checkoutUnavailable && { checkoutUnavailable, checkoutUnavailableReason }),
+    };
   }
 
   private async pushProposalArtifact(
@@ -606,6 +636,216 @@ export class QuotesService {
   }
 
   // ---------------------------------------------------------------
+  // Quote-ready delivery — fired when a quote transitions to QUOTED
+  // (services calculate) or AUTO_QUOTED (fab calculate). Sends the
+  // transactional "quote ready" email to the customer (Janua
+  // centralized email preferred, Bull quote-ready template as
+  // fallback), emits the PhyndCRM `cotiza:quote_sent` lifecycle event,
+  // and pushes a quote artifact into the engagement timeline when the
+  // quote is linked to one.
+  //
+  // Entirely fire-and-forget: never throws, never blocks the quote
+  // transition. Transactional email — no marketing-consent gate.
+  // ---------------------------------------------------------------
+  async dispatchQuoteReady(tenantId: string, quoteId: string): Promise<void> {
+    try {
+      const quote = await this.prisma.quote.findFirst({
+        where: { id: quoteId, tenantId },
+        include: {
+          items: { select: { id: true } },
+          customer: { select: { id: true, email: true, name: true } },
+        },
+      });
+      if (!quote) return;
+      if (quote.status !== QuoteStatus.QUOTED && quote.status !== QuoteStatus.AUTO_QUOTED) {
+        return;
+      }
+
+      const contactEmail = quote.customer?.email ?? null;
+      const frontendUrl =
+        this.configService.get<string>('FRONTEND_URL', 'http://localhost:3002') ?? '';
+      const quoteUrl = `${frontendUrl.replace(/\/+$/, '')}/quote/${quote.id}`;
+      const totals = (quote.totals ?? {}) as { grandTotal?: number };
+      const total = Number(quote.total ?? quote.totalPrice ?? totals.grandTotal ?? 0);
+
+      if (contactEmail) {
+        try {
+          if (this.januaEmail.available) {
+            await this.januaEmail.sendQuoteReadyEmail(
+              contactEmail,
+              quote.number,
+              total,
+              quote.currency,
+              quote.validityUntil?.toISOString(),
+              quote.items.length,
+              quoteUrl,
+            );
+          } else {
+            // Fallback: local Bull queue + the existing quote-ready
+            // handlebars template in email-notification.processor.ts.
+            await this.jobsService.addJob(JobType.EMAIL_NOTIFICATION, {
+              tenantId,
+              type: 'quote-ready',
+              recipientEmail: contactEmail,
+              recipientName: quote.customer?.name ?? undefined,
+              templateData: {
+                quoteNumber: quote.number,
+                itemCount: quote.items.length,
+                total,
+                currency: quote.currency,
+                validUntil: quote.validityUntil?.toISOString(),
+                quoteUrl,
+              },
+            });
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          this.logger.error(
+            `dispatchQuoteReady: quote-ready email failed for quote=${quote.id}: ${msg}`,
+          );
+        }
+      } else {
+        this.logger.warn(
+          `dispatchQuoteReady: no customer email for quote=${quote.id} — skipping quote-ready email`,
+        );
+      }
+
+      // PhyndCRM lifecycle event (cotiza:quote_sent) — fire-and-forget.
+      this.quoteLifecycle.emit('sent', quote, {
+        contactEmail,
+        message: `Quote ${quote.number} sent to customer`,
+        metadata: { quote_url: quoteUrl },
+      });
+
+      // Quote artifact (mirrors the signed-proposal artifact push in
+      // approve(), with type 'quote'). Engagement-linked quotes only —
+      // the artifacts endpoint requires an engagement.
+      const engagementId = this.phyndcrmEngagement.getEngagementId(
+        quote.metadata as Record<string, unknown> | null,
+      );
+      if (engagementId) {
+        void this.pushQuoteArtifact(tenantId, engagementId, quote);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`dispatchQuoteReady failed for quote=${quoteId}: ${msg}`);
+    }
+  }
+
+  private async pushQuoteArtifact(
+    tenantId: string,
+    engagementId: string,
+    quote: PrismaQuote,
+  ): Promise<void> {
+    try {
+      const { url } = await this.generatePdf(tenantId, quote.id);
+      await this.phyndcrmEngagement.recordArtifact({
+        engagement_id: engagementId,
+        type: 'quote',
+        entity_type: 'quote',
+        entity_id: quote.id,
+        url,
+        title: `Quote ${quote.number}`,
+        metadata: {
+          quote_id: quote.id,
+          quote_number: quote.number,
+          currency: quote.currency,
+        },
+      });
+    } catch {
+      // Non-blocking, mirrors pushProposalArtifact.
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Customer first-view tracking. Called (fire-and-forget) from the
+  // customer-facing GET /quotes/:id handler when the requester is the
+  // quote's customer. Stamps metadata.firstViewedAt exactly once and
+  // emits the PhyndCRM `cotiza:quote_viewed` event (also dedup-keyed
+  // server-side as cotiza:<quoteId>:viewed as a second guard).
+  // ---------------------------------------------------------------
+  async recordCustomerView(
+    tenantId: string,
+    quoteId: string,
+    viewer: { id: string; email?: string },
+  ): Promise<void> {
+    try {
+      // Fresh read (findOne is cached) so the first-view stamp is
+      // accurate even when the detail response came from cache.
+      const quote = await this.prisma.quote.findFirst({
+        where: { id: quoteId, tenantId },
+      });
+      if (!quote) return;
+      if (!quote.customerId || quote.customerId !== viewer.id) return;
+
+      const metadata = (quote.metadata ?? {}) as Record<string, unknown>;
+      if (metadata.firstViewedAt) return;
+
+      const firstViewedAt = new Date().toISOString();
+      await this.prisma.quote.update({
+        where: { id: quote.id },
+        data: {
+          metadata: { ...metadata, firstViewedAt } as Prisma.InputJsonValue,
+        },
+      });
+
+      this.quoteLifecycle.emit('viewed', quote, {
+        contactEmail: viewer.email,
+        message: `Quote ${quote.number} viewed by customer`,
+        metadata: { first_viewed_at: firstViewedAt },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`recordCustomerView failed for quote=${quoteId}: ${msg}`);
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Customer rejects a ready quote. Terminal REJECTED transition +
+  // PhyndCRM `cotiza:quote_rejected` lifecycle event.
+  // ---------------------------------------------------------------
+  @CacheInvalidate('quote:detail:*')
+  async reject(
+    tenantId: string,
+    quoteId: string,
+    customerId: string,
+    reason?: string,
+  ): Promise<PrismaQuote> {
+    const quote = await this.findOne(tenantId, quoteId);
+
+    if (quote.customerId !== customerId) {
+      throw new BadRequestException('Unauthorized to reject this quote');
+    }
+
+    const allowedStatuses: QuoteStatus[] = [QuoteStatus.QUOTED, QuoteStatus.AUTO_QUOTED];
+    if (!allowedStatuses.includes(quote.status as QuoteStatus)) {
+      throw new BadRequestException('Quote cannot be rejected in current status');
+    }
+
+    const metadata = {
+      ...((quote.metadata ?? {}) as Record<string, unknown>),
+      rejectedAt: new Date().toISOString(),
+      ...(reason && { rejectionReason: reason }),
+    };
+
+    const updated = await this.prisma.quote.update({
+      where: { id: quoteId },
+      data: {
+        status: QuoteStatus.REJECTED,
+        metadata: metadata as Prisma.InputJsonValue,
+      },
+    });
+
+    this.quoteLifecycle.emit('rejected', updated, {
+      contactEmail: (quote as unknown as { customer?: { email?: string } }).customer?.email,
+      message: `Quote ${updated.number} rejected by customer`,
+      metadata: reason ? { rejection_reason: reason } : undefined,
+    });
+
+    return updated;
+  }
+
+  // ---------------------------------------------------------------
   // Phase D outbound integrations — fired when a quote reaches ORDERED
   // (post-payment). Called from OrdersService.createOrderFromQuote
   // after the status flip to ORDERED.
@@ -620,11 +860,14 @@ export class QuotesService {
   //  - Pravara  — MES dispatch (FAB items only)
   // ---------------------------------------------------------------
   async handleOrdered(tenantId: string, quoteId: string, orderId?: string): Promise<void> {
-    let quote: PrismaQuote & { items: PrismaQuoteItem[] };
+    let quote: PrismaQuote & {
+      items: PrismaQuoteItem[];
+      customer?: { email: string } | null;
+    };
     try {
       const loaded = await this.prisma.quote.findFirst({
         where: { id: quoteId, tenantId },
-        include: { items: true },
+        include: { items: true, customer: { select: { email: true } } },
       });
       if (!loaded) {
         this.logger.warn('handleOrdered: quote not found (tenant=%s quote=%s)', tenantId, quoteId);
@@ -639,6 +882,15 @@ export class QuotesService {
 
     const metadata = (quote.metadata ?? {}) as Record<string, unknown>;
     const engagementId = this.phyndcrmEngagement.getEngagementId(metadata);
+
+    // PhyndCRM lifecycle event: the quote is now ORDERED (payment
+    // landed, order minted). handleOrdered only runs on fresh order
+    // creation, so replayed payment webhooks never re-emit this.
+    this.quoteLifecycle.emit('ordered', quote, {
+      contactEmail: quote.customer?.email,
+      message: `Quote ${quote.number} ordered (payment received)`,
+      metadata: orderId ? { order_id: orderId } : undefined,
+    });
 
     // Load tenant for RFC/branding. Non-fatal if missing.
     let tenantSettings: Record<string, unknown> = {};

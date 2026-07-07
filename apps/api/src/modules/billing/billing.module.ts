@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { BillingService } from './billing.service';
 import { BillingController } from './billing.controller';
@@ -10,6 +10,7 @@ import { UsageTrackingInterceptor } from './interceptors/usage-tracking.intercep
 import { DhanamRelayService } from './services/dhanam-relay.service';
 import { JanuaBillingService } from './services/janua-billing.service';
 import { PrismaModule } from '@/prisma/prisma.module';
+import { OrdersModule } from '@/modules/orders/orders.module';
 import { RedisModule } from '@/modules/redis/redis.module';
 // NOTE: PaymentModule (direct Stripe) removed - all payments now route through Janua
 
@@ -17,6 +18,10 @@ import { RedisModule } from '@/modules/redis/redis.module';
   imports: [
     PrismaModule,
     RedisModule,
+    // forwardRef: BillingModule → OrdersModule → QuotesModule →
+    // BillingModule cycle (payment webhook → order creation → quote
+    // fan-out → checkout mint). Every edge in the cycle is forwardRef'd.
+    forwardRef(() => OrdersModule),
     // PaymentModule removed - using JanuaBillingService for all payment operations
     BullModule.registerQueue({
       name: 'billing',

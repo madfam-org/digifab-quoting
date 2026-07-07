@@ -1,8 +1,9 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UsageTrackingService, UsageEventType } from './services/usage-tracking.service';
 import { PricingTierService } from './services/pricing-tier.service';
 import { JanuaBillingService } from './services/janua-billing.service';
+import { OrdersService } from '@/modules/orders/orders.service';
 // NOTE: All payment processing now goes through Janua Payment Gateway
 // Direct Stripe usage removed - Janua handles provider routing (Conekta, Stripe, Polar)
 
@@ -44,6 +45,9 @@ export class BillingService {
     private readonly usageTracking: UsageTrackingService,
     private readonly pricingTierService: PricingTierService,
     private readonly januaBilling: JanuaBillingService,
+    // forwardRef: OrdersModule → QuotesModule → BillingModule cycle.
+    @Inject(forwardRef(() => OrdersService))
+    private readonly ordersService: OrdersService,
   ) {}
 
   /**
@@ -636,10 +640,93 @@ export class BillingService {
   }
 
   /**
+   * Extract the Cotiza quote id from payment webhook metadata.
+   *
+   * Two checkout mints stamp a quote reference:
+   *  - JanuaBillingService.createCheckoutSession (Dhanam mint used by
+   *    QuotesService.approve) sets `metadata.cotiza_quote_id`.
+   *  - JanuaBillingService.createQuotePaymentSession (Janua mint) sets
+   *    `metadata.quote_id` — but createPaymentSession() reuses that
+   *    field for billing-invoice ids with `metadata.type =
+   *    'billing_invoice'`, so those are explicitly excluded.
+   */
+  private extractQuoteIdFromPaymentMetadata(
+    metadata: Record<string, unknown> | undefined | null,
+  ): string | null {
+    if (!metadata) return null;
+    if (metadata.type === 'billing_invoice') return null;
+    const id = metadata.cotiza_quote_id ?? metadata.quote_id;
+    return typeof id === 'string' && id.length > 0 ? id : null;
+  }
+
+  /**
+   * Quote-payment success path: idempotently convert the paid APPROVED
+   * quote into an Order (APPROVED → ORDERED), which triggers the
+   * handleOrdered fan-out (Karafiel CFDI, Dhanam milestones, Pravara
+   * MES, PhyndCRM `cotiza:quote_ordered`).
+   *
+   * Returns true when the payload was recognized and consumed as a
+   * quote payment (even if order creation failed — a quote payment must
+   * never fall through to the subscription-invoice bookkeeping path).
+   */
+  private async handleQuotePaymentSucceeded(
+    quoteId: string,
+    data: { provider?: string; amount?: number; currency?: string },
+  ): Promise<boolean> {
+    const quote = await this.prisma.quote.findUnique({ where: { id: quoteId } });
+    if (!quote) {
+      this.logger.warn(
+        `payment.succeeded carried quote id ${quoteId} but no such quote exists — falling through`,
+      );
+      return false;
+    }
+
+    // Idempotency: a replayed payment.succeeded for an already-ordered
+    // quote must not create a second order (createOrderFromQuote also
+    // guards this; the pre-check keeps replays cheap and log-visible).
+    const existingOrder = await this.prisma.order.findFirst({
+      where: { quoteId, tenantId: quote.tenantId },
+    });
+    if (existingOrder) {
+      this.logger.log(
+        `payment.succeeded replay for quote ${quoteId}: order ${existingOrder.orderNumber} already exists — idempotent skip`,
+      );
+      return true;
+    }
+
+    try {
+      const order = await this.ordersService.createOrderFromQuote(quoteId, quote.tenantId);
+      this.logger.log(
+        `payment.succeeded (${data.provider ?? 'unknown'}) → created order ${order.orderNumber} from quote ${quoteId} (${data.currency ?? quote.currency} ${data.amount ?? ''})`,
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`payment.succeeded for quote ${quoteId} but order creation failed: ${msg}`);
+    }
+    return true;
+  }
+
+  /**
    * Handle Janua payment succeeded event
+   *
+   * Revenue path: when the payment metadata carries a Cotiza quote id
+   * (stamped by the Dhanam checkout mint in
+   * JanuaBillingService.createCheckoutSession), this is a QUOTE payment
+   * — mint the order and run the ORDERED fan-out. Otherwise fall back
+   * to the legacy tenant-subscription invoice bookkeeping.
    */
   async handleJanuaPaymentSucceeded(payload: any): Promise<void> {
-    const { customer_id, amount, currency, provider } = payload.data;
+    const { customer_id, amount, currency, provider, metadata } = payload.data ?? {};
+
+    const quoteId = this.extractQuoteIdFromPaymentMetadata(metadata);
+    if (quoteId) {
+      const handled = await this.handleQuotePaymentSucceeded(quoteId, {
+        provider,
+        amount,
+        currency,
+      });
+      if (handled) return;
+    }
 
     const tenant = await this.prisma.tenant.findFirst({
       where: { januaCustomerId: customer_id },

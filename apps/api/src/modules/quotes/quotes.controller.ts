@@ -28,9 +28,10 @@ import { CreateQuoteDto, QuoteResponseDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { AddQuoteItemDto, QuoteItemResponseDto } from './dto/add-quote-item.dto';
 import { CalculateQuoteDto } from './dto/calculate-quote.dto';
+import { RejectQuoteDto } from './dto/reject-quote.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { QuoteStatus } from '@cotiza/shared';
+import { QuoteStatus, Role } from '@cotiza/shared';
 import { Audit } from '../audit/audit.interceptor';
 import { AuditAction, AuditEntity } from '../audit/audit.service';
 import {
@@ -134,8 +135,22 @@ export class QuotesController {
     description: 'Quote not found',
     type: NotFoundResponseDto,
   })
-  findOne(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
-    return this.quotesService.findOne(req.user.tenantId, id);
+  async findOne(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
+    const quote = await this.quotesService.findOne(req.user.tenantId, id);
+
+    // First-view tracking: when the CUSTOMER opens their quote, stamp
+    // metadata.firstViewedAt (once) and emit the PhyndCRM
+    // `cotiza:quote_viewed` engagement event. Fire-and-forget — never
+    // delays or fails the GET response. Staff/admin views don't count.
+    const roles: string[] = req.user.roles ?? [];
+    if (roles.includes(Role.CUSTOMER) && quote.customerId === req.user.id) {
+      void this.quotesService.recordCustomerView(req.user.tenantId, id, {
+        id: req.user.id,
+        email: req.user.email,
+      });
+    }
+
+    return quote;
   }
 
   @Patch(':id')
@@ -285,6 +300,50 @@ export class QuotesController {
   @ApiOperation({ summary: 'Cancel quote' })
   cancel(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.quotesService.cancel(req.user.tenantId, id);
+  }
+
+  // POST /quotes/:id/reject
+  //
+  // Customer-side counterpart to /accept: the customer declines a
+  // ready (QUOTED / AUTO_QUOTED) quote. Terminal REJECTED transition;
+  // emits the PhyndCRM `cotiza:quote_rejected` lifecycle event.
+  @Post(':id/reject')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Customer rejects quote',
+    description:
+      'Customer declines a ready quote (QUOTED or AUTO_QUOTED). Transitions the quote to ' +
+      'REJECTED and records the optional rejection reason in quote metadata.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Quote ID',
+    example: 'quote_123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Quote rejected',
+    type: QuoteResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Quote not found',
+    type: NotFoundResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Quote is not in a rejectable status or requester is not the quote customer',
+    type: ValidationErrorResponseDto,
+  })
+  @Audit({
+    entity: AuditEntity.QUOTE,
+    action: AuditAction.REJECT,
+    includeBody: true,
+  })
+  reject(
+    @Request() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() rejectQuoteDto: RejectQuoteDto,
+  ) {
+    return this.quotesService.reject(req.user.tenantId, id, req.user.id, rejectQuoteDto.reason);
   }
 
   @Get(':id/pdf')
