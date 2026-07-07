@@ -30,6 +30,11 @@ export interface CachedQuoteResult {
     boundingBox: { x: number; y: number; z: number };
     surface_area?: number;
   };
+  sustainability?: Record<string, unknown>;
+  /** Truth-preserving market provenance (see PricingProvenance). */
+  pricingProvenance?: Record<string, unknown> | null;
+  /** ForgeSight benchmark snapshot when market-verified data existed. */
+  marketBenchmark?: Record<string, unknown> | null;
   timestamp: number;
 }
 

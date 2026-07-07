@@ -1,6 +1,11 @@
 import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PricingService } from '../pricing/pricing.service';
+import {
+  PricingResolverService,
+  PRICING_DEGRADE_REASONS,
+  PricingDegradeReason,
+} from '../pricing/pricing-resolver.service';
 import { QuoteCacheService } from '../redis/quote-cache.service';
 import { Cacheable, CacheInvalidate } from '../redis/decorators/cache.decorator';
 import { Quote as PrismaQuote, QuoteItem as PrismaQuoteItem, Prisma } from '@prisma/client';
@@ -46,6 +51,7 @@ export class QuotesService {
   constructor(
     private prisma: PrismaService,
     private pricingService: PricingService,
+    private pricingResolver: PricingResolverService,
     private quoteCacheService: QuoteCacheService,
     private tenantCacheService: TenantCacheService,
     private jobsService: JobsService,
@@ -286,20 +292,67 @@ export class QuotesService {
 
     for (const item of itemsToCalculate) {
       try {
-        // Get or create quote item
-        let quoteItem;
+        // Get or create quote item, then (re)load it with the relations the
+        // pricing-input resolution needs (worker analysis + DFM report).
+        let quoteItemId: string;
         if ('id' in item && item.id) {
-          // Existing quote item
-          quoteItem = await this.prisma.quoteItem.findFirst({
-            where: { id: item.id, quoteId },
-            include: { files: true, dfmReport: true },
-          });
-          if (!quoteItem) {
-            throw new Error(`Quote item not found for id: ${item.id}`);
-          }
+          quoteItemId = item.id;
         } else {
-          // Create new item
-          quoteItem = await this.addItem(tenantId, quoteId, item as AddQuoteItemDto);
+          const created = await this.addItem(tenantId, quoteId, item as AddQuoteItemDto);
+          quoteItemId = created.id;
+        }
+
+        const quoteItem = await this.prisma.quoteItem.findFirst({
+          where: { id: quoteItemId, quoteId },
+          include: {
+            files: { include: { fileAnalysis: true } },
+            dfmReport: true,
+          },
+        });
+        if (!quoteItem) {
+          throw new Error(`Quote item not found for id: ${quoteItemId}`);
+        }
+
+        // ------------------------------------------------------------------
+        // Resolve real pricing inputs. A missing input degrades the item with
+        // a machine-readable reason (quote -> NEEDS_REVIEW) instead of
+        // throwing an opaque error.
+        // ------------------------------------------------------------------
+        const geometry = this.pricingResolver.resolveGeometry(quoteItem);
+        if (!geometry) {
+          // Kick off the worker analysis so a later recalculation can price
+          // this item, then degrade explicitly.
+          await this.queueFileAnalysisForItem(tenantId, quoteItem);
+          errors.push(
+            await this.degradeQuoteItem(
+              quoteItem,
+              PRICING_DEGRADE_REASONS.MISSING_GEOMETRY_ANALYSIS,
+            ),
+          );
+          continue;
+        }
+
+        const materialCode =
+          ((quoteItem.selections as Record<string, unknown>)?.material as string) ||
+          quoteItem.material;
+        const material = await this.pricingResolver.resolveMaterial(tenantId, {
+          materialId: quoteItem.materialId,
+          materialCode,
+          process: quoteItem.processCode,
+        });
+        if (!material) {
+          errors.push(
+            await this.degradeQuoteItem(quoteItem, PRICING_DEGRADE_REASONS.MATERIAL_NOT_FOUND),
+          );
+          continue;
+        }
+
+        const machine = await this.pricingResolver.resolveMachine(tenantId, quoteItem.processCode);
+        if (!machine) {
+          errors.push(
+            await this.degradeQuoteItem(quoteItem, PRICING_DEGRADE_REASONS.NO_MACHINE_FOR_PROCESS),
+          );
+          continue;
         }
 
         // Try to get cached pricing result first
@@ -315,13 +368,17 @@ export class QuotesService {
         const pricingResult = await this.quoteCacheService.getOrCalculateQuote(
           cacheKey,
           async () => {
-            const result = await this.pricingService.calculateQuoteItem(
+            const result = await this.pricingService.calculateQuoteItemWithMarketIntelligence(
               tenantId,
               quoteItem.processCode as ProcessType,
-              {}, // geometryMetrics - placeholder
-              quoteItem.materialId || '',
-              '', // machineId - placeholder
-              quoteItem.selections,
+              {
+                volumeCm3: geometry.volumeCm3,
+                surfaceAreaCm2: geometry.surfaceAreaCm2,
+                boundingBox: geometry.boundingBox,
+              },
+              material.id,
+              machine.id,
+              (quoteItem.selections ?? {}) as Record<string, unknown>,
               quoteItem.quantity,
               quote.objective as { cost?: number; lead?: number; green?: number },
             );
@@ -337,24 +394,37 @@ export class QuotesService {
                 machineCost: result.costBreakdown?.machine || 0,
                 materialCost: result.costBreakdown?.material || 0,
               },
+              sustainability: result.sustainability as unknown as Record<string, unknown>,
+              pricingProvenance: result.pricing_provenance as unknown as Record<string, unknown>,
+              marketBenchmark: (result.benchmark as unknown as Record<string, unknown>) || null,
               timestamp: Date.now(),
             };
           },
         );
 
-        // Update quote item with results
+        // Update quote item with results. Provenance travels on metadata so
+        // fallback pricing is never silently presented as market-verified.
         const updatedItem = await this.prisma.quoteItem.update({
           where: { id: quoteItem.id },
           data: {
             unitPrice: pricingResult.pricing.unitCost,
             totalPrice: pricingResult.pricing.totalCost,
             leadDays: pricingResult.manufacturing.estimatedTime,
+            materialId: material.id,
             costBreakdown: {
               machine: pricingResult.manufacturing.machineCost,
               material: pricingResult.manufacturing.materialCost,
             } as Prisma.InputJsonValue,
-            sustainability: {} as Prisma.InputJsonValue,
+            sustainability: (pricingResult.sustainability || {}) as Prisma.InputJsonValue,
             flags: [],
+            metadata: {
+              ...((quoteItem.metadata as Record<string, unknown>) || {}),
+              needsReviewReason: null,
+              machineId: machine.id,
+              geometrySource: geometry.source,
+              pricingProvenance: pricingResult.pricingProvenance || null,
+              marketBenchmark: pricingResult.marketBenchmark || null,
+            } as Prisma.InputJsonValue,
           },
         });
 
@@ -406,6 +476,84 @@ export class QuotesService {
       quote: updatedQuote,
       errors: errors.length > 0 ? errors : undefined,
     };
+  }
+
+  /**
+   * Degrade a fab quote item that cannot be auto-priced: record a
+   * machine-readable reason on the item (`flags` + `metadata.needsReviewReason`)
+   * and return the error entry that pushes the quote into NEEDS_REVIEW.
+   * Explicit degradation instead of a thrown "Machine with ID  not found".
+   */
+  private async degradeQuoteItem(
+    quoteItem: PrismaQuoteItem,
+    reason: PricingDegradeReason,
+  ): Promise<{ itemId: string; error: string }> {
+    try {
+      await this.prisma.quoteItem.update({
+        where: { id: quoteItem.id },
+        data: {
+          flags: Array.from(new Set([...(quoteItem.flags || []), reason])),
+          metadata: {
+            ...((quoteItem.metadata as Record<string, unknown>) || {}),
+            needsReviewReason: reason,
+          } as Prisma.InputJsonValue,
+        },
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Failed to record degradation reason ${reason} on quote item ${quoteItem.id}: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
+    }
+    return { itemId: quoteItem.id, error: reason };
+  }
+
+  /**
+   * Fire-and-forget enqueue of the worker geometry/DFM analysis for the
+   * item's file so a later recalculation has real metrics. Uses the existing
+   * FILE_ANALYSIS Bull queue (FileAnalysisProcessor -> Python worker ->
+   * FileAnalysis row).
+   */
+  private async queueFileAnalysisForItem(
+    tenantId: string,
+    quoteItem: PrismaQuoteItem & {
+      files?: Array<{
+        id: string;
+        path: string;
+        s3Key?: string | null;
+        filename: string;
+        originalName: string;
+        type: string;
+      }> | null;
+    },
+  ): Promise<void> {
+    const file = quoteItem.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      await this.jobsService.addJob(JobType.FILE_ANALYSIS, {
+        tenantId,
+        fileId: file.id,
+        fileUrl: file.s3Key || file.path,
+        fileName: file.originalName || file.filename,
+        fileType: file.type,
+        analysisOptions: {
+          performDfm: true,
+          extractGeometry: true,
+          calculateVolume: true,
+          detectFeatures: true,
+        },
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Failed to enqueue file analysis for quote item ${quoteItem.id}: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
+    }
   }
 
   // Services-mode pricing: no engine, no DFM, no cache. Items already
