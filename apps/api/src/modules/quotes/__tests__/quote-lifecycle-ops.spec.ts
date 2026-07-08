@@ -33,6 +33,16 @@ function buildService() {
     file: { findFirst: jest.fn(), update: jest.fn() },
   };
   const pricingService = { calculateQuoteItem: jest.fn() };
+  const pricingResolver = {
+    resolveGeometry: jest.fn().mockReturnValue({
+      volumeCm3: 10,
+      surfaceAreaCm2: 80,
+      boundingBox: { x: 40, y: 30, z: 20 },
+      source: 'analysis',
+    }),
+    resolveMaterial: jest.fn().mockResolvedValue({ id: 'mat-1' }),
+    resolveMachine: jest.fn().mockResolvedValue({ id: 'mach-1' }),
+  };
   const quoteCacheService = { getOrCalculateQuote: jest.fn() };
   const tenantCacheService = {
     getTenantConfig: jest.fn(),
@@ -73,6 +83,7 @@ function buildService() {
   const service = new QuotesService(
     prisma as never,
     pricingService as never,
+    pricingResolver as never,
     quoteCacheService as never,
     tenantCacheService as never,
     jobsService as never,

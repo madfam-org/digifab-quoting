@@ -1,558 +1,220 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { QuotesController } from '../quotes.controller';
 import { QuotesService } from '../quotes.service';
-import { PrismaService } from '@/prisma/prisma.service';
-import { CacheService } from '@/cache/cache.service';
-import { FilesService } from '@/modules/files/files.service';
-import { PricingService } from '@/modules/pricing/pricing.service';
-import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { QuoteStatus, Technology, Material } from '@prisma/client';
+import { Role } from '@cotiza/shared';
+import { AuthenticatedRequest } from '../../../types/auth-request';
+
+// The controller is a thin delegation layer over QuotesService. These tests
+// assert the exact tenant-scoped delegation contract (tenantId-first service
+// signatures) and the first-view side effect on findOne. The service itself is
+// covered end-to-end by quote-lifecycle-ops.spec.ts and quotes-calculate.spec.ts.
 
 describe('QuotesController', () => {
   let controller: QuotesController;
-  let quotesService: QuotesService;
+  let service: jest.Mocked<
+    Pick<
+      QuotesService,
+      | 'create'
+      | 'findAll'
+      | 'findOne'
+      | 'update'
+      | 'addItem'
+      | 'calculate'
+      | 'approve'
+      | 'cancel'
+      | 'reject'
+      | 'generatePdf'
+      | 'recordCustomerView'
+    >
+  >;
 
-  const mockQuotesService = {
-    create: jest.fn(),
-    findAll: jest.fn(),
-    findOne: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    addItem: jest.fn(),
-    calculate: jest.fn(),
-    approve: jest.fn(),
-    cancel: jest.fn(),
-    generatePdf: jest.fn(),
-    checkOwnership: jest.fn(),
-  };
+  const tenantId = 'tenant-123';
+  const userId = 'user-123';
 
-  const mockUser = {
-    id: 'user-123',
-    email: 'test@example.com',
-    role: 'customer',
-    tenantId: 'tenant-123',
-  };
-
-  const mockQuote = {
-    id: 'quote-123',
-    projectName: 'Test Project',
-    description: 'Test description',
-    customerId: 'user-123',
-    status: QuoteStatus.DRAFT,
-    items: [],
-    subtotal: 0,
-    tax: 0,
-    totalPrice: 0,
-    currency: 'USD',
-    validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    tenantId: 'tenant-123',
-  };
-
-  const mockQuoteItem = {
-    id: 'item-123',
-    quoteId: 'quote-123',
-    fileId: 'file-123',
-    fileName: 'part.stl',
-    technology: Technology.FFF,
-    material: Material.PLA,
-    quantity: 10,
-    unitPrice: 25.5,
-    totalPrice: 255.0,
-    leadTime: 3,
-    status: 'priced',
-    manufacturingDetails: {
-      volume: 125.5,
-      boundingBox: { x: 100, y: 50, z: 25 },
-      machineTime: 180,
-      complexity: 'medium',
+  const customerReq = {
+    user: {
+      id: userId,
+      tenantId,
+      email: 'customer@example.com',
+      roles: [Role.CUSTOMER],
     },
-  };
+  } as unknown as AuthenticatedRequest;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [QuotesController],
-      providers: [
-        {
-          provide: QuotesService,
-          useValue: mockQuotesService,
-        },
-        {
-          provide: PrismaService,
-          useValue: {},
-        },
-        {
-          provide: CacheService,
-          useValue: {
-            get: jest.fn(),
-            set: jest.fn(),
-            del: jest.fn(),
-          },
-        },
-        {
-          provide: FilesService,
-          useValue: {},
-        },
-        {
-          provide: PricingService,
-          useValue: {},
-        },
-      ],
-    }).compile();
+  const staffReq = {
+    user: {
+      id: 'staff-1',
+      tenantId,
+      email: 'ops@example.com',
+      roles: [Role.OPERATOR],
+    },
+  } as unknown as AuthenticatedRequest;
 
-    controller = module.get<QuotesController>(QuotesController);
-    quotesService = module.get<QuotesService>(QuotesService);
+  beforeEach(() => {
+    service = {
+      create: jest.fn(),
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      update: jest.fn(),
+      addItem: jest.fn(),
+      calculate: jest.fn(),
+      approve: jest.fn(),
+      cancel: jest.fn(),
+      reject: jest.fn(),
+      generatePdf: jest.fn(),
+      recordCustomerView: jest.fn(),
+    } as unknown as typeof service;
+
+    controller = new QuotesController(service as unknown as QuotesService);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  afterEach(() => jest.clearAllMocks());
 
   describe('create', () => {
-    const createQuoteDto = {
-      projectName: 'New Project',
-      description: 'Project description',
-      items: [
-        {
-          fileId: 'file-456',
-          technology: Technology.FFF,
-          material: Material.PLA,
-          quantity: 5,
-        },
-      ],
-      currency: 'USD',
-      requestedDelivery: new Date('2025-02-15'),
-    };
+    it('delegates to service.create(tenantId, userId, dto)', async () => {
+      const dto = { currency: 'MXN' } as any;
+      const created = { id: 'quote-1' };
+      service.create.mockResolvedValue(created as any);
 
-    it('should create a new quote', async () => {
-      const expectedQuote = {
-        ...mockQuote,
-        ...createQuoteDto,
-        id: 'quote-456',
-      };
+      const result = await controller.create(customerReq, dto);
 
-      mockQuotesService.create.mockResolvedValue(expectedQuote);
-
-      const result = await controller.create(createQuoteDto, { user: mockUser });
-
-      expect(result).toEqual(expectedQuote);
-      expect(mockQuotesService.create).toHaveBeenCalledWith(
-        createQuoteDto,
-        mockUser.id,
-        mockUser.tenantId,
-      );
-    });
-
-    it('should validate required fields', async () => {
-      const invalidDto = {
-        projectName: '', // Invalid: empty
-        items: [], // Invalid: no items
-      };
-
-      mockQuotesService.create.mockRejectedValue(new BadRequestException('Validation failed'));
-
-      await expect(controller.create(invalidDto, { user: mockUser })).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should handle file not found error', async () => {
-      mockQuotesService.create.mockRejectedValue(new NotFoundException('File not found'));
-
-      await expect(controller.create(createQuoteDto, { user: mockUser })).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('should enforce item limits', async () => {
-      const tooManyItems = {
-        projectName: 'Project',
-        items: Array(101).fill({
-          fileId: 'file-123',
-          technology: Technology.FFF,
-          material: Material.PLA,
-          quantity: 1,
-        }),
-      };
-
-      mockQuotesService.create.mockRejectedValue(
-        new BadRequestException('Too many items (max 100)'),
-      );
-
-      await expect(controller.create(tooManyItems, { user: mockUser })).rejects.toThrow(
-        'Too many items',
-      );
+      expect(result).toBe(created);
+      expect(service.create).toHaveBeenCalledWith(tenantId, userId, dto);
     });
   });
 
   describe('findAll', () => {
-    it('should return paginated quotes list', async () => {
-      const quotes = [mockQuote, { ...mockQuote, id: 'quote-456' }];
-      const paginatedResult = {
-        data: quotes,
-        meta: {
-          page: 1,
-          limit: 20,
-          total: 2,
-          totalPages: 1,
-        },
-      };
+    it('maps pagination + filters into the tenant-scoped filter object', async () => {
+      const page = { data: [], meta: {} };
+      service.findAll.mockResolvedValue(page as any);
 
-      mockQuotesService.findAll.mockResolvedValue(paginatedResult);
-
-      const result = await controller.findAll({ page: 1, limit: 20 }, { user: mockUser });
-
-      expect(result).toEqual(paginatedResult);
-      expect(mockQuotesService.findAll).toHaveBeenCalledWith(
-        { page: 1, limit: 20 },
-        mockUser.id,
-        mockUser.role,
+      const result = await controller.findAll(
+        customerReq,
+        { page: 2, limit: 25 } as any,
+        'quoted' as any,
+        'cust-9',
       );
-    });
 
-    it('should filter quotes by status', async () => {
-      mockQuotesService.findAll.mockResolvedValue({
-        data: [mockQuote],
-        meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      expect(result).toBe(page);
+      expect(service.findAll).toHaveBeenCalledWith(tenantId, {
+        status: 'quoted',
+        customerId: 'cust-9',
+        page: 2,
+        limit: 25,
       });
-
-      await controller.findAll({ status: QuoteStatus.DRAFT }, { user: mockUser });
-
-      expect(mockQuotesService.findAll).toHaveBeenCalledWith(
-        { status: QuoteStatus.DRAFT },
-        mockUser.id,
-        mockUser.role,
-      );
-    });
-
-    it('should filter quotes by date range', async () => {
-      const dateFilter = {
-        createdAfter: new Date('2025-01-01'),
-        createdBefore: new Date('2025-01-31'),
-      };
-
-      mockQuotesService.findAll.mockResolvedValue({
-        data: [],
-        meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
-      });
-
-      await controller.findAll(dateFilter, { user: mockUser });
-
-      expect(mockQuotesService.findAll).toHaveBeenCalledWith(
-        dateFilter,
-        mockUser.id,
-        mockUser.role,
-      );
-    });
-
-    it('should return all quotes for admin users', async () => {
-      const adminUser = { ...mockUser, role: 'admin' };
-
-      mockQuotesService.findAll.mockResolvedValue({
-        data: [mockQuote],
-        meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
-      });
-
-      await controller.findAll({}, { user: adminUser });
-
-      expect(mockQuotesService.findAll).toHaveBeenCalledWith({}, adminUser.id, 'admin');
     });
   });
 
   describe('findOne', () => {
-    it('should return quote details', async () => {
-      const detailedQuote = {
-        ...mockQuote,
-        items: [mockQuoteItem],
-        customer: {
-          id: mockUser.id,
-          name: 'Test User',
-          email: mockUser.email,
-        },
-      };
+    it('returns the quote scoped to the tenant', async () => {
+      const quote = { id: 'quote-1', customerId: 'someone-else' };
+      service.findOne.mockResolvedValue(quote as any);
 
-      mockQuotesService.findOne.mockResolvedValue(detailedQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
+      const result = await controller.findOne(staffReq, 'quote-1');
 
-      const result = await controller.findOne('quote-123', { user: mockUser });
-
-      expect(result).toEqual(detailedQuote);
-      expect(mockQuotesService.findOne).toHaveBeenCalledWith('quote-123');
+      expect(result).toBe(quote);
+      expect(service.findOne).toHaveBeenCalledWith(tenantId, 'quote-1');
     });
 
-    it('should throw 404 if quote not found', async () => {
-      mockQuotesService.findOne.mockRejectedValue(new NotFoundException('Quote not found'));
+    it('records a customer first-view when the owning customer opens the quote', async () => {
+      service.findOne.mockResolvedValue({ id: 'quote-1', customerId: userId } as any);
 
-      await expect(controller.findOne('invalid-id', { user: mockUser })).rejects.toThrow(
-        NotFoundException,
-      );
+      await controller.findOne(customerReq, 'quote-1');
+
+      expect(service.recordCustomerView).toHaveBeenCalledWith(tenantId, 'quote-1', {
+        id: userId,
+        email: 'customer@example.com',
+      });
     });
 
-    it('should check ownership for non-admin users', async () => {
-      mockQuotesService.findOne.mockResolvedValue(mockQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(false);
+    it('does NOT record a view for staff/admin roles', async () => {
+      service.findOne.mockResolvedValue({ id: 'quote-1', customerId: userId } as any);
 
-      await expect(controller.findOne('quote-123', { user: mockUser })).rejects.toThrow(
-        ForbiddenException,
-      );
+      await controller.findOne(staffReq, 'quote-1');
+
+      expect(service.recordCustomerView).not.toHaveBeenCalled();
     });
 
-    it('should allow admin to view any quote', async () => {
-      const adminUser = { ...mockUser, role: 'admin' };
+    it('does NOT record a view when a customer opens a quote they do not own', async () => {
+      service.findOne.mockResolvedValue({ id: 'quote-1', customerId: 'other' } as any);
 
-      mockQuotesService.findOne.mockResolvedValue(mockQuote);
+      await controller.findOne(customerReq, 'quote-1');
 
-      const result = await controller.findOne('quote-123', { user: adminUser });
-
-      expect(result).toEqual(mockQuote);
-      expect(mockQuotesService.checkOwnership).not.toHaveBeenCalled();
+      expect(service.recordCustomerView).not.toHaveBeenCalled();
     });
   });
 
   describe('update', () => {
-    const updateDto = {
-      projectName: 'Updated Project',
-      description: 'Updated description',
-    };
+    it('delegates to service.update(tenantId, id, dto)', async () => {
+      const dto = { objective: {} } as any;
+      service.update.mockResolvedValue({ id: 'quote-1' } as any);
 
-    it('should update quote details', async () => {
-      const updatedQuote = { ...mockQuote, ...updateDto };
+      await controller.update(customerReq, 'quote-1', dto);
 
-      mockQuotesService.update.mockResolvedValue(updatedQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
-
-      const result = await controller.update('quote-123', updateDto, { user: mockUser });
-
-      expect(result).toEqual(updatedQuote);
-      expect(mockQuotesService.update).toHaveBeenCalledWith('quote-123', updateDto);
-    });
-
-    it('should prevent updates to approved quotes', async () => {
-      const approvedQuote = { ...mockQuote, status: QuoteStatus.APPROVED };
-
-      mockQuotesService.findOne.mockResolvedValue(approvedQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
-
-      await expect(controller.update('quote-123', updateDto, { user: mockUser })).rejects.toThrow(
-        'Cannot update approved quote',
-      );
-    });
-
-    it('should prevent non-owners from updating', async () => {
-      mockQuotesService.checkOwnership.mockResolvedValue(false);
-
-      await expect(controller.update('quote-123', updateDto, { user: mockUser })).rejects.toThrow(
-        ForbiddenException,
-      );
+      expect(service.update).toHaveBeenCalledWith(tenantId, 'quote-1', dto);
     });
   });
 
   describe('addItem', () => {
-    const addItemDto = {
-      fileId: 'file-789',
-      technology: Technology.CNC,
-      material: Material.ALUMINUM_6061,
-      quantity: 15,
-      finishType: 'ANODIZED',
-      notes: 'Black anodizing required',
-    };
+    it('delegates to service.addItem(tenantId, id, dto)', async () => {
+      const dto = { fileId: 'file-1' } as any;
+      service.addItem.mockResolvedValue({ id: 'item-1' } as any);
 
-    it('should add item to quote', async () => {
-      const updatedQuote = {
-        ...mockQuote,
-        items: [mockQuoteItem, { ...mockQuoteItem, id: 'item-456' }],
-      };
+      await controller.addItem(customerReq, 'quote-1', dto);
 
-      mockQuotesService.addItem.mockResolvedValue(updatedQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
-
-      const result = await controller.addItem('quote-123', addItemDto, { user: mockUser });
-
-      expect(result).toEqual(updatedQuote);
-      expect(mockQuotesService.addItem).toHaveBeenCalledWith('quote-123', addItemDto);
-    });
-
-    it('should validate technology and material compatibility', async () => {
-      const invalidCombination = {
-        fileId: 'file-789',
-        technology: Technology.FFF,
-        material: Material.ALUMINUM_6061, // Invalid for FFF
-        quantity: 1,
-      };
-
-      mockQuotesService.addItem.mockRejectedValue(
-        new BadRequestException('Invalid technology-material combination'),
-      );
-
-      await expect(
-        controller.addItem('quote-123', invalidCombination, { user: mockUser }),
-      ).rejects.toThrow('Invalid technology-material combination');
+      expect(service.addItem).toHaveBeenCalledWith(tenantId, 'quote-1', dto);
     });
   });
 
   describe('calculate', () => {
-    it('should calculate quote pricing', async () => {
-      const calculatedQuote = {
-        ...mockQuote,
-        subtotal: 255.0,
-        tax: 45.9,
-        totalPrice: 300.9,
-        items: [
-          {
-            ...mockQuoteItem,
-            unitPrice: 25.5,
-            totalPrice: 255.0,
-          },
-        ],
-      };
+    it('delegates to service.calculate(tenantId, id, dto)', async () => {
+      const dto = {} as any;
+      service.calculate.mockResolvedValue({ quote: { id: 'quote-1' } } as any);
 
-      mockQuotesService.calculate.mockResolvedValue(calculatedQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
+      await controller.calculate(customerReq, 'quote-1', dto);
 
-      const result = await controller.calculate('quote-123', { user: mockUser });
-
-      expect(result).toEqual(calculatedQuote);
-      expect(mockQuotesService.calculate).toHaveBeenCalledWith('quote-123');
-    });
-
-    it('should handle calculation errors', async () => {
-      mockQuotesService.calculate.mockRejectedValue(
-        new BadRequestException('Missing required data for calculation'),
-      );
-
-      await expect(controller.calculate('quote-123', { user: mockUser })).rejects.toThrow(
-        'Missing required data for calculation',
-      );
+      expect(service.calculate).toHaveBeenCalledWith(tenantId, 'quote-1', dto);
     });
   });
 
-  describe('approve', () => {
-    it('should approve quote', async () => {
-      const approvedQuote = {
-        ...mockQuote,
-        status: QuoteStatus.APPROVED,
-        approvedAt: new Date(),
-      };
+  describe('accept', () => {
+    it('delegates to service.approve(tenantId, id, userId) (route renamed /approve -> /accept)', async () => {
+      const approved = { quote: { id: 'quote-1' }, checkoutUrl: 'https://pay', sessionId: 'cs_1' };
+      service.approve.mockResolvedValue(approved as any);
 
-      mockQuotesService.approve.mockResolvedValue(approvedQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
+      const result = await controller.accept(customerReq, 'quote-1');
 
-      const result = await controller.approve('quote-123', { user: mockUser });
-
-      expect(result).toEqual(approvedQuote);
-      expect(mockQuotesService.approve).toHaveBeenCalledWith('quote-123', mockUser.id);
-    });
-
-    it('should prevent approving expired quotes', async () => {
-      const expiredQuote = {
-        ...mockQuote,
-        validUntil: new Date(Date.now() - 1000),
-      };
-
-      mockQuotesService.findOne.mockResolvedValue(expiredQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
-
-      await expect(controller.approve('quote-123', { user: mockUser })).rejects.toThrow(
-        'Quote has expired',
-      );
+      expect(result).toBe(approved);
+      expect(service.approve).toHaveBeenCalledWith(tenantId, 'quote-1', userId);
     });
   });
 
   describe('cancel', () => {
-    it('should cancel quote', async () => {
-      const cancelledQuote = {
-        ...mockQuote,
-        status: QuoteStatus.CANCELLED,
-        cancelledAt: new Date(),
-      };
+    it('delegates to service.cancel(tenantId, id)', async () => {
+      service.cancel.mockResolvedValue({ id: 'quote-1', status: 'cancelled' } as any);
 
-      mockQuotesService.cancel.mockResolvedValue(cancelledQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
+      await controller.cancel(customerReq, 'quote-1');
 
-      const result = await controller.cancel(
-        'quote-123',
-        { reason: 'Changed requirements' },
-        { user: mockUser },
-      );
-
-      expect(result).toEqual(cancelledQuote);
-      expect(mockQuotesService.cancel).toHaveBeenCalledWith('quote-123', 'Changed requirements');
+      expect(service.cancel).toHaveBeenCalledWith(tenantId, 'quote-1');
     });
+  });
 
-    it('should prevent cancelling completed quotes', async () => {
-      const completedQuote = {
-        ...mockQuote,
-        status: QuoteStatus.COMPLETED,
-      };
+  describe('reject', () => {
+    it('delegates to service.reject(tenantId, id, userId, reason)', async () => {
+      service.reject.mockResolvedValue({ id: 'quote-1', status: 'rejected' } as any);
 
-      mockQuotesService.findOne.mockResolvedValue(completedQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
+      await controller.reject(customerReq, 'quote-1', { reason: 'too expensive' } as any);
 
-      await expect(controller.cancel('quote-123', {}, { user: mockUser })).rejects.toThrow(
-        'Cannot cancel completed quote',
-      );
+      expect(service.reject).toHaveBeenCalledWith(tenantId, 'quote-1', userId, 'too expensive');
     });
   });
 
   describe('generatePdf', () => {
-    it('should generate quote PDF', async () => {
-      const pdfUrl = 'https://s3.amazonaws.com/quotes/quote-123.pdf';
+    it('delegates to service.generatePdf(tenantId, id)', async () => {
+      service.generatePdf.mockResolvedValue({ url: 'https://s3/quote.pdf' } as any);
 
-      mockQuotesService.generatePdf.mockResolvedValue({ url: pdfUrl });
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
+      const result = await controller.generatePdf(customerReq, 'quote-1');
 
-      const result = await controller.generatePdf('quote-123', { user: mockUser });
-
-      expect(result).toEqual({ url: pdfUrl });
-      expect(mockQuotesService.generatePdf).toHaveBeenCalledWith('quote-123');
-    });
-
-    it('should cache generated PDFs', async () => {
-      const pdfUrl = 'https://s3.amazonaws.com/quotes/quote-123.pdf';
-
-      mockQuotesService.generatePdf.mockResolvedValue({ url: pdfUrl });
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
-
-      // First call
-      await controller.generatePdf('quote-123', { user: mockUser });
-
-      // Second call should use cache
-      await controller.generatePdf('quote-123', { user: mockUser });
-
-      expect(mockQuotesService.generatePdf).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('permissions', () => {
-    it('should allow customers to view own quotes', async () => {
-      mockQuotesService.findOne.mockResolvedValue(mockQuote);
-      mockQuotesService.checkOwnership.mockResolvedValue(true);
-
-      const result = await controller.findOne('quote-123', { user: mockUser });
-
-      expect(result).toEqual(mockQuote);
-    });
-
-    it('should allow operators to view all quotes', async () => {
-      const operatorUser = { ...mockUser, role: 'operator' };
-
-      mockQuotesService.findOne.mockResolvedValue(mockQuote);
-
-      const result = await controller.findOne('quote-123', { user: operatorUser });
-
-      expect(result).toEqual(mockQuote);
-    });
-
-    it('should allow managers to update any quote', async () => {
-      const managerUser = { ...mockUser, role: 'manager' };
-      const updateDto = { projectName: 'Manager Update' };
-
-      mockQuotesService.update.mockResolvedValue({ ...mockQuote, ...updateDto });
-
-      const result = await controller.update('quote-123', updateDto, { user: managerUser });
-
-      expect(result.projectName).toBe('Manager Update');
+      expect(result).toEqual({ url: 'https://s3/quote.pdf' });
+      expect(service.generatePdf).toHaveBeenCalledWith(tenantId, 'quote-1');
     });
   });
 });

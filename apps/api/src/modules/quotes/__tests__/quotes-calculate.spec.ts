@@ -102,6 +102,8 @@ describe('QuotesService.calculate (fab pricing inputs)', () => {
       mockJobsService,
       {} as never, // FilesService
       {} as never, // PhyndCrmEngagementService
+      { emit: jest.fn() } as never, // QuoteLifecycleEventsService
+      { available: false, sendQuoteReadyEmail: jest.fn() } as never, // JanuaEmailService
       {} as never, // KarafielComplianceService
       {} as never, // DhanamMilestoneService
       {} as never, // PravaraDispatchService
