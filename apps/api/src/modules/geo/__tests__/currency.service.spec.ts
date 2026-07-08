@@ -6,7 +6,7 @@ import { AxiosResponse } from 'axios';
 import { CurrencyService } from '../currency.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { RedisService } from '@/modules/redis/redis.service';
-import { Currency } from '@prisma/client';
+import { Currency } from '@cotiza/shared';
 import { Decimal } from '@prisma/client/runtime/library';
 
 describe('CurrencyService', () => {
@@ -208,8 +208,10 @@ describe('CurrencyService', () => {
         convertedAmount: 92,
         convertedCurrency: Currency.EUR,
         rate: 0.92,
-        inverseRate: 1.087,
       });
+      // inverseRate is the exact reciprocal (1 / 0.92 = 1.0869…); compare
+      // with tolerance rather than a truncated literal.
+      expect(result.inverseRate).toBeCloseTo(1.087, 3);
     });
 
     it('should apply fees when configured', async () => {

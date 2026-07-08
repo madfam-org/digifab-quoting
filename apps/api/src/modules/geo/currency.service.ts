@@ -133,14 +133,17 @@ export class CurrencyService {
     try {
       const rate = await this.getRate(from, to, options?.date);
 
-      let convertedAmount = amount * rate;
-
-      // Apply fees if configured
+      // Apply fees (denominated in the source currency) before converting so
+      // the deduction stays dimensionally consistent — subtracting a source
+      // currency fee from the already-converted target amount is incorrect.
+      let netAmount = amount;
       let fees: FeeCalculation | undefined;
       if (options?.includeFees) {
         fees = this.calculateFees(amount, from, to);
-        convertedAmount -= fees.total;
+        netAmount -= fees.total;
       }
+
+      let convertedAmount = netAmount * rate;
 
       // Apply rounding rules per currency
       convertedAmount = this.roundByCurrency(convertedAmount, to, options?.roundingMode);
@@ -381,7 +384,9 @@ export class CurrencyService {
     mode: 'floor' | 'ceil' | 'round' = 'round',
   ): number {
     const config = CURRENCY_CONFIG[currency];
-    const decimals = config?.decimals || 2;
+    // Use nullish coalescing: zero-decimal currencies (JPY, CLP, COP) set
+    // decimals: 0, which `|| 2` would incorrectly override with 2.
+    const decimals = config?.decimals ?? 2;
     const multiplier = Math.pow(10, decimals);
 
     switch (mode) {
