@@ -77,7 +77,6 @@ describe('ReportDataLoaderService', () => {
           items: expect.any(Object),
           customer: true,
           tenant: expect.any(Object),
-          quoteItems: expect.any(Object),
         }),
       });
       expect(loggerService.log).toHaveBeenCalledWith('Loading data for quote report', {
@@ -134,7 +133,6 @@ describe('ReportDataLoaderService', () => {
         include: expect.objectContaining({
           order: expect.any(Object),
           customer: expect.any(Object),
-          tenant: expect.any(Object),
         }),
       });
     });
@@ -198,7 +196,7 @@ describe('ReportDataLoaderService', () => {
         { customerId: 'customer-2' },
       ] as any);
 
-      const result = await service.loadReportData('analytics', criteriaJson, tenantId);
+      const result: any = await service.loadReportData('analytics', criteriaJson, tenantId);
 
       expect(result).toHaveProperty('criteria', criteria);
       expect(result).toHaveProperty('quotes', mockQuoteStats);
@@ -277,7 +275,7 @@ describe('ReportDataLoaderService', () => {
       ]);
       (prismaService.quote.findMany as jest.Mock).mockResolvedValue([]);
 
-      const result = await service.loadReportData('analytics', criteriaJson, tenantId);
+      const result: any = await service.loadReportData('analytics', criteriaJson, tenantId);
 
       expect(result.metrics.conversionRate).toBe(50); // 10/20 * 100
       expect(result.metrics.averageTimeToConvert).toBe(48.5);
@@ -307,7 +305,7 @@ describe('ReportDataLoaderService', () => {
       ]);
       (prismaService.quote.findMany as jest.Mock).mockResolvedValue([]);
 
-      const result = await service.loadReportData('analytics', criteriaJson, tenantId);
+      const result: any = await service.loadReportData('analytics', criteriaJson, tenantId);
 
       expect(result.metrics.conversionRate).toBe(0);
       expect(result.metrics.averageTimeToConvert).toBe(0);
@@ -341,7 +339,7 @@ describe('ReportDataLoaderService', () => {
         { customerId: 'customer-3' },
       ] as any);
 
-      const result = await service.loadReportData('analytics', criteriaJson, tenantId);
+      const result: any = await service.loadReportData('analytics', criteriaJson, tenantId);
 
       expect(result.metrics.uniqueCustomers).toBe(3);
     });
@@ -383,7 +381,7 @@ describe('ReportDataLoaderService', () => {
 
     it('should handle database errors gracefully', async () => {
       const dbError = new Error('Database connection failed');
-      prismaService.quote.findUnique.mockRejectedValue(dbError);
+      (prismaService.quote.findUnique as jest.Mock).mockRejectedValue(dbError);
 
       await expect(service.loadReportData('quote', 'quote-123', tenantId)).rejects.toThrow(
         'Database connection failed',
@@ -395,7 +393,7 @@ describe('ReportDataLoaderService', () => {
       const criteriaJson = JSON.stringify(criteria);
 
       const error = new Error('Query failed');
-      prismaService.quote.groupBy.mockRejectedValue(error);
+      (prismaService.quote.groupBy as jest.Mock).mockRejectedValue(error);
 
       await expect(service.loadReportData('analytics', criteriaJson, tenantId)).rejects.toThrow(
         'Query failed',

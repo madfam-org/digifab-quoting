@@ -43,8 +43,10 @@ interface MockConfigService {
   get: jest.Mock;
 }
 
-// Type for accessing private members in tests
-type TestableRateLimitMiddleware = RateLimitMiddleware & {
+// Structural view of the middleware's private members for tests. Declared as a
+// standalone shape (not `RateLimitMiddleware & …`) because intersecting with the
+// class — whose `configs` field is private — collapses the type to `never`.
+type TestableRateLimitMiddleware = {
   getClientIdentifier(req: Request): string;
   configs: Map<string, unknown>;
 };
@@ -224,7 +226,9 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should use different limits for different configs', async () => {
-      mockRedisService.get.mockResolvedValue('1').mockResolvedValue(Date.now().toString());
+      mockRedisService.get.mockImplementation((key: string) =>
+        Promise.resolve(key.endsWith(':window') ? Date.now().toString() : '1'),
+      );
       mockRedisService.set.mockResolvedValue(true);
 
       // Test auth limiter (very restrictive)
@@ -261,7 +265,7 @@ describe('RateLimitMiddleware', () => {
       };
 
       const identifier = (middleware as unknown as TestableRateLimitMiddleware).getClientIdentifier(
-        request as Request,
+        request as unknown as Request,
       );
       expect(identifier).toBe('user:user-123');
     });
@@ -273,7 +277,7 @@ describe('RateLimitMiddleware', () => {
       };
 
       const identifier = (middleware as unknown as TestableRateLimitMiddleware).getClientIdentifier(
-        request as Request,
+        request as unknown as Request,
       );
       expect(identifier).toBe('tenant:tenant-456');
     });
@@ -285,7 +289,7 @@ describe('RateLimitMiddleware', () => {
       };
 
       const identifier = (middleware as unknown as TestableRateLimitMiddleware).getClientIdentifier(
-        request as Request,
+        request as unknown as Request,
       );
       expect(identifier).toBe('ip:192.168.1.100');
     });
@@ -297,7 +301,7 @@ describe('RateLimitMiddleware', () => {
       };
 
       const identifier = (middleware as unknown as TestableRateLimitMiddleware).getClientIdentifier(
-        request as Request,
+        request as unknown as Request,
       );
       expect(identifier).toBe('ip:203.0.113.1');
     });
@@ -315,9 +319,11 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should handle errors in stats collection', async () => {
-      // Mock an error in one of the configs
+      // Force an error while reading a config entry. `configs` is a plain Map
+      // field (not an accessor), so spy on the Map's own get() method rather
+      // than a property getter.
       jest
-        .spyOn(middleware as TestableRateLimitMiddleware, 'configs', 'get')
+        .spyOn((middleware as unknown as TestableRateLimitMiddleware).configs, 'get')
         .mockImplementation(() => {
           throw new Error('Config error');
         });
@@ -364,7 +370,9 @@ describe('RateLimitMiddleware', () => {
       const promises = [];
       const requestCount = 100;
 
-      mockRedisService.get.mockResolvedValue('1').mockResolvedValue(Date.now().toString());
+      mockRedisService.get.mockImplementation((key: string) =>
+        Promise.resolve(key.endsWith(':window') ? Date.now().toString() : '1'),
+      );
       mockRedisService.set.mockResolvedValue(true);
 
       const rateLimiter = middleware.createRateLimiter('global');
@@ -390,7 +398,9 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should not leak memory on repeated calls', async () => {
-      mockRedisService.get.mockResolvedValue('1').mockResolvedValue(Date.now().toString());
+      mockRedisService.get.mockImplementation((key: string) =>
+        Promise.resolve(key.endsWith(':window') ? Date.now().toString() : '1'),
+      );
       mockRedisService.set.mockResolvedValue(true);
 
       const rateLimiter = middleware.createRateLimiter('global');

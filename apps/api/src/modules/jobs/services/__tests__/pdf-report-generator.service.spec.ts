@@ -6,6 +6,9 @@ import PDFDocument from 'pdfkit';
 
 // Mock PDFDocument
 jest.mock('pdfkit');
+// fs.createWriteStream is non-configurable under Node 22, so spyOn() fails with
+// "Cannot redefine property". Replace the module with a jest.fn factory instead.
+jest.mock('fs', () => ({ createWriteStream: jest.fn() }));
 
 describe('PdfReportGeneratorService', () => {
   let service: PdfReportGeneratorService;
@@ -36,7 +39,7 @@ describe('PdfReportGeneratorService', () => {
   });
 
   describe('generateReport', () => {
-    const mockQuoteData = {
+    const mockQuoteData: any = {
       id: 'quote-123',
       number: 'Q-2024-001',
       status: 'active',
@@ -96,7 +99,7 @@ describe('PdfReportGeneratorService', () => {
         }),
       };
 
-      jest.spyOn(fs, 'createWriteStream').mockReturnValue(mockStream as any);
+      (fs.createWriteStream as jest.Mock).mockReturnValue(mockStream as any);
 
       const result = await service.generateReport('quote', mockQuoteData, mockOptions);
 
@@ -110,7 +113,7 @@ describe('PdfReportGeneratorService', () => {
     });
 
     it('should handle order reports', async () => {
-      const mockOrderData = {
+      const mockOrderData: any = {
         id: 'order-123',
         number: 'O-2024-001',
         status: 'completed',
@@ -144,7 +147,7 @@ describe('PdfReportGeneratorService', () => {
         }),
       };
 
-      jest.spyOn(fs, 'createWriteStream').mockReturnValue(mockStream as any);
+      (fs.createWriteStream as jest.Mock).mockReturnValue(mockStream as any);
 
       const result = await service.generateReport('order', mockOrderData, mockOptions);
 
@@ -156,7 +159,7 @@ describe('PdfReportGeneratorService', () => {
     });
 
     it('should handle invoice reports', async () => {
-      const mockInvoiceData = {
+      const mockInvoiceData: any = {
         id: 'inv-123',
         number: 'INV-2024-001',
         status: 'paid',
@@ -210,16 +213,19 @@ describe('PdfReportGeneratorService', () => {
         }),
       };
 
-      jest.spyOn(fs, 'createWriteStream').mockReturnValue(mockStream as any);
+      (fs.createWriteStream as jest.Mock).mockReturnValue(mockStream as any);
 
       const result = await service.generateReport('invoice', mockInvoiceData, mockOptions);
 
       expect(result.fileName).toMatch(/^invoice-inv-123-\d+\.pdf$/);
-      expect(mockDoc.text).toHaveBeenCalledWith(expect.stringContaining('INVOICE #INV-2024-001'));
+      expect(mockDoc.text).toHaveBeenCalledWith(
+        expect.stringContaining('INVOICE #INV-2024-001'),
+        expect.anything(),
+      );
     });
 
     it('should handle analytics reports', async () => {
-      const mockAnalyticsData = {
+      const mockAnalyticsData: any = {
         criteria: {
           startDate: '2024-01-01',
           endDate: '2024-01-31',
@@ -256,7 +262,7 @@ describe('PdfReportGeneratorService', () => {
         }),
       };
 
-      jest.spyOn(fs, 'createWriteStream').mockReturnValue(mockStream as any);
+      (fs.createWriteStream as jest.Mock).mockReturnValue(mockStream as any);
 
       const result = await service.generateReport('analytics', mockAnalyticsData, mockOptions);
 
@@ -286,7 +292,7 @@ describe('PdfReportGeneratorService', () => {
         }),
       };
 
-      jest.spyOn(fs, 'createWriteStream').mockReturnValue(mockStream as any);
+      (fs.createWriteStream as jest.Mock).mockReturnValue(mockStream as any);
 
       await service.generateReport('quote', mockQuoteData, { ...mockOptions, language: 'es' });
 
@@ -317,7 +323,7 @@ describe('PdfReportGeneratorService', () => {
         }),
       };
 
-      jest.spyOn(fs, 'createWriteStream').mockReturnValue(mockStream as any);
+      (fs.createWriteStream as jest.Mock).mockReturnValue(mockStream as any);
 
       await expect(service.generateReport('quote', mockQuoteData, mockOptions)).rejects.toThrow(
         'Stream error',
@@ -349,13 +355,17 @@ describe('PdfReportGeneratorService', () => {
         }),
       };
 
-      jest.spyOn(fs, 'createWriteStream').mockReturnValue(mockStream as any);
+      (fs.createWriteStream as jest.Mock).mockReturnValue(mockStream as any);
 
       const mxnQuoteData = { ...mockQuoteData, currency: 'MXN' };
       await service.generateReport('quote', mxnQuoteData, mockOptions);
 
-      // Check that currency formatting was applied
-      expect(mockDoc.text).toHaveBeenCalledWith(expect.stringContaining('Total: $1,150.00'));
+      // Currency formatting is applied per-currency: MXN renders as "MX$" in the
+      // en-US locale, and the total line carries an { underline: true } option.
+      expect(mockDoc.text).toHaveBeenCalledWith(
+        expect.stringContaining('Total: MX$1,150.00'),
+        expect.anything(),
+      );
     });
   });
 
@@ -382,9 +392,9 @@ describe('PdfReportGeneratorService', () => {
         }),
       };
 
-      jest.spyOn(fs, 'createWriteStream').mockReturnValue(mockStream as any);
+      (fs.createWriteStream as jest.Mock).mockReturnValue(mockStream as any);
 
-      const quoteWithoutCustomer = {
+      const quoteWithoutCustomer: any = {
         id: 'quote-123',
         number: 'Q-2024-001',
         status: 'active',
@@ -422,10 +432,20 @@ describe('PdfReportGeneratorService', () => {
         }),
       };
 
-      jest.spyOn(fs, 'createWriteStream').mockReturnValue(mockStream as any);
+      (fs.createWriteStream as jest.Mock).mockReturnValue(mockStream as any);
 
-      const quoteWithNoItems = {
-        ...mockQuoteData,
+      const quoteWithNoItems: any = {
+        id: 'quote-123',
+        number: 'Q-2024-001',
+        status: 'active',
+        currency: 'USD',
+        createdAt: new Date(),
+        validUntil: new Date(),
+        subtotal: 1000,
+        tax: 100,
+        shipping: 50,
+        total: 1150,
+        customer: { name: 'John Doe', email: 'john@example.com' },
         items: [],
       };
 

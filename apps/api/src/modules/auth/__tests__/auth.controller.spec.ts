@@ -74,7 +74,8 @@ describe('AuthController', () => {
     const registerDto = {
       email: 'new@example.com',
       password: 'SecurePassword123!',
-      name: 'New User',
+      firstName: 'New',
+      lastName: 'User',
       company: 'ACME Corp',
     };
 
@@ -300,7 +301,9 @@ describe('AuthController', () => {
           controller.register({
             email,
             password: 'ValidPassword123!',
-            name: 'Test',
+            firstName: 'Test',
+            lastName: 'User',
+            company: 'ACME Corp',
           }),
         ).rejects.toThrow('Invalid email format');
       }
@@ -324,7 +327,9 @@ describe('AuthController', () => {
           controller.register({
             email: 'test@example.com',
             password,
-            name: 'Test',
+            firstName: 'Test',
+            lastName: 'User',
+            company: 'ACME Corp',
           }),
         ).rejects.toThrow('Password does not meet requirements');
       }
