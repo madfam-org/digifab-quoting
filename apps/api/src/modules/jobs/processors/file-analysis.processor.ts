@@ -10,6 +10,14 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { getErrorMessage, toError } from '@/common/utils/error-handling';
+import {
+  WORKER_ANALYZE_PATH,
+  WorkerAnalyzeRequest,
+  WorkerAnalyzeResponse,
+  deriveProcessType,
+  mapSeverity,
+  parseWorkerAnalyzeResponse,
+} from './worker-analyze.contract';
 
 interface FileAnalysisResult {
   fileId: string;
@@ -29,7 +37,7 @@ interface FileAnalysisResult {
       type: string;
       severity: 'critical' | 'warning' | 'info';
       description: string;
-      location?: { x?: number; y?: number; z?: number };
+      location?: string;
     }>;
     score: number;
     manufacturable: boolean;
@@ -75,7 +83,7 @@ export class FileAnalysisProcessor {
   @Process()
   async handleFileAnalysis(job: Job<FileAnalysisJobData>): Promise<JobResult<FileAnalysisResult>> {
     const startTime = Date.now();
-    const { fileId, fileUrl, fileName, fileType, analysisOptions, tenantId } = job.data;
+    const { fileId, fileName, fileType, tenantId } = job.data;
 
     try {
       this.logger.log(`Starting file analysis for ${fileId}`, {
@@ -84,29 +92,17 @@ export class FileAnalysisProcessor {
         fileName,
       });
 
-      // Update job progress
-      await this.updateProgress(job, 10, 'Downloading file');
-
-      // Download file from S3
-      const fileBuffer = await this.filesService.downloadFile(fileUrl);
-
-      await this.updateProgress(job, 20, 'File downloaded successfully');
-
       // Validate file format
+      await this.updateProgress(job, 10, 'Validating file');
       if (!this.isValidFileFormat(fileType)) {
         throw new Error(`Unsupported file format: ${fileType}`);
       }
 
-      // Send to worker service for analysis
+      // Send to worker service for analysis. The worker downloads the file
+      // itself from a presigned URL, so we do not stream the bytes here.
       await this.updateProgress(job, 30, 'Sending to analysis service');
 
-      const analysisResult = await this.callWorkerService(
-        fileBuffer,
-        fileName,
-        fileType,
-        analysisOptions,
-        job,
-      );
+      const analysisResult = await this.callWorkerService(job);
 
       await this.updateProgress(job, 90, 'Analysis complete, saving results');
 
@@ -207,89 +203,121 @@ export class FileAnalysisProcessor {
     return supportedFormats.includes(fileType.toLowerCase());
   }
 
-  private async callWorkerService(
-    fileBuffer: Buffer,
-    fileName: string,
-    fileType: string,
-    analysisOptions: FileAnalysisJobData['analysisOptions'],
-    job: Job<FileAnalysisJobData>,
-  ): Promise<FileAnalysisResult> {
-    const formData = new FormData();
-    const blob = new Blob([fileBuffer as BlobPart], { type: `application/${fileType}` });
-    formData.append('file', blob, fileName);
-    formData.append('options', JSON.stringify(analysisOptions || {}));
+  private async callWorkerService(job: Job<FileAnalysisJobData>): Promise<FileAnalysisResult> {
+    const { fileId, fileType, tenantId, analysisOptions } = job.data;
 
-    try {
-      // Update progress periodically while waiting for worker
-      const progressInterval = setInterval(async () => {
+    // The worker downloads the file itself, so hand it a presigned URL rather
+    // than streaming the bytes. This matches the worker's real contract:
+    //   POST /analyze  { file_url, file_type, process_type, options, job_id }
+    const fileUrl = await this.filesService.getFileUrl(tenantId, fileId);
+
+    const requestBody: WorkerAnalyzeRequest = {
+      file_url: fileUrl,
+      file_type: fileType.toLowerCase(),
+      process_type: deriveProcessType(fileType, analysisOptions),
+      options: (analysisOptions as Record<string, unknown>) ?? {},
+      job_id: job.id != null ? String(job.id) : undefined,
+    };
+
+    // Update progress periodically while waiting for the worker.
+    const progressInterval = setInterval(() => {
+      void (async () => {
         const currentProgress = job.progress() as JobProgress;
-        if (currentProgress.percentage < 80) {
+        if (currentProgress && currentProgress.percentage < 80) {
           await this.updateProgress(job, currentProgress.percentage + 5, 'Analyzing geometry...');
         }
-      }, this.progressIntervalMs);
+      })();
+    }, this.progressIntervalMs);
 
+    let rawResponseData: unknown;
+    try {
       const response = await firstValueFrom(
-        this.httpService.post(`${this.workerServiceUrl}/api/v1/analyze`, formData, {
+        this.httpService.post(`${this.workerServiceUrl}${WORKER_ANALYZE_PATH}`, requestBody, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
           },
           timeout: this.workerServiceTimeout,
         }),
       );
-
-      clearInterval(progressInterval);
-
-      return {
-        fileId: job.data.fileId,
-        geometry: response.data.geometry || {},
-        dfmAnalysis: response.data.dfm_analysis,
-        features: response.data.features,
-        metadata: {
-          fileFormat: fileType,
-          fileSize: fileBuffer.length,
-          processingTime: response.data.processing_time || 0,
-        },
-      };
+      rawResponseData = response.data;
     } catch (error) {
-      // If worker service is unavailable, provide basic analysis
-      this.logger.warn(
-        `Worker service unavailable, using fallback analysis: ${error instanceof Error ? error.message : String(error)}`,
+      // A genuine worker failure (unreachable, timeout, 4xx/5xx) is an explicit
+      // failure: propagate it so the job is marked failed and NO fabricated
+      // no-geometry FileAnalysis row is persisted. Downstream pricing then
+      // degrades cleanly because there simply is no geometry to read.
+      throw new Error(
+        `Worker ${WORKER_ANALYZE_PATH} call failed for file ${fileId}: ${getErrorMessage(error)}`,
       );
-
-      return this.performBasicAnalysis(job.data.fileId, fileBuffer, fileType);
+    } finally {
+      clearInterval(progressInterval);
     }
+
+    // Validate the response against the agreed contract. A shape mismatch (e.g.
+    // the worker changed its route/schema) throws loudly here instead of being
+    // silently mapped to an empty, volume-less geometry result.
+    const workerResult = parseWorkerAnalyzeResponse(rawResponseData);
+
+    return this.mapWorkerResponse(fileId, fileType, workerResult);
   }
 
-  private async performBasicAnalysis(
+  /**
+   * Map the worker's real response
+   * (`{ metrics: { volume_cm3, surface_area_cm2, bbox_mm, ... }, issues, risk_score }`)
+   * onto the {@link FileAnalysisResult} the persistence layer and the pricing
+   * resolver expect (`geometry.volume` / `surfaceArea` / `boundingBox`).
+   */
+  private mapWorkerResponse(
     fileId: string,
-    fileBuffer: Buffer,
     fileType: string,
-  ): Promise<FileAnalysisResult> {
-    // Basic analysis when worker service is unavailable
+    worker: WorkerAnalyzeResponse,
+  ): FileAnalysisResult {
+    const { metrics, issues, risk_score } = worker;
+
+    const dfmIssues = issues.map((issue) => ({
+      type: issue.type,
+      severity: mapSeverity(issue.severity),
+      description: issue.description,
+      ...(issue.location ? { location: issue.location } : {}),
+    }));
+
+    const hasCritical = dfmIssues.some((issue) => issue.severity === 'critical');
+    const triangleCount = metrics.triangle_count ?? undefined;
+
     return {
       fileId,
       geometry: {
-        // These would be calculated by the worker service
-        volume: undefined,
-        surfaceArea: undefined,
-        boundingBox: undefined,
+        volume: metrics.volume_cm3,
+        surfaceArea: metrics.surface_area_cm2,
+        boundingBox: {
+          x: metrics.bbox_mm.x,
+          y: metrics.bbox_mm.y,
+          z: metrics.bbox_mm.z,
+        },
         partCount: 1,
+        triangleCount: triangleCount ?? undefined,
       },
       dfmAnalysis: {
-        issues: [],
-        score: 100,
-        manufacturable: true,
+        issues: dfmIssues,
+        // Worker `risk_score` is 0-100 where higher = worse; FileAnalysis
+        // `dfmScore` is a health score where higher = better.
+        score: Math.max(0, Math.min(100, 100 - risk_score)),
+        manufacturable: !hasCritical,
       },
       features: {
-        hasUndercuts: false,
-        hasThinWalls: false,
-        hasSmallFeatures: false,
-        complexity: 'simple',
+        hasUndercuts: issues.some((i) => i.type.toLowerCase().includes('undercut')),
+        hasThinWalls: issues.some((i) => i.type.toLowerCase().includes('wall')),
+        hasSmallFeatures: issues.some((i) => i.type.toLowerCase().includes('small')),
+        complexity:
+          triangleCount && triangleCount > 100000
+            ? 'complex'
+            : triangleCount && triangleCount > 10000
+              ? 'moderate'
+              : 'simple',
       },
       metadata: {
         fileFormat: fileType,
-        fileSize: fileBuffer.length,
-        processingTime: 0,
+        fileSize: 0,
+        processingTime: worker.processing_time_ms ?? 0,
       },
     };
   }
