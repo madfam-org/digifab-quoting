@@ -10,7 +10,7 @@ resources:
 - worker-deployment.yaml
 - network-policies.yaml
 images:
-- digest: sha256:0762f802cae0429ee87fde0a9469cf542f0408eebfba07cbb3813951aa70855b
+- digest: sha256:59b0a6bc2bd36d3298d293fc4d69106b9f4772b70bac8b130ad7bb11f010afbe
   name: ghcr.io/madfam-org/digifab-quoting/api
   newName: ghcr.io/madfam-org/digifab-quoting/api
 - digest: sha256:30d424e173695b206f67b9aff878328894fabf8fd3e262ad82f41c0cab173450
