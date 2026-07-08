@@ -109,9 +109,9 @@ export class PdfReportGeneratorService {
     doc.fontSize(14).text('Customer Information', { underline: true });
     doc
       .fontSize(12)
-      .text(`Name: ${quote.customer.name || 'N/A'}`)
-      .text(`Email: ${quote.customer.email || 'N/A'}`)
-      .text(`Phone: ${quote.customer.phone || 'N/A'}`)
+      .text(`Name: ${quote.customer?.name || 'N/A'}`)
+      .text(`Email: ${quote.customer?.email || 'N/A'}`)
+      .text(`Phone: ${quote.customer?.phone || 'N/A'}`)
       .moveDown();
 
     // Quote details

@@ -35,7 +35,7 @@ describe('ExcelReportGeneratorService', () => {
   });
 
   describe('generateReport', () => {
-    const mockQuoteData = {
+    const mockQuoteData: any = {
       id: 'quote-123',
       number: 'Q-2024-001',
       status: 'active',
@@ -77,23 +77,11 @@ describe('ExcelReportGeneratorService', () => {
       numFmt?: string;
     }
 
-    interface MockWorksheet {
-      mergeCells: jest.Mock;
-      getCell: jest.Mock<MockCell>;
-      columns: Array<{ key?: string; header?: string; width?: number }>;
-      addRow: jest.Mock;
-      getRow: jest.Mock;
-    }
-
-    interface MockWorkbook {
-      addWorksheet: jest.Mock<MockWorksheet>;
-      xlsx: {
-        writeFile: jest.Mock<Promise<void>>;
-      };
-    }
-
-    let mockWorkbook: MockWorkbook;
-    let mockWorksheet: MockWorksheet;
+    // mockWorkbook / mockWorksheet are intentionally partial stand-ins for the
+    // ExcelJS Workbook/Worksheet (typed `any`) — the real classes carry ~30
+    // members the generator never touches under test.
+    let mockWorkbook: any;
+    let mockWorksheet: any;
 
     beforeEach(() => {
       mockWorksheet = {
@@ -145,7 +133,7 @@ describe('ExcelReportGeneratorService', () => {
     });
 
     it('should generate an Excel report for an order', async () => {
-      const mockOrderData = {
+      const mockOrderData: any = {
         id: 'order-123',
         number: 'O-2024-001',
         status: 'completed',
@@ -161,7 +149,7 @@ describe('ExcelReportGeneratorService', () => {
     });
 
     it('should generate an Excel report for an invoice', async () => {
-      const mockInvoiceData = {
+      const mockInvoiceData: any = {
         id: 'inv-123',
         number: 'INV-2024-001',
         status: 'paid',
@@ -201,7 +189,7 @@ describe('ExcelReportGeneratorService', () => {
     });
 
     it('should generate analytics report with multiple sheets', async () => {
-      const mockAnalyticsData = {
+      const mockAnalyticsData: any = {
         criteria: {
           startDate: '2024-01-01',
           endDate: '2024-01-31',
@@ -275,7 +263,7 @@ describe('ExcelReportGeneratorService', () => {
         getCell: mockGetCell,
       });
 
-      const mxnInvoiceData = {
+      const mxnInvoiceData: any = {
         id: 'inv-123',
         number: 'INV-2024-001',
         currency: 'MXN',
@@ -301,7 +289,7 @@ describe('ExcelReportGeneratorService', () => {
     });
 
     it('should handle missing data gracefully', async () => {
-      const incompleteQuote = {
+      const incompleteQuote: any = {
         id: 'quote-123',
         number: 'Q-2024-001',
         createdAt: new Date(),
@@ -340,7 +328,7 @@ describe('ExcelReportGeneratorService', () => {
     });
 
     it('should create proper headers for analytics summary', async () => {
-      const mockAnalyticsData = {
+      const mockAnalyticsData: any = {
         criteria: {
           startDate: '2024-01-01',
           endDate: '2024-01-31',
@@ -362,21 +350,18 @@ describe('ExcelReportGeneratorService', () => {
       expect(getCellSpy).toHaveBeenCalledWith('A1');
       expect(getCellSpy).toHaveBeenCalledWith('A3');
     });
-  });
-
-  describe('error handling', () => {
     it('should handle workbook creation errors', async () => {
       (ExcelJS.Workbook as jest.MockedClass<typeof ExcelJS.Workbook>).mockImplementation(() => {
         throw new Error('Workbook creation failed');
       });
 
-      await expect(service.generateReport('quote', {}, {})).rejects.toThrow(
+      await expect(service.generateReport('quote', {} as any, {})).rejects.toThrow(
         'Workbook creation failed',
       );
     });
 
     it('should handle undefined analytics data arrays', async () => {
-      const mockAnalyticsData = {
+      const mockAnalyticsData: any = {
         criteria: {
           startDate: '2024-01-01',
           endDate: '2024-01-31',

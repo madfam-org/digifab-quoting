@@ -374,7 +374,9 @@ export class ReportDataLoaderService {
         AND q.created_at <= ${endDate}::timestamp
     `;
 
-    const data = result[0];
+    // Defensive: a raw aggregate normally returns a single row, but guard
+    // against an empty result so report generation never throws.
+    const data = result[0] ?? { total_quotes: 0, converted_quotes: 0, avg_hours_to_convert: null };
     const rate = data.total_quotes > 0 ? (data.converted_quotes / data.total_quotes) * 100 : 0;
 
     return {
