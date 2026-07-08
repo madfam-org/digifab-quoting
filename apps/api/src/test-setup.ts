@@ -7,6 +7,15 @@ jest.mock('@sentry/node', () => ({
   captureException: jest.fn(),
   captureMessage: jest.fn(),
   setUser: jest.fn(),
+  setTag: jest.fn(),
+  setContext: jest.fn(),
+  addBreadcrumb: jest.fn(),
+  // withScope invokes its callback with a scope stub so the SentryService's
+  // scope.setTag / scope.setLevel calls don't blow up under the mock.
+  withScope: jest.fn((callback: (scope: unknown) => void) =>
+    callback({ setTag: jest.fn(), setLevel: jest.fn(), setContext: jest.fn() }),
+  ),
+  flush: jest.fn().mockResolvedValue(true),
   httpIntegration: jest.fn(),
   expressIntegration: jest.fn(),
   postgresIntegration: jest.fn(),

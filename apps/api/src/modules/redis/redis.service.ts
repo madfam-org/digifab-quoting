@@ -96,6 +96,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
       if (!value) {
         this.statistics.misses++;
+        this.updateHitRate();
         return null;
       }
 
@@ -105,6 +106,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       if (entry.metadata.expiresAt && entry.metadata.expiresAt < Date.now()) {
         await this.delete(key);
         this.statistics.misses++;
+        this.updateHitRate();
         return null;
       }
 
