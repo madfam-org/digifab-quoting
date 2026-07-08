@@ -152,6 +152,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Build @cotiza/api's workspace deps (shared, pricing-engine, …) so
+      # ts-jest can resolve their type declarations from dist/. Jest's runtime
+      # moduleNameMapper points at source, but the ts-jest type-checker
+      # resolves @cotiza/* via node_modules → package "types" (dist/*.d.ts),
+      # which don't exist until these are built. This job runs jest directly
+      # (not via turbo), so it must build deps itself.
+      - name: Build workspace dependencies
+        run: pnpm --filter "@cotiza/api^..." run build
+
       - name: Generate Prisma client
         run: pnpm --filter @cotiza/api run db:generate
 
