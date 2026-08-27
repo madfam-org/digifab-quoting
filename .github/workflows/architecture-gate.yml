@@ -2,8 +2,7 @@ name: Architecture Gate
 
 # Enforces ecosystem-wide architectural invariants. Currently:
 #  - Stripe key segregation: cotiza (this repo) is a billing-API client of
-#    Dhanam and must NOT hold Stripe keys. The reusable gate at
-#    madfam-org/internal-devops enforces this on every PR + push to main.
+#    Dhanam and must NOT hold Stripe keys.
 #
 # Operator directive (2026-04-25):
 #   "One set of Stripe keys, owned by Dhanam. All financial transactions and
@@ -18,15 +17,266 @@ name: Architecture Gate
 # Historical bug pattern: cotiza had STRIPE_SECRET_KEY in env validation that
 # crash-looped the API pod for 1012 restarts. Wave B2 deleted the runtime
 # code; this gate prevents the next agent from re-adding the dependency.
+#
+# ---------------------------------------------------------------------------
+# WHY THIS SCAN IS VENDORED RATHER THAN CALLED AS A REUSABLE WORKFLOW
+#
+# This file previously did:
+#   uses: madfam-org/internal-devops/.github/workflows/stripe-key-segregation.yml@main
+#
+# That call could never start. This repository is PUBLIC; internal-devops is
+# PRIVATE. A public caller cannot resolve a `workflow_call` into a private
+# repository's reusable workflow, so GitHub rejected the run before scheduling
+# any job: every invocation since 2026-07-07 ended as a 0-second startup
+# failure with ZERO jobs created. A red X on this gate therefore meant "the
+# gate never ran", not "the gate ran and failed" -- so Stripe key segregation
+# was NOT actually enforced here despite appearing to be.
+#
+# The upstream reusable workflow documents this same blocker in its own header
+# banner and prescribes exactly this remedy: vendor the scan into each consumer
+# repo and inline the job steps -- the pattern this repo already uses for the
+# production-readiness ratchet.
+#
+# The scan logic below is transplanted verbatim from the upstream workflow
+# (madfam-org/internal-devops/.github/workflows/stripe-key-segregation.yml),
+# which remains the source of truth. The only changes are substituting the
+# two reusable-workflow inputs with their literal caller values:
+#   inputs.repo_name -> github.event.repository.name
+#   inputs.is_dhanam -> false   (this repo is a consumer platform, not dhanam)
+# Keep this copy in sync when the upstream scan changes.
+# ---------------------------------------------------------------------------
 
 on:
   pull_request:
   push:
     branches: [main, develop]
 
+# The gate only reads the checkout; its output goes to annotations and
+# GITHUB_STEP_SUMMARY, neither of which needs API write.
+permissions:
+  contents: read
+
 jobs:
-  stripe-segregation:
-    uses: madfam-org/internal-devops/.github/workflows/stripe-key-segregation.yml@main
-    with:
-      repo_name: ${{ github.event.repository.name }}
-      is_dhanam: false
+  stripe-key-segregation:
+    name: Architecture Gate -- Stripe Key Segregation
+    runs-on: ${{ vars.ARC_BOOTSTRAP_COMPLETE == 'true' && 'madfam-runners-blue' || 'ubuntu-latest' }}
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Scan for Stripe key references
+        id: scan
+        # `bash {0}` (not the default `bash -e {0}`) so the script's own
+        # `set -uo pipefail` governs. The scan deliberately omits `-e`:
+        # run_grep's grep exits 1 when it finds NOTHING, which is the PASS
+        # case. Under GitHub's default `-e` the step aborts silently on a
+        # clean tree -- a clean repo fails and a dirty one passes. Keep the
+        # explicit shell invocation here.
+        shell: bash {0}
+        run: |
+          set -uo pipefail
+
+          REPO="${{ github.event.repository.name }}"
+          IS_DHANAM="false"
+          DOC_URL="https://github.com/madfam-org/internal-devops/blob/main/ecosystem/monetization-architecture-2026-04-26.md"
+
+          echo "::group::Configuration"
+          echo "repo_name        = $REPO"
+          echo "is_dhanam        = $IS_DHANAM"
+          echo "canonical_doc    = $DOC_URL"
+          echo "::endgroup::"
+
+          # ──────────────────────────────────────────────────────────────────
+          # File scope: source-code-bearing extensions. Excludes vendor dirs,
+          # build artifacts, lock files, and anything inside .git/.
+          # ──────────────────────────────────────────────────────────────────
+          INCLUDE_PATTERNS=(
+            --include='*.ts' --include='*.tsx'
+            --include='*.js' --include='*.jsx' --include='*.mjs' --include='*.cjs'
+            --include='*.py'
+            --include='*.go'
+            --include='*.rs'
+            --include='*.java' --include='*.kt'
+            --include='*.rb'
+            --include='*.php'
+            --include='*.yml' --include='*.yaml'
+            --include='*.json'
+            --include='*.toml'
+            --include='Dockerfile' --include='Dockerfile.*' --include='*.Dockerfile'
+            --include='.env' --include='.env.*'
+            --include='docker-compose*.yml' --include='docker-compose*.yaml'
+          )
+          EXCLUDE_PATTERNS=(
+            --exclude-dir=node_modules
+            --exclude-dir=.git
+            --exclude-dir=dist
+            --exclude-dir=build
+            --exclude-dir=.next
+            --exclude-dir=.turbo
+            --exclude-dir=.venv
+            --exclude-dir=venv
+            --exclude-dir=__pycache__
+            --exclude-dir=target
+            --exclude-dir=vendor
+            --exclude-dir=coverage
+            --exclude='*.lock'
+            --exclude='*.lockb'
+            --exclude='*.min.js'
+            --exclude='*.bundle.js'
+          )
+
+          # ──────────────────────────────────────────────────────────────────
+          # Pattern set
+          #
+          #   Pattern A (env-var name): STRIPE_<anything>_KEY or NEXT_PUBLIC_STRIPE_<anything>_KEY
+          #     Only flagged in NON-dhanam repos. Dhanam legitimately uses
+          #     STRIPE_SECRET_KEY, STRIPE_MX_SECRET_KEY, etc.
+          #
+          #   Pattern B (live key literal): sk_live_<20+ alphanum>
+          #     Flagged in ALL repos including dhanam -- live keys must NEVER
+          #     appear in source, only in runtime secrets / env vars.
+          #
+          #   Pattern C (real test key literal): sk_test_<20+ alphanum>
+          #     Flagged in ALL repos. Test placeholders that look like
+          #     "sk_test_..." or "sk_test_your-..." or "sk_test_dummy" are
+          #     intentionally below the 20-char threshold and won't match.
+          #     Real test keys (which start with sk_test_ followed by long
+          #     base62) WILL match.
+          # ──────────────────────────────────────────────────────────────────
+          PATTERN_A='\b(NEXT_PUBLIC_)?STRIPE_[A-Z0-9_]*KEY\b'
+          PATTERN_B='\bsk_live_[A-Za-z0-9]{20,}\b'
+          PATTERN_C='\bsk_test_[A-Za-z0-9]{20,}\b'
+
+          # Whitelist files: never scan these paths (regex over the full path)
+          # - CHANGELOG.md and *.md: documentation and history are fine
+          # - test fixtures: explicitly named *.fixture.* may carry the
+          #   literal strings to test the gate itself
+          # - this very workflow file: it MUST contain the patterns to enforce
+          #   them, and that's not a violation
+          PATH_WHITELIST_REGEX='(^|/)(CHANGELOG\.md|.+\.md|.+\.fixture\.[^/]+|\.github/workflows/stripe-key-segregation\.yml|\.github/workflows/architecture-gate\.yml)$'
+
+          violations_file="$(mktemp)"
+          trap "rm -f '$violations_file'" EXIT
+
+          run_grep() {
+            local pattern="$1"
+            local label="$2"
+            grep -RInE "$pattern" \
+              "${INCLUDE_PATTERNS[@]}" \
+              "${EXCLUDE_PATTERNS[@]}" \
+              . 2>/dev/null | while IFS=: read -r path lineno content; do
+                # Strip leading ./ for cleaner output
+                clean_path="${path#./}"
+                # Path whitelist
+                if [[ "$clean_path" =~ $PATH_WHITELIST_REGEX ]]; then
+                  continue
+                fi
+                # Per-line allowlist comment (any comment style)
+                # Examples:
+                #   STRIPE_SECRET_KEY=...  # stripe-key-allowed: shared dhanam fixture
+                #   const k = "sk_live_xxx"; // stripe-key-allowed: smoke-test stub
+                if echo "$content" | grep -qE 'stripe-key-allowed:[[:space:]]*\S'; then
+                  continue
+                fi
+                # Drop architectural rule explanations (comments mentioning
+                # the rule by name). Only catch lines whose ONLY occurrence
+                # of the pattern is inside a comment that explicitly cites
+                # the segregation rule.
+                if echo "$content" | grep -qE '(monetization-architecture|stripe-key-segregation|architectural rule|architectural invariant)'; then
+                  continue
+                fi
+                # Never print the matched line. If this gate catches a real
+                # key, CI logs must not become the next credential leak.
+                printf '%s\t%s\t%s\t%s\n' "$label" "$clean_path" "$lineno" "[matching line redacted]" >> "$violations_file"
+            done
+          }
+
+          if [ "$IS_DHANAM" = "true" ]; then
+            echo "::notice::Dhanam mode -- scanning for live key LITERALS only (env var names allowed)"
+            run_grep "$PATTERN_B" "live-key-literal"
+            run_grep "$PATTERN_C" "test-key-literal"
+          else
+            echo "::notice::Consumer-platform mode -- scanning for STRIPE_*_KEY env names AND live key literals"
+            run_grep "$PATTERN_A" "stripe-env-var"
+            run_grep "$PATTERN_B" "live-key-literal"
+            run_grep "$PATTERN_C" "test-key-literal"
+          fi
+
+          violation_count=$(wc -l < "$violations_file" | tr -d ' ')
+
+          if [ "$violation_count" -eq 0 ]; then
+            echo ""
+            echo "PASS: no Stripe key segregation violations found in $REPO."
+            {
+              echo "## Architecture Gate: Stripe Key Segregation -- PASS"
+              echo ""
+              echo "**Repository**: \`$REPO\`"
+              echo "**Mode**: $([ "$IS_DHANAM" = "true" ] && echo 'dhanam (live-key-literal scan only)' || echo 'consumer platform (STRIPE_*_KEY + literals scan)')"
+              echo ""
+              echo "No violations of the [monetization architecture directive]($DOC_URL) found."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # ──────────────────────────────────────────────────────────────────
+          # FAIL path: emit GitHub annotations + step summary + exit 1
+          # ──────────────────────────────────────────────────────────────────
+          echo ""
+          echo "FAIL: $violation_count Stripe key segregation violation(s) found in $REPO."
+          echo ""
+
+          {
+            echo "## Architecture Gate: Stripe Key Segregation -- FAIL"
+            echo ""
+            echo "**Repository**: \`$REPO\`"
+            echo "**Mode**: $([ "$IS_DHANAM" = "true" ] && echo 'dhanam (live-key-literal scan)' || echo 'consumer platform (STRIPE_*_KEY + literals scan)')"
+            echo "**Violations**: $violation_count"
+            echo ""
+            echo "### Operator directive (2026-04-25)"
+            echo ""
+            echo "> One set of Stripe keys, owned by Dhanam. All financial transactions and billing funnel through Dhanam's API. Janua handles auth/identity and may link credentials but never holds money. Karafiel handles CFDI stamping triggered by Dhanam-issued invoices."
+            echo ""
+            echo "Canonical doc: [monetization-architecture-2026-04-26.md]($DOC_URL)"
+            echo ""
+            echo "### Historical bug pattern"
+            echo ""
+            echo "Cotiza had \`STRIPE_SECRET_KEY\` in env validation that crash-looped the API pod for **1012 restarts** because the env var wasn't provided (correctly -- cotiza must NOT hold Stripe keys). This gate prevents that drift from recurring."
+            echo ""
+            echo "### Violations"
+            echo ""
+            echo "| Type | File | Line | Snippet |"
+            echo "|---|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          while IFS=$'\t' read -r label path lineno content; do
+            # Per-violation GitHub annotation (renders inline on the PR Files tab)
+            case "$label" in
+              stripe-env-var)
+                msg="Found STRIPE_*_KEY env var reference. Per the operator's 2026-04-25 monetization architecture directive, only the dhanam repo may hold Stripe keys. See: $DOC_URL. If this is a legitimate exception, add a 'stripe-key-allowed: <reason>' comment on the same line."
+                ;;
+              live-key-literal)
+                msg="Found a Stripe LIVE key literal (sk_live_...). Live keys must never appear in source -- only in runtime secrets. See: $DOC_URL."
+                ;;
+              test-key-literal)
+                msg="Found a Stripe TEST key literal (sk_test_<20+ chars>). Real test keys must never appear in source -- only in runtime secrets. Placeholders like 'sk_test_...' or 'sk_test_dummy' don't trigger this rule. See: $DOC_URL."
+                ;;
+            esac
+            echo "::error file=$path,line=$lineno::[$label] $msg"
+            # Truncate the snippet for the summary table so a long line doesn't blow up rendering
+            snippet=$(echo "$content" | sed 's/|/\\|/g' | cut -c1-120)
+            echo "| \`$label\` | \`$path\` | $lineno | \`$snippet\` |" >> "$GITHUB_STEP_SUMMARY"
+          done < "$violations_file"
+
+          {
+            echo ""
+            echo "### Resolution"
+            echo ""
+            echo "1. **Remove the reference** if this repo should not hold Stripe keys (the common case for everything except dhanam). Route the payment flow through Dhanam's billing API."
+            echo "2. **Add an allowlist comment** if there is a legitimate reason (e.g. a CHANGELOG entry, a test fixture, or a documented exception). Append \`# stripe-key-allowed: <reason>\` (or \`// stripe-key-allowed: <reason>\` in C-family languages) to the same line."
+            echo "3. **Move literal keys to runtime secrets** -- sk_live_/sk_test_ literals belong in K8s Secrets, GitHub Actions secrets, or Vault, never in source."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit 1
