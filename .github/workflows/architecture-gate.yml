@@ -69,7 +69,13 @@ jobs:
 
       - name: Scan for Stripe key references
         id: scan
-        shell: bash
+        # `bash {0}` (not the default `bash -e {0}`) so the script's own
+        # `set -uo pipefail` governs. The scan deliberately omits `-e`:
+        # run_grep's grep exits 1 when it finds NOTHING, which is the PASS
+        # case. Under GitHub's default `-e` the step aborts silently on a
+        # clean tree -- a clean repo fails and a dirty one passes. Keep the
+        # explicit shell invocation here.
+        shell: bash {0}
         run: |
           set -uo pipefail
 
