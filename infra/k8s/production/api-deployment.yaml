@@ -33,6 +33,16 @@ spec:
         ports:
         - containerPort: 4000
           name: http
+        env:
+          # The API shares a 100-slot Postgres with the rest of the ecosystem. Prisma's
+          # default here (DB_POOL_MAX) was 50 PER POD; two fresh pods held 24 idle
+          # slots on 2026-09-12 and the instance started refusing every new
+          # connection cluster-wide. A quoting API at this traffic needs single
+          # digits. Raise only together with the shared-instance budget.
+          - name: DB_POOL_MAX
+            value: "5"
+          - name: DB_POOL_TIMEOUT
+            value: "10"
         envFrom:
         - secretRef:
             name: digifab-quoting-secrets

@@ -55,7 +55,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private updateDatabaseUrl() {
     const baseUrl = this.configService.get<string>('DATABASE_URL', '');
     const poolConfig = {
-      connection_limit: this.configService.get<number>('DB_POOL_MAX', 50),
+      // Default 10, not 50: the production database is a SHARED instance with
+      // max_connections=100 across the whole ecosystem, and this value is per pod.
+      // Production pins it lower still via DB_POOL_MAX in the deployment manifest.
+      connection_limit: this.configService.get<number>('DB_POOL_MAX', 10),
       pool_timeout: this.configService.get<number>('DB_POOL_TIMEOUT', 10),
       statement_cache_size: this.configService.get<number>('DB_STATEMENT_CACHE_SIZE', 1000),
       pgbouncer: this.configService.get<boolean>('DB_USE_PGBOUNCER', false),
