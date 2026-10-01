@@ -59,7 +59,7 @@ permissions:
 jobs:
   stripe-key-segregation:
     name: Architecture Gate -- Stripe Key Segregation
-    runs-on: ${{ vars.ARC_BOOTSTRAP_COMPLETE == 'true' && 'madfam-runners-blue' || 'ubuntu-latest' }}
+    runs-on: ${{ vars.ARC_BOOTSTRAP_COMPLETE == 'true' && 'madfam-runners-blue' || 'ubuntu-24.04' }}
     timeout-minutes: 5
     steps:
       - name: Checkout repository

@@ -25,7 +25,7 @@ jobs:
     with:
       image_prefix: ghcr.io/madfam-org/digifab-quoting
       kustomization_path: infra/k8s/production
-      build_runner: ubuntu-latest
+      build_runner: ubuntu-24.04
       services: |
         [
           {"name":"api", "dockerfile":"apps/api/Dockerfile"}
