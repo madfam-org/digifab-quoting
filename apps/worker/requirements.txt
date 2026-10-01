@@ -1,6 +1,6 @@
 fastapi==0.109.2
 uvicorn[standard]==0.27.1
-python-multipart==0.0.9
+python-multipart==0.0.32
 pydantic==2.6.1
 numpy==1.26.4
 trimesh==4.1.7
