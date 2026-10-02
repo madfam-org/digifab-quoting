@@ -61,7 +61,8 @@
 
 ### Deployment
 
-- [**DEPLOYMENT.md**](./DEPLOYMENT.md) - Production deployment guide
+- [**DEPLOYMENT.md**](./DEPLOYMENT.md) - Current deploy path (Enclii `build-publish.yml` → GHCR → digest pin → ArgoCD), maintenance backlog, and historical AWS reference
+- [**runbooks/2026-04-25-auth-remediation.md**](./runbooks/2026-04-25-auth-remediation.md) - Auth remediation runbook
 - [**MIGRATION_GUIDE.md**](./MIGRATION_GUIDE.md) - Database and system migration procedures
 
 ### Reports
@@ -129,12 +130,13 @@
 - **Technical Architecture**: ✅ Complete
 - **API Documentation**: ✅ Complete
 - **Development Guides**: ✅ Complete
-- **Operations Guides**: ✅ Complete
+- **Operations Guides**: ✅ Current deploy path documented (2026-10-01); AWS sections are historical
+- **Tests**: ⚠️ Known gaps listed in [AGENTS.md, "Tests and CI gates"](../AGENTS.md#tests-and-ci-gates)
 
 ### Last Updated
 
-- Most Recent: May 29, 2026
-- Next Review: Q3 2026
+- Most Recent: October 1, 2026 (close-out of the 2026-09-30 dependency and runner-pin wave)
+- Next Review: Q4 2026
 
 ---
 
@@ -187,24 +189,30 @@
 
 ## 🔗 EXTERNAL RESOURCES
 
-### Related Repositories
+### Workspace Packages
 
 - Frontend Components: `@cotiza/ui`
 - Shared Types: `@cotiza/shared`
 - Pricing Engine: `@cotiza/pricing-engine`
 
+### Related Repositories / Contracts
+
+The cross-repo contract table (Janua, Enclii, PhyndCRM, Yantra4D, Pravara MES,
+Dhanam, Karafiel, Forgesight), with links to the defining doc on each side, is
+in [AGENTS.md, "Related repositories / contracts"](../AGENTS.md#related-repositories--contracts).
+
 ### Third-Party Documentation
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [NestJS Documentation](https://docs.nestjs.com)
-- [Janua Payment Gateway](https://janua.io/docs) - Payment processing
+- [Janua integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md) - Identity and JWT verification (Janua is identity, not payments; billing goes through Dhanam)
 - [AWS Documentation](https://docs.aws.amazon.com)
 
 ### MADFAM Ecosystem
 
-- [Primavera3D](../../primavera3d) - Manufacturing platform (embeds Cotiza)
-- [Forgesight](../../forgesight) - Project management integration
-- [Dhanam](../../dhanam) - Financial tracking
+- [Primavera3D](https://github.com/madfam-org/primavera3d) - Manufacturing platform (embeds Cotiza)
+- Forgesight - pricing intelligence feed (`price.updated` webhook into Cotiza)
+- Dhanam - billing: checkout relay and milestone invoices
 
 ---
 
@@ -219,4 +227,4 @@
 ---
 
 _This index is the single source of truth for all Cotiza Studio documentation._
-_Last Updated: November 2025_
+_Last Updated: October 2026_

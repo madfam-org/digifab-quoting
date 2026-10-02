@@ -15,7 +15,99 @@ secrets into this file, issues, PRs, CI logs, or LLM chat.
 **API Endpoint**: https://api.cotiza.studio  
 **Admin Panel**: not currently exposed as a verified production route
 
-## Architecture Overview
+## Current deploy path (verified 2026-10-01)
+
+This is how `main` reaches production today. Everything after the
+"Historical AWS reference" heading below describes an earlier AWS/ECS design
+that is **not** what runs now; keep it only as infrastructure reference.
+
+### Pipeline
+
+1. A push to `main` runs one or both caller workflows. Both call the shared
+   reusable workflow
+   [`madfam-org/enclii/.github/workflows/build-publish.yml`](https://github.com/madfam-org/enclii/blob/main/docs/guides/reusable-workflows.md),
+   pinned to the tag `v1.0.0-alpha.9` (not `@main`; pinned in #61).
+2. The reusable workflow builds each service with Buildx, pushes it to GHCR as
+   `ghcr.io/madfam-org/digifab-quoting/<service>:<commit-sha>` (there is no
+   `:latest` tag), and signs it keyless with cosign.
+3. It reads each digest back from the registry, runs
+   `kustomize edit set image` in `infra/k8s/production/kustomization.yaml`, and
+   commits the `@sha256:` pin to `main` as `ci: pin image digests from <sha>`.
+4. ArgoCD watches `infra/k8s/production` on `main` (see
+   `infra/argocd/config.json`) and syncs the namespace `digifab-quoting`.
+
+See also the
+[signed GitOps digest runbook](https://github.com/madfam-org/enclii/blob/main/docs/runbooks/SIGNED_GITOPS_DIGESTS.md)
+on the Enclii side.
+
+### The two caller workflows
+
+| Workflow                                  | Builds                 | Triggers on `main`                                                                                                                                                                                        | Build runner                                                                                                            |
+| ----------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `Build & Deploy` (`build-deploy.yml`)     | `api`, `web`, `worker` | every push except changes limited to `**.md` and `docs/**`; also `workflow_dispatch`                                                                                                                      | reusable-workflow default: the ARC pool `madfam-runners-blue` when the repo variable `ARC_BOOTSTRAP_COMPLETE` is `true` |
+| `Deploy API Only` (`deploy-api-only.yml`) | `api`                  | `apps/api/**`, `packages/**`, `pnpm-lock.yaml`, `package.json`, `pnpm-workspace.yaml`, `turbo.json`, the workflow file, `infra/k8s/production/api-*.yaml`, `kustomization.yaml`; also `workflow_dispatch` | `build_runner: ubuntu-24.04` (GitHub-hosted, so the API can ship when ARC capacity is unavailable)                      |
+
+Both workflows share the concurrency group
+`digifab-quoting-kustomization-<ref>` with `cancel-in-progress: false`, so
+their digest-pin commits to `kustomization.yaml` are serialized instead of
+racing. A push that touches `apps/api/**` therefore builds the API twice (once
+in each workflow) and produces two pin commits. That duplication is expected.
+
+Notes:
+
+- `llms.txt` and `llms-full.txt` are not `**.md`, so a change to them alone
+  still triggers `Build & Deploy` (a no-op rebuild of all three images).
+- To ship without a code change, dispatch the workflow:
+  `gh workflow run build-deploy.yml --ref main` or
+  `gh workflow run deploy-api-only.yml --ref main`.
+- GitHub-hosted jobs in this repo are pinned to `ubuntu-24.04`, ahead of
+  GitHub moving `ubuntu-latest` to Ubuntu 26 on 2026-10-19 (#68). The pinned
+  `alpha.9` reusable workflow still falls back to `ubuntu-latest` internally
+  when no `build_runner` is passed and ARC is not bootstrapped, and its
+  `deploy-state-guard` job ("Guard against silent stale deploy") ignores
+  `build_runner` entirely. That is owned by Enclii, not by this repo.
+- Database migrations are not run by either workflow. Treat any production
+  migration as an explicit, operator-approved action (see `AGENTS.md`).
+
+### Verifying a deploy
+
+- The `ci: pin image digests from <sha>` commit lands on `main` after a green
+  run, and the three `images:` entries in
+  `infra/k8s/production/kustomization.yaml` carry `@sha256:` digests.
+- The reusable workflow's `deploy-state-guard` job ("Guard against silent
+  stale deploy") fails loudly if images were pushed but the pin commit did not
+  land.
+- Runtime state (ArgoCD sync, pod health) is checked through Enclii, not raw
+  `kubectl`.
+
+## Maintenance backlog (as of 2026-10-01)
+
+- **nodemailer 7 needs an SESv2 transport.** `apps/api` stays on
+  `nodemailer@^6.10.1` because every advisory fix is in 7.x+, and 7.0 removed
+  the aws-sdk v2 `SES` transport that `apps/api/src/modules/email/email.service.ts`
+  builds with `new aws.SES(...)`. The upgrade has to move the transport to
+  `@aws-sdk/client-sesv2` (nodemailer's `SES: { sesClient, SendEmailCommand }`
+  shape) and should land as its own change. After #67, nodemailer is the only
+  remaining HIGH runtime finding in the lockfile scan.
+- **`test.yml` uses the retired `actions/upload-artifact@v3`** (three steps).
+  GitHub fails any job that references v3, so the manual-only `Test Suite`
+  workflow would fail at those jobs if dispatched. `ci.yml`, the workflow that
+  gates PRs, already uses `@v4`. Move `test.yml` to `@v4` when the suite is
+  rewritten (its header explains why it is `workflow_dispatch` only).
+- **Next image optimizer posture.** `apps/web/next.config.js` still sets
+  `images.domains` and leaves the optimizer on. The fleet posture after
+  GHSA-2xp9-vwfh-vxw4 is `images.unoptimized: true` with an exact
+  `remotePatterns` allow-list and `/_next/image` returning 404. The installed
+  `next` (15.5.27) already includes the advisory fix; adopting the posture is a
+  defence-in-depth follow-up.
+- **Pricing-engine tests are not running.** See "Tests" in `AGENTS.md`.
+
+## Historical AWS reference
+
+The sections below predate the Enclii/GitOps pipeline. They are kept as
+infrastructure reference only and do not describe the running deployment.
+
+### Architecture Overview
 
 ```mermaid
 graph TB
@@ -275,10 +367,11 @@ aws cloudfront create-invalidation \
 
 ## CI/CD Pipeline
 
-### GitHub Actions Workflow
+### GitHub Actions Workflow (historical; this file is not in the repo)
 
 ```yaml
-# .github/workflows/deploy.yml
+# .github/workflows/deploy.yml (historical example; the live callers are
+# build-deploy.yml and deploy-api-only.yml, see "Current deploy path")
 name: Deploy to Production
 
 on:
@@ -291,7 +384,7 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v3
 
@@ -312,7 +405,7 @@ jobs:
 
   build-and-push:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         service: [api, web, worker]
@@ -344,7 +437,7 @@ jobs:
 
   deploy:
     needs: build-and-push
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v3

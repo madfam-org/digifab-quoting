@@ -1,6 +1,6 @@
 # Digifab Quoting Full LLM Context
 
-Generated: 2026-05-13
+Generated: 2026-05-13 (curated 2026-10-01; kept by sync-agent-docs.py)
 
 ## Purpose
 
@@ -41,8 +41,83 @@ gap or incident link.
 - `infra/`
 - `.github/workflows/`
 
+## Product and layout
+
+Cotiza Studio is MADFAM's quoting engine for digital fabrication (FFF/SLA 3D
+printing, 3-axis CNC, 2D laser) and for services quotes
+(`Quote.quoteType === 'services'`, feature-flagged per tenant).
+
+- `apps/api` — NestJS 10.4 + Prisma, REST under `/api/v1`. Prisma pool capped
+  at 5 connections per pod.
+- `apps/web` — Next.js 15.5.27 App Router, next-auth 4.24, ES/EN/pt-BR.
+- `apps/worker` — Python FastAPI geometry and DFM analysis.
+- `packages/pricing-engine`, `packages/shared`, `packages/ui`,
+  `packages/client`, plus `cache`, `chaos`, `resilience` Nest helpers.
+- `infra/k8s/production` — Kustomize manifests synced by ArgoCD.
+- `infrastructure/terraform` — historical AWS reference, not the live stack.
+
+## Deploy contract (verified 2026-10-01)
+
+1. `Build & Deploy` (`build-deploy.yml`, api/web/worker; every push to `main`
+   except changes limited to `**.md`/`docs/**`) and `Deploy API Only`
+   (`deploy-api-only.yml`, api; path-filtered, `build_runner: ubuntu-24.04`)
+   both call `madfam-org/enclii/.github/workflows/build-publish.yml@v1.0.0-alpha.9`.
+2. Images go to `ghcr.io/madfam-org/digifab-quoting/<service>:<sha>`, signed
+   with cosign. No `:latest`.
+3. A bot commit `ci: pin image digests from <sha>` pins `@sha256:` digests in
+   `infra/k8s/production/kustomization.yaml`; ArgoCD syncs namespace
+   `digifab-quoting`.
+4. Both callers share concurrency group `digifab-quoting-kustomization-<ref>`
+   (no cancel), so pin commits are serialized.
+5. `llms.txt`/`llms-full.txt` are not `**.md`, so editing them triggers a
+   full no-op rebuild.
+6. Migrations are never run by CI; production migrations are explicit
+   operator actions.
+
+Details: `docs/DEPLOYMENT.md` ("Current deploy path").
+
+## Tests and CI gates
+
+`ci.yml` gates PRs: NetworkPolicy port lint, no-TODO-auth grep, ESLint,
+`prettier --check` over ts/tsx/js/jsx/json/css/md, `pnpm test` (turbo), API
+tests with Postgres and Redis service containers, worker pytest (exit 5
+accepted), build, Docker build per service, and typecheck of shared,
+pricing-engine and ui. `Architecture Gate` and `Production Readiness Ratchet`
+also run. `test.yml` is manual-only.
+
+Known gaps: all 12 `@cotiza/pricing-engine` test files are excluded in its
+`jest.config.js` (API drift; rewrite pending); `apps/worker` has no tests;
+`apps/web` has no unit-test runner and its Playwright e2e runs only from
+`test.yml`. No known flaky tests.
+
+## Backlog
+
+- nodemailer 7 requires moving `EmailService` from the aws-sdk v2 `SES`
+  transport to `@aws-sdk/client-sesv2`. Until then nodemailer stays on 6.x and
+  is the only remaining HIGH runtime finding.
+- `test.yml` references the retired `actions/upload-artifact@v3`.
+- `apps/web/next.config.js` uses `images.domains`; the fleet posture is
+  `images.unoptimized: true` plus an exact `remotePatterns` allow-list with
+  `/_next/image` returning 404.
+- Pravara contract drift: Cotiza POSTs `/api/v1/mes/jobs` with
+  `x-webhook-signature`; Pravara `main` serves `/v1/webhooks/cotiza` and
+  verifies `X-Cotiza-Signature`.
+
+## Related repositories / contracts
+
+- Janua JWT verification: https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md
+- Janua service tokens: https://github.com/madfam-org/janua/blob/main/docs/service-tokens.md
+- Enclii reusable workflows: https://github.com/madfam-org/enclii/blob/main/docs/guides/reusable-workflows.md
+- Enclii signed GitOps digests: https://github.com/madfam-org/enclii/blob/main/docs/runbooks/SIGNED_GITOPS_DIGESTS.md
+- PhyndCRM engagement events: https://github.com/madfam-org/phynd-crm/blob/main/docs/ENGAGEMENT_EVENT_TAXONOMY.md
+- Yantra4D → Cotiza → Forgesight pricing flow: https://github.com/madfam-org/yantra4d/blob/main/docs/reference/COTIZA_FORGESIGHT_PRICING_FLOW.md
+- Pravara MES webhooks API: https://github.com/madfam-org/pravara-mes/blob/main/README.md
+- Dhanam (billing), Karafiel (CFDI) and Forgesight (price feed) repos are not
+  public; their Cotiza-side contracts are described in `AGENTS.md`.
+
 ## Maintenance
 
-These files are maintained by `internal-devops/scripts/sync-agent-docs.py`.
+These files are maintained by `internal-devops/scripts/sync-agent-docs.py`,
+which keeps curated llms files untouched.
 If repo-specific long-form agent guidance is needed, put it in `AGENTS.md`,
 not `CLAUDE.md`.
