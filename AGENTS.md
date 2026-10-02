@@ -132,12 +132,12 @@ CI step "Config guard (apps/web next.config.js)". Re-enabling the optimizer
 or adding a remote origin means changing the config, the test and this
 section together, with exact origins only.
 
-### Maintenance backlog
+### Pending work
 
-Tracked in
-[docs/DEPLOYMENT.md, "Maintenance backlog"](docs/DEPLOYMENT.md#maintenance-backlog-as-of-2026-10-01):
-nodemailer 7 needs the SESv2 transport, and `test.yml` still uses the retired
-`actions/upload-artifact@v3`.
+The single pending-work list, with priorities and owner-vs-engineering
+labels, is [ROADMAP.md, "Pending work"](ROADMAP.md#pending-work-as-of-2026-10-02).
+It covers the Pravara and Dhanam contract drifts below, the nodemailer SESv2
+move, the test gaps above and the retired `upload-artifact@v3` in `test.yml`.
 
 ### Related repositories / contracts
 
@@ -153,13 +153,29 @@ nodemailer 7 needs the SESv2 transport, and `test.yml` still uses the retired
 | Karafiel CFDI issuance                                              | `KarafielComplianceService` (`POST /api/v1/cfdi/issue/`)                      | Karafiel API (repo not public)                                                                                                                                                                                                                                                                                         |
 | Forgesight price feed (`price.updated` webhook)                     | `apps/api/src/integrations/forgesight/webhook.controller.ts`                  | Forgesight (repo not public)                                                                                                                                                                                                                                                                                           |
 
-**Drift note (Pravara).** As of 2026-10-01, Cotiza's `PravaraDispatchService`
-POSTs to `${PRAVARA_API_URL}/api/v1/mes/jobs` with `x-webhook-signature` and
-`x-webhook-timestamp` headers. Pravara's `main` registers its Cotiza inbound
-handler at `/v1/webhooks/cotiza` and verifies `X-Cotiza-Signature`; there is no
-`mes/jobs` route. The dispatch is fire-and-forget, so a mismatch is logged, not
-raised. Reconcile the two sides before relying on automatic fabrication
-dispatch.
+**Drift note (Pravara).** Both sides on `main` as of 2026-10-02. The same
+table is in madfam-org/pravara-mes#47, which describes the Pravara side:
+
+|                  | Cotiza sends (`PravaraDispatchService`)                                                        | Pravara accepts                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Route            | `POST ${PRAVARA_API_URL}/api/v1/mes/jobs`                                                      | `POST /v1/webhooks/cotiza`; no `mes/jobs` route              |
+| Signature header | `x-webhook-signature`, plus `x-webhook-timestamp`                                              | `X-Cotiza-Signature`                                         |
+| Signature value  | hex HMAC-SHA256 of the raw body                                                                | hex HMAC-SHA256 of the raw body (matches)                    |
+| Payload          | flat job: `orderId`, `externalId`, `engagement_id`, `currency`, `dueBy`, `items[]`, `metadata` | envelope: `event` (`order.created`, …), `timestamp`, `order` |
+
+The dispatch is fire-and-forget, so a mismatch is logged, not raised. Deciding
+which side is canonical (a Pravara intake route for Cotiza's job shape, or
+Cotiza adopting Pravara's order envelope) is an owner decision; then one side
+changes and both get a contract test. Pravara side:
+[pravara-mes `ROADMAP.md`, "Pending work and roadmap ahead"](https://github.com/madfam-org/pravara-mes/blob/main/ROADMAP.md).
+
+**Drift note (Dhanam).** `DhanamMilestoneService` POSTs milestone invoices to
+`${DHANAM_API_URL}/api/v1/invoices` with `x-webhook-signature`,
+`x-webhook-timestamp` and an `Idempotency-Key`. On 2026-10-02 no matching
+`POST` invoices route was found on Dhanam's `main`. The billing relay
+(`DhanamRelayService`, `x-cotiza-signature`) matches Dhanam's Cotiza webhook.
+Milestone posts are fire-and-forget, so a missing route is logged, not raised.
+Both drifts are tracked in [ROADMAP.md](ROADMAP.md#pending-work-as-of-2026-10-02).
 
 ---
 

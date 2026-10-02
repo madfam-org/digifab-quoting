@@ -423,9 +423,9 @@ curl -H "Authorization: Bearer <token>" \
 `build-publish.yml@v1.0.0-alpha.9`, called by `Build & Deploy` (api, web,
 worker) and `Deploy API Only` (api). Images are pushed to GHCR and signed, the
 digests are pinned in `infra/k8s/production/kustomization.yaml` by a bot
-commit, and ArgoCD syncs the cluster. Triggers, runners, verification and the
-maintenance backlog are in
-[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#current-deploy-path-verified-2026-10-01).
+commit, and ArgoCD syncs the cluster. Triggers, runners and verification are
+in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#current-deploy-path-verified-2026-10-01).
+Pending work, with priorities, is in [ROADMAP.md](ROADMAP.md#pending-work-as-of-2026-10-02).
 
 The Docker Build and AWS Infrastructure subsections below are historical reference.
 

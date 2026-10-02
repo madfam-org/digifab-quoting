@@ -96,15 +96,14 @@ Known gaps: all 12 `@cotiza/pricing-engine` test files are excluded in its
   `remotePatterns: []`, so `/_next/image` returns 404; guarded by
   `apps/web/test/next-config.test.mjs` (CI "Config guard").
 
-## Backlog
+## Pending work
 
-- nodemailer 7 requires moving `EmailService` from the aws-sdk v2 `SES`
-  transport to `@aws-sdk/client-sesv2`. Until then nodemailer stays on 6.x and
-  is the only remaining HIGH runtime finding.
-- `test.yml` references the retired `actions/upload-artifact@v3`.
-- Pravara contract drift: Cotiza POSTs `/api/v1/mes/jobs` with
-  `x-webhook-signature`; Pravara `main` serves `/v1/webhooks/cotiza` and
-  verifies `X-Cotiza-Signature`.
+The single pending-work list, with priorities (P0-P3) and owner-decision vs
+engineering labels, is `ROADMAP.md`, "Pending work". In short: the Pravara
+dispatch and Dhanam milestone-invoice contract drifts (P1), the nodemailer 7
+SESv2 transport move (P1), the excluded pricing-engine tests and missing
+worker/web unit tests (P2), and `upload-artifact@v3` in the manual `test.yml`
+(P3). Do not keep a separate list here.
 
 ## Related repositories / contracts
 
@@ -115,6 +114,7 @@ Known gaps: all 12 `@cotiza/pricing-engine` test files are excluded in its
 - PhyndCRM engagement events: https://github.com/madfam-org/phynd-crm/blob/main/docs/ENGAGEMENT_EVENT_TAXONOMY.md
 - Yantra4D → Cotiza → Forgesight pricing flow: https://github.com/madfam-org/yantra4d/blob/main/docs/reference/COTIZA_FORGESIGHT_PRICING_FLOW.md
 - Pravara MES webhooks API: https://github.com/madfam-org/pravara-mes/blob/main/README.md
+- Pravara MES pending work (the Cotiza dispatch drift table, both sides): https://github.com/madfam-org/pravara-mes/blob/main/ROADMAP.md
 - Dhanam (billing), Karafiel (CFDI) and Forgesight (price feed) repos are not
   public; their Cotiza-side contracts are described in `AGENTS.md`.
 

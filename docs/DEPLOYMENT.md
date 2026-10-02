@@ -80,21 +80,13 @@ Notes:
 - Runtime state (ArgoCD sync, pod health) is checked through Enclii, not raw
   `kubectl`.
 
-## Maintenance backlog (as of 2026-10-01)
+## Maintenance backlog
 
-- **nodemailer 7 needs an SESv2 transport.** `apps/api` stays on
-  `nodemailer@^6.10.1` because every advisory fix is in 7.x+, and 7.0 removed
-  the aws-sdk v2 `SES` transport that `apps/api/src/modules/email/email.service.ts`
-  builds with `new aws.SES(...)`. The upgrade has to move the transport to
-  `@aws-sdk/client-sesv2` (nodemailer's `SES: { sesClient, SendEmailCommand }`
-  shape) and should land as its own change. After #67, nodemailer is the only
-  remaining HIGH runtime finding in the lockfile scan.
-- **`test.yml` uses the retired `actions/upload-artifact@v3`** (three steps).
-  GitHub fails any job that references v3, so the manual-only `Test Suite`
-  workflow would fail at those jobs if dispatched. `ci.yml`, the workflow that
-  gates PRs, already uses `@v4`. Move `test.yml` to `@v4` when the suite is
-  rewritten (its header explains why it is `workflow_dispatch` only).
-- **Pricing-engine tests are not running.** See "Tests" in `AGENTS.md`.
+Moved to the single pending-work list in
+[ROADMAP.md, "Pending work"](../ROADMAP.md#pending-work-as-of-2026-10-02):
+the nodemailer SESv2 transport, the retired `upload-artifact@v3` in
+`test.yml`, the excluded pricing-engine tests, and the Pravara and Dhanam
+contract drifts.
 
 ## Historical AWS reference
 

@@ -61,7 +61,8 @@
 
 ### Deployment
 
-- [**DEPLOYMENT.md**](./DEPLOYMENT.md) - Current deploy path (Enclii `build-publish.yml` → GHCR → digest pin → ArgoCD), maintenance backlog, and historical AWS reference
+- [**DEPLOYMENT.md**](./DEPLOYMENT.md) - Current deploy path (Enclii `build-publish.yml` → GHCR → digest pin → ArgoCD) and historical AWS reference
+- [**ROADMAP.md**](../ROADMAP.md) - The single pending-work list (priorities, owner decision vs engineering) and the Yantra4D quote-import waves
 - [**runbooks/2026-04-25-auth-remediation.md**](./runbooks/2026-04-25-auth-remediation.md) - Auth remediation runbook
 - [**MIGRATION_GUIDE.md**](./MIGRATION_GUIDE.md) - Database and system migration procedures
 
