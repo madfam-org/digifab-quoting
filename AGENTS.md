@@ -132,12 +132,12 @@ CI step "Config guard (apps/web next.config.js)". Re-enabling the optimizer
 or adding a remote origin means changing the config, the test and this
 section together, with exact origins only.
 
-### Maintenance backlog
+### Pending work
 
-Tracked in
-[docs/DEPLOYMENT.md, "Maintenance backlog"](docs/DEPLOYMENT.md#maintenance-backlog-as-of-2026-10-01):
-nodemailer 7 needs the SESv2 transport, and `test.yml` still uses the retired
-`actions/upload-artifact@v3`.
+The single pending-work list, with priorities and owner-vs-engineering
+labels, is [ROADMAP.md, "Pending work"](ROADMAP.md#pending-work-as-of-2026-10-02).
+It covers the Pravara and Dhanam contract drifts below, the nodemailer SESv2
+move, the test gaps above and the retired `upload-artifact@v3` in `test.yml`.
 
 ### Related repositories / contracts
 
@@ -160,6 +160,14 @@ handler at `/v1/webhooks/cotiza` and verifies `X-Cotiza-Signature`; there is no
 `mes/jobs` route. The dispatch is fire-and-forget, so a mismatch is logged, not
 raised. Reconcile the two sides before relying on automatic fabrication
 dispatch.
+
+**Drift note (Dhanam).** `DhanamMilestoneService` POSTs milestone invoices to
+`${DHANAM_API_URL}/api/v1/invoices` with `x-webhook-signature`,
+`x-webhook-timestamp` and an `Idempotency-Key`. On 2026-10-02 no matching
+`POST` invoices route was found on Dhanam's `main`. The billing relay
+(`DhanamRelayService`, `x-cotiza-signature`) matches Dhanam's Cotiza webhook.
+Milestone posts are fire-and-forget, so a missing route is logged, not raised.
+Both drifts are tracked in [ROADMAP.md](ROADMAP.md#pending-work-as-of-2026-10-02).
 
 ---
 

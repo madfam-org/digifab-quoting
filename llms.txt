@@ -24,7 +24,8 @@ geometry/DFM), `packages/pricing-engine`, `packages/shared`, `packages/ui`.
 
 ## Key docs
 
-- `docs/DEPLOYMENT.md` — current deploy path (Enclii `build-publish.yml@v1.0.0-alpha.9` → GHCR → digest pin in `infra/k8s/production/kustomization.yaml` → ArgoCD) and the maintenance backlog.
+- `ROADMAP.md` — the single pending-work list (priorities, owner decision vs engineering) and the Yantra4D quote-import waves.
+- `docs/DEPLOYMENT.md` — current deploy path (Enclii `build-publish.yml@v1.0.0-alpha.9` → GHCR → digest pin in `infra/k8s/production/kustomization.yaml` → ArgoCD).
 - `AGENTS.md` "Current state" — stack, CI gates, known test gaps, related repositories and contracts.
 - `docs/ROUTES.md`, `docs/API_REFERENCE.md` — API surface.
 
@@ -34,4 +35,4 @@ geometry/DFM), `packages/pricing-engine`, `packages/shared`, `packages/ui`.
 - GitHub-hosted jobs are pinned to `ubuntu-24.04`, not `ubuntu-latest`.
 - `@cotiza/pricing-engine` tests are all excluded in its `jest.config.js`; the worker and web app have no unit tests.
 - nodemailer stays on 6.x until the email transport moves to SESv2; `test.yml` (manual-only) still uses the retired `upload-artifact@v3`.
-- Janua is identity, Dhanam is billing, Karafiel is CFDI, Pravara is fabrication dispatch. Cotiza's Pravara dispatch path currently drifts from Pravara's inbound route (see `AGENTS.md`).
+- Janua is identity, Dhanam is billing, Karafiel is CFDI, Pravara is fabrication dispatch. Cotiza's Pravara dispatch path and Dhanam milestone-invoice path currently drift from the other side's routes (see `AGENTS.md` and `ROADMAP.md`).
