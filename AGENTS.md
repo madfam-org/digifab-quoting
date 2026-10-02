@@ -60,6 +60,94 @@ redirect and should not become the source of truth again.
 Regenerate or repair these files with
 `internal-devops/scripts/sync-agent-docs.py` from the labspace ecosystem.
 
+## Current state (verified 2026-10-01)
+
+This section is current. The imported legacy guidance further down is kept for
+context; where the two disagree, this section and the linked docs win.
+
+### Stack
+
+- `apps/web`: Next.js 15.5.27 (App Router, `output: 'standalone'`), React
+  18.3, next-auth 4.24.15.
+- `apps/api`: NestJS 10.4.22 (one Nest version across the workspace), Prisma,
+  pool capped at 5 connections per pod (#63).
+- `apps/worker`: Python FastAPI geometry/DFM service.
+- Package manager: pnpm 9.15 (`packageManager` in `package.json`).
+- Dependency floor set by #67: runtime HIGH/CRITICAL findings went to 0
+  critical / 4 high, all of them nodemailer (see backlog).
+
+### Deploy
+
+`main` deploys through the Enclii reusable `build-publish.yml@v1.0.0-alpha.9`
+from two callers, `Build & Deploy` (api, web, worker) and `Deploy API Only`
+(api on `ubuntu-24.04`). Images go to GHCR, digests are pinned in
+`infra/k8s/production/kustomization.yaml` by a bot commit, and ArgoCD syncs.
+Full description, triggers and verification:
+[docs/DEPLOYMENT.md, "Current deploy path"](docs/DEPLOYMENT.md#current-deploy-path-verified-2026-10-01).
+GitHub-hosted jobs are pinned to `ubuntu-24.04` (#68); do not reintroduce
+`ubuntu-latest`.
+
+### Tests and CI gates
+
+`ci.yml` gates every PR: NetworkPolicy port lint, a no-TODO-auth grep, ESLint +
+`prettier --check` (this includes `**/*.md`, so format docs with the repo's
+Prettier before pushing), unit tests (`pnpm test` via turbo), API tests against
+Postgres/Redis service containers (`pnpm --filter @cotiza/api run test`), worker
+pytest, a build, a Docker build per service, and a typecheck of
+`@cotiza/shared`, `@cotiza/pricing-engine` and `@cotiza/ui`. `Architecture
+Gate` and `Production Readiness Ratchet` run alongside it. `test.yml` is
+manual-only (see its header).
+
+Known gaps, stated so nobody reads green CI as full coverage:
+
+- **`@cotiza/pricing-engine` runs no tests.** All 12 of its test files are
+  listed in `testPathIgnorePatterns` in `packages/pricing-engine/jest.config.js`
+  (with `passWithNoTests: true`) because the calculator API drifted
+  (constructors no longer take arguments, `ProcessingTime.toNumber()` was
+  removed, `@jest/globals` was dropped). The engine is still reached
+  indirectly by
+  `apps/api/src/modules/pricing/__tests__/pricing.service.market-intelligence.spec.ts`,
+  which drives the real `PricingService` (the quote-calculation specs mock
+  it), but no test pins per-process calculator outputs. Rewriting these against
+  the current API is the top test-debt item; it touches pricing formulas, so follow the
+  revenue rules above.
+- **`apps/worker` has no tests.** CI accepts pytest exit code 5 (no tests
+  collected).
+- **`apps/web` has no unit-test runner** (no `test` script). The Playwright
+  specs in `e2e/` run only in the manual `test.yml`, not in `ci.yml`.
+- No known flaky tests: `CI` on `main` has been green on every run since
+  2026-07.
+
+### Maintenance backlog
+
+Tracked in
+[docs/DEPLOYMENT.md, "Maintenance backlog"](docs/DEPLOYMENT.md#maintenance-backlog-as-of-2026-10-01):
+nodemailer 7 needs the SESv2 transport, `test.yml` still uses the retired
+`actions/upload-artifact@v3`, and the web app has not adopted the
+`images.unoptimized` + exact `remotePatterns` posture.
+
+### Related repositories / contracts
+
+| Contract                                                            | Cotiza side                                                                   | Other side                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Janua JWT verification (RS256 via JWKS, issuer allow-list)          | `apps/api/src/modules/auth/strategies/janua-jwt.strategy.ts`                  | [janua `docs/guides/ECOSYSTEM_INTEGRATION.md`](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md)                                                                                                                                                                                     |
+| Janua service tokens (machine-to-machine bearer, used for Karafiel) | `KARAFIEL_SERVICE_TOKEN`                                                      | [janua `docs/service-tokens.md`](https://github.com/madfam-org/janua/blob/main/docs/service-tokens.md)                                                                                                                                                                                                                 |
+| Build, sign, publish and digest pin                                 | `.github/workflows/build-deploy.yml`, `.github/workflows/deploy-api-only.yml` | [enclii `docs/guides/reusable-workflows.md`](https://github.com/madfam-org/enclii/blob/main/docs/guides/reusable-workflows.md), [enclii `docs/runbooks/SIGNED_GITOPS_DIGESTS.md`](https://github.com/madfam-org/enclii/blob/main/docs/runbooks/SIGNED_GITOPS_DIGESTS.md)                                               |
+| PhyndCRM engagement projection and lifecycle events                 | `POST /api/v1/webhooks/phyndcrm/engagements`, `PhyndCrmEngagementService`     | [phynd-crm `docs/ENGAGEMENT_EVENT_TAXONOMY.md`](https://github.com/madfam-org/phynd-crm/blob/main/docs/ENGAGEMENT_EVENT_TAXONOMY.md)                                                                                                                                                                                   |
+| Yantra4D geometry source and outbound quote-status webhook          | `Yantra4dWebhookService`                                                      | [yantra4d `docs/reference/COTIZA_FORGESIGHT_PRICING_FLOW.md`](https://github.com/madfam-org/yantra4d/blob/main/docs/reference/COTIZA_FORGESIGHT_PRICING_FLOW.md), [yantra4d `docs/guides/tablaco-verified-quote-flow.md`](https://github.com/madfam-org/yantra4d/blob/main/docs/guides/tablaco-verified-quote-flow.md) |
+| Pravara MES fabrication dispatch on ORDERED                         | `apps/api/src/integrations/pravara/pravara-dispatch.service.ts`               | [pravara-mes `README.md`, "Webhooks API"](https://github.com/madfam-org/pravara-mes/blob/main/README.md) (see drift note below)                                                                                                                                                                                        |
+| Dhanam billing relay, checkout and milestone invoices               | `DhanamRelayService`, `DhanamMilestoneService`                                | Dhanam billing API (the Dhanam repo that defines it is not public; the Cotiza-side env and header contract is described in the legacy section below)                                                                                                                                                                   |
+| Karafiel CFDI issuance                                              | `KarafielComplianceService` (`POST /api/v1/cfdi/issue/`)                      | Karafiel API (repo not public)                                                                                                                                                                                                                                                                                         |
+| Forgesight price feed (`price.updated` webhook)                     | `apps/api/src/integrations/forgesight/webhook.controller.ts`                  | Forgesight (repo not public)                                                                                                                                                                                                                                                                                           |
+
+**Drift note (Pravara).** As of 2026-10-01, Cotiza's `PravaraDispatchService`
+POSTs to `${PRAVARA_API_URL}/api/v1/mes/jobs` with `x-webhook-signature` and
+`x-webhook-timestamp` headers. Pravara's `main` registers its Cotiza inbound
+handler at `/v1/webhooks/cotiza` and verifies `X-Cotiza-Signature`; there is no
+`mes/jobs` route. The dispatch is fire-and-forget, so a mismatch is logged, not
+raised. Reconcile the two sides before relying on automatic fabrication
+dispatch.
+
 ---
 
 ## Legacy CLAUDE.md guidance imported on 2026-05-13
@@ -340,7 +428,7 @@ PRAVARA_WEBHOOK_TIMEOUT
 ### Deployment
 
 - **Branches**: `main` (production), `develop` (staging)
-- **CI/CD**: GitHub Actions -> Docker -> ECR -> ECS Fargate. Worker build job included in `build-deploy.yml` (builds and deploys the Python worker alongside the API and web apps)
+- **CI/CD**: (superseded) the ECR/ECS Fargate pipeline is gone. Current path: Enclii reusable `build-publish.yml` → GHCR → digest pin in `infra/k8s/production/kustomization.yaml` → ArgoCD. See "Current state" above and `docs/DEPLOYMENT.md`. The worker is built in `build-deploy.yml` alongside the API and web apps.
 - **Environments**: `dev`, `staging`, `prod`
 - PR checks include: lint, unit tests, E2E smoke tests
 
@@ -406,9 +494,9 @@ PRAVARA_WEBHOOK_TIMEOUT
 
 ## Known Issues — Audit 2026-04-23
 
-See `/Users/aldoruizluna/labspace/claudedocs/ECOSYSTEM_AUDIT_2026-04-23.md` for the full ecosystem audit.
+The full 2026-04-23 ecosystem audit lives in the internal ecosystem workspace, not in this repo.
 
 - ~~**🔴 R3: Three unauthenticated admin geo endpoints**~~ — Fixed 2026-04-23: all three (`GET /geo/analytics`, `GET /currency/analytics`, `POST /currency/admin/refresh-rates`) now require `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(Role.ADMIN)` (pattern from `enterprise.controller.ts`).
-- **🟡 H13: `.env` committed to git** — move to `.env.example`, rotate any real secrets.
+- ~~**🟡 H13: `.env` committed to git**~~ — no `.env` is tracked as of 2026-10-01; only `*.env.example` templates are. Rotation of anything previously committed is an operator decision.
 
 <!-- END LEGACY_CLAUDE_IMPORT -->

@@ -1,7 +1,7 @@
 # Cotiza Studio - Digital Manufacturing Quoting Platform
 
 [![Build Status](https://github.com/madfam-org/digifab-quoting/workflows/CI/badge.svg)](https://github.com/madfam-org/digifab-quoting/actions)
-[![Security Score](https://img.shields.io/badge/Security-A-green)](docs/SECURITY.md)
+[![Security Score](https://img.shields.io/badge/Security-A-green)](SECURITY.md)
 [![License](https://img.shields.io/badge/License-Proprietary-blue.svg)](LICENSE)
 [![Website](https://img.shields.io/badge/Website-cotiza.studio-purple)](https://cotiza.studio)
 
@@ -71,13 +71,13 @@ pnpm dev
 
 ### Tech Stack
 
-- **Frontend**: Next.js 14 (App Router), TypeScript, TailwindCSS, shadcn/ui, React Query
-- **Backend**: NestJS, TypeScript, Prisma ORM, REST API with OpenAPI
+- **Frontend**: Next.js 15.5 (App Router), React 18, TypeScript, TailwindCSS, shadcn/ui, React Query, next-auth 4
+- **Backend**: NestJS 10, TypeScript, Prisma ORM, REST API with OpenAPI
 - **Worker**: Python (FastAPI) for geometry analysis and DFM
 - **Database**: PostgreSQL 14+ with row-level security
 - **Queue/Cache**: AWS SQS for job processing, Redis for caching
 - **Storage**: AWS S3 with KMS encryption for files
-- **Infrastructure**: Docker, AWS ECS Fargate, Terraform IaC
+- **Infrastructure**: Docker images on GHCR, Kubernetes via ArgoCD GitOps (Enclii). The Terraform under `infrastructure/` is historical AWS reference.
 
 ### Project Structure
 
@@ -85,13 +85,15 @@ pnpm dev
 ├── apps/
 │   ├── api/             # NestJS backend API (port 4000)
 │   ├── web/             # Next.js frontend (port 3002)
-│   ├── worker/          # Python geometry analyzer
-│   └── admin/           # Admin dashboard (placeholder)
+│   └── worker/          # Python geometry analyzer
 ├── packages/
 │   ├── pricing-engine/  # Core pricing calculations
 │   ├── shared/          # Shared types and utilities
-│   └── ui/              # Shared UI components
-├── infrastructure/      # Terraform modules
+│   ├── ui/              # Shared UI components
+│   ├── client/          # API client
+│   └── cache, chaos, resilience/  # Nest infrastructure helpers
+├── infra/k8s/production # Kustomize manifests synced by ArgoCD
+├── infrastructure/      # Terraform modules (historical AWS reference)
 └── docker-compose.yml   # Local development
 ```
 
@@ -221,21 +223,25 @@ src/
 ### Running Tests
 
 ```bash
-# Unit tests
-npm test
+# Unit tests across the workspace (turbo)
+pnpm test
 
-# Test specific package
-npm test -- --filter=@cotiza/pricing-engine
+# API tests (needs Postgres and Redis, as in CI)
+pnpm --filter @cotiza/api run test
 
-# Coverage report
-npm test -- --coverage
+# Typecheck the shared packages, as CI does
+pnpm exec turbo run typecheck --filter=@cotiza/shared --filter=@cotiza/pricing-engine --filter=@cotiza/ui
 
-# Watch mode
-npm test:watch
+# Formatting gate (includes Markdown)
+pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json,css,md}"
 
-# E2E tests
-npm run test:e2e
+# E2E tests (Playwright; only run by the manual test.yml workflow)
+pnpm run test:e2e
 ```
+
+What CI gates, and the known coverage gaps (the pricing-engine suite is
+currently excluded, the worker and web app have no unit tests), are listed in
+[AGENTS.md, "Tests and CI gates"](AGENTS.md#tests-and-ci-gates).
 
 ### Test Coverage Targets
 
@@ -259,6 +265,14 @@ All project documentation is organized in the `/docs` directory. See [**docs/IND
 - **[Routes Documentation](docs/ROUTES.md)** - All routes with auth requirements
 - **[Local Setup Guide](docs/LOCAL_SETUP_GUIDE.md)** - Detailed environment setup
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment procedures
+
+### Related repositories / contracts
+
+Cotiza integrates with Janua (identity), Dhanam (billing), Karafiel (CFDI),
+Pravara MES (fabrication dispatch), PhyndCRM (engagements), Yantra4D
+(geometry) and Forgesight (price feed), and deploys through Enclii. The
+contract table, with links to the defining doc on each side, is in
+[AGENTS.md, "Related repositories / contracts"](AGENTS.md#related-repositories--contracts).
 
 ### Documentation by Role
 
@@ -403,6 +417,18 @@ curl -H "Authorization: Bearer <token>" \
 
 ## 🚀 Deployment
 
+### Current deploy path
+
+`main` deploys through the Enclii reusable workflow
+`build-publish.yml@v1.0.0-alpha.9`, called by `Build & Deploy` (api, web,
+worker) and `Deploy API Only` (api). Images are pushed to GHCR and signed, the
+digests are pinned in `infra/k8s/production/kustomization.yaml` by a bot
+commit, and ArgoCD syncs the cluster. Triggers, runners, verification and the
+maintenance backlog are in
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#current-deploy-path-verified-2026-10-01).
+
+The Docker Build and AWS Infrastructure subsections below are historical reference.
+
 ### Docker Build
 
 ```bash
@@ -412,7 +438,7 @@ docker build -t cotiza-web -f apps/web/Dockerfile .
 docker build -t cotiza-worker -f apps/worker/Dockerfile .
 
 # Run with docker-compose
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose -f docker-compose.production.yml up -d
 ```
 
 ### AWS Infrastructure
@@ -428,13 +454,9 @@ terraform apply tfplan
 
 ### CI/CD Pipeline
 
-GitHub Actions workflow:
-
-1. Run tests and linting
-2. Build Docker images
-3. Push to Amazon ECR
-4. Deploy to ECS Fargate
-5. Run smoke tests
+`ci.yml` runs lint, Prettier, unit, API and worker tests, build, Docker build
+and typecheck on every PR and push. Deploys run through the Enclii pipeline
+described above; the earlier ECR/ECS Fargate pipeline no longer exists.
 
 ### Production Checklist
 
