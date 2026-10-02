@@ -114,6 +114,7 @@ worker/web unit tests (P2), and `upload-artifact@v3` in the manual `test.yml`
 - PhyndCRM engagement events: https://github.com/madfam-org/phynd-crm/blob/main/docs/ENGAGEMENT_EVENT_TAXONOMY.md
 - Yantra4D → Cotiza → Forgesight pricing flow: https://github.com/madfam-org/yantra4d/blob/main/docs/reference/COTIZA_FORGESIGHT_PRICING_FLOW.md
 - Pravara MES webhooks API: https://github.com/madfam-org/pravara-mes/blob/main/README.md
+- Pravara MES pending work (the Cotiza dispatch drift table, both sides): https://github.com/madfam-org/pravara-mes/blob/main/ROADMAP.md
 - Dhanam (billing), Karafiel (CFDI) and Forgesight (price feed) repos are not
   public; their Cotiza-side contracts are described in `AGENTS.md`.
 

@@ -153,13 +153,21 @@ move, the test gaps above and the retired `upload-artifact@v3` in `test.yml`.
 | Karafiel CFDI issuance                                              | `KarafielComplianceService` (`POST /api/v1/cfdi/issue/`)                      | Karafiel API (repo not public)                                                                                                                                                                                                                                                                                         |
 | Forgesight price feed (`price.updated` webhook)                     | `apps/api/src/integrations/forgesight/webhook.controller.ts`                  | Forgesight (repo not public)                                                                                                                                                                                                                                                                                           |
 
-**Drift note (Pravara).** As of 2026-10-01, Cotiza's `PravaraDispatchService`
-POSTs to `${PRAVARA_API_URL}/api/v1/mes/jobs` with `x-webhook-signature` and
-`x-webhook-timestamp` headers. Pravara's `main` registers its Cotiza inbound
-handler at `/v1/webhooks/cotiza` and verifies `X-Cotiza-Signature`; there is no
-`mes/jobs` route. The dispatch is fire-and-forget, so a mismatch is logged, not
-raised. Reconcile the two sides before relying on automatic fabrication
-dispatch.
+**Drift note (Pravara).** Both sides on `main` as of 2026-10-02 (pravara-mes
+#47 records the same table on its side):
+
+|                  | Cotiza sends (`PravaraDispatchService`)                                                        | Pravara accepts                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Route            | `POST ${PRAVARA_API_URL}/api/v1/mes/jobs`                                                      | `POST /v1/webhooks/cotiza`; no `mes/jobs` route              |
+| Signature header | `x-webhook-signature`, plus `x-webhook-timestamp`                                              | `X-Cotiza-Signature`                                         |
+| Signature value  | hex HMAC-SHA256 of the raw body                                                                | hex HMAC-SHA256 of the raw body (matches)                    |
+| Payload          | flat job: `orderId`, `externalId`, `engagement_id`, `currency`, `dueBy`, `items[]`, `metadata` | envelope: `event` (`order.created`, …), `timestamp`, `order` |
+
+The dispatch is fire-and-forget, so a mismatch is logged, not raised. Deciding
+which side is canonical (a Pravara intake route for Cotiza's job shape, or
+Cotiza adopting Pravara's order envelope) is an owner decision; then one side
+changes and both get a contract test. Pravara side:
+[pravara-mes `ROADMAP.md`, "Pending work and roadmap ahead"](https://github.com/madfam-org/pravara-mes/blob/main/ROADMAP.md).
 
 **Drift note (Dhanam).** `DhanamMilestoneService` POSTs milestone invoices to
 `${DHANAM_API_URL}/api/v1/invoices` with `x-webhook-signature`,
