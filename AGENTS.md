@@ -153,8 +153,8 @@ move, the test gaps above and the retired `upload-artifact@v3` in `test.yml`.
 | Karafiel CFDI issuance                                              | `KarafielComplianceService` (`POST /api/v1/cfdi/issue/`)                      | Karafiel API (repo not public)                                                                                                                                                                                                                                                                                         |
 | Forgesight price feed (`price.updated` webhook)                     | `apps/api/src/integrations/forgesight/webhook.controller.ts`                  | Forgesight (repo not public)                                                                                                                                                                                                                                                                                           |
 
-**Drift note (Pravara).** Both sides on `main` as of 2026-10-02 (pravara-mes
-#47 records the same table on its side):
+**Drift note (Pravara).** Both sides on `main` as of 2026-10-02. The same
+table is in madfam-org/pravara-mes#47, which describes the Pravara side:
 
 |                  | Cotiza sends (`PravaraDispatchService`)                                                        | Pravara accepts                                              |
 | ---------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
