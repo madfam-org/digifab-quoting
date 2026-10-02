@@ -94,12 +94,6 @@ Notes:
   workflow would fail at those jobs if dispatched. `ci.yml`, the workflow that
   gates PRs, already uses `@v4`. Move `test.yml` to `@v4` when the suite is
   rewritten (its header explains why it is `workflow_dispatch` only).
-- **Next image optimizer posture.** `apps/web/next.config.js` still sets
-  `images.domains` and leaves the optimizer on. The fleet posture after
-  GHSA-2xp9-vwfh-vxw4 is `images.unoptimized: true` with an exact
-  `remotePatterns` allow-list and `/_next/image` returning 404. The installed
-  `next` (15.5.27) already includes the advisory fix; adopting the posture is a
-  defence-in-depth follow-up.
 - **Pricing-engine tests are not running.** See "Tests" in `AGENTS.md`.
 
 ## Historical AWS reference

@@ -113,18 +113,31 @@ Known gaps, stated so nobody reads green CI as full coverage:
   revenue rules above.
 - **`apps/worker` has no tests.** CI accepts pytest exit code 5 (no tests
   collected).
-- **`apps/web` has no unit-test runner** (no `test` script). The Playwright
-  specs in `e2e/` run only in the manual `test.yml`, not in `ci.yml`.
+- **`apps/web` has no unit-test runner** (no `test` script). Its only unit
+  test is the `node:test` config guard below (`test:config`, run by its own CI
+  step). The Playwright specs in `e2e/` run only in the manual `test.yml`, not
+  in `ci.yml`.
 - No known flaky tests: `CI` on `main` has been green on every run since
   2026-07.
+
+### Security invariant: Next image optimizer off
+
+`apps/web/next.config.js` sets `images.unoptimized: true` with
+`remotePatterns: []`, so `/_next/image` answers 404 (GHSA-2xp9-vwfh-vxw4
+defence in depth; `next` 15.5.27 already carries the fix). Nothing imports
+`next/image`. `apps/web/test/next-config.test.mjs` checks the flag, the exact
+empty allow-list with no `domains`, and that no `src/` file imports
+`next/image`. It runs as `pnpm --filter @cotiza/web run test:config` in the
+CI step "Config guard (apps/web next.config.js)". Re-enabling the optimizer
+or adding a remote origin means changing the config, the test and this
+section together, with exact origins only.
 
 ### Maintenance backlog
 
 Tracked in
 [docs/DEPLOYMENT.md, "Maintenance backlog"](docs/DEPLOYMENT.md#maintenance-backlog-as-of-2026-10-01):
-nodemailer 7 needs the SESv2 transport, `test.yml` still uses the retired
-`actions/upload-artifact@v3`, and the web app has not adopted the
-`images.unoptimized` + exact `remotePatterns` posture.
+nodemailer 7 needs the SESv2 transport, and `test.yml` still uses the retired
+`actions/upload-artifact@v3`.
 
 ### Related repositories / contracts
 

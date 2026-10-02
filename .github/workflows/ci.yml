@@ -100,6 +100,11 @@ jobs:
       - name: Run unit tests
         run: pnpm test
 
+      - name: Config guard (apps/web next.config.js)
+        # GHSA-2xp9-vwfh-vxw4: fails if the web image optimizer is re-enabled
+        # or the remote-image allow-list widens.
+        run: pnpm --filter @cotiza/web run test:config
+
   test-api:
     name: API Tests
     runs-on: ubuntu-24.04
