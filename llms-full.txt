@@ -90,15 +90,18 @@ Known gaps: all 12 `@cotiza/pricing-engine` test files are excluded in its
 `apps/web` has no unit-test runner and its Playwright e2e runs only from
 `test.yml`. No known flaky tests.
 
+## Security invariant
+
+- Invariant: `apps/web` runs with `images.unoptimized: true` and
+  `remotePatterns: []`, so `/_next/image` returns 404; guarded by
+  `apps/web/test/next-config.test.mjs` (CI "Config guard").
+
 ## Backlog
 
 - nodemailer 7 requires moving `EmailService` from the aws-sdk v2 `SES`
   transport to `@aws-sdk/client-sesv2`. Until then nodemailer stays on 6.x and
   is the only remaining HIGH runtime finding.
 - `test.yml` references the retired `actions/upload-artifact@v3`.
-- `apps/web/next.config.js` uses `images.domains`; the fleet posture is
-  `images.unoptimized: true` plus an exact `remotePatterns` allow-list with
-  `/_next/image` returning 404.
 - Pravara contract drift: Cotiza POSTs `/api/v1/mes/jobs` with
   `x-webhook-signature`; Pravara `main` serves `/v1/webhooks/cotiza` and
   verifies `X-Cotiza-Signature`.

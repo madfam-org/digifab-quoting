@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "clean": "rm -rf .next .turbo",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:config": "node --test test/next-config.test.mjs"
   },
   "dependencies": {
     "@cotiza/shared": "workspace:*",

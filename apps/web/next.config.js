@@ -9,8 +9,15 @@ const nextConfig = {
     locales: ['es', 'en', 'pt-BR'],
     localeDetection: false,
   },
+  // GHSA-2xp9-vwfh-vxw4 defence in depth: nothing in this app imports
+  // next/image, so Next's built-in optimizer is off and /_next/image answers
+  // 404. The allow-list is exact and empty (the hostname-only `domains` list it
+  // replaces is deprecated and allowed any path on s3.amazonaws.com), so
+  // re-enabling optimization later cannot turn the app into an image proxy.
+  // Guarded by test/next-config.test.mjs (CI: Unit Tests).
   images: {
-    domains: ['localhost', 's3.amazonaws.com'],
+    unoptimized: true,
+    remotePatterns: [],
   },
   async rewrites() {
     return [
